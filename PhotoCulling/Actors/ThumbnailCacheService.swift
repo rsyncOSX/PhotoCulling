@@ -14,7 +14,7 @@ actor ThumbnailCacheService {
     // NSCache works with classes, so we wrap URL in NSURL and use NSImage for macOS
     private let cache = NSCache<NSURL, NSImage>()
 
-   func thumbnail(for url: URL, targetSize: Int) async -> NSImage? {
+    func thumbnail(for url: URL, targetSize: Int) async -> NSImage? {
         Logger.process.debugThreadOnly("ThumbnailCacheService: thumbnail()")
         let nsUrl = url as NSURL
 
