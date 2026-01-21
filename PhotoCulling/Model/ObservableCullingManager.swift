@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import OSLog
 
 @Observable
 class ObservableCullingManager {
@@ -21,8 +22,10 @@ class ObservableCullingManager {
 
     func toggleSelection(filename: String) {
         if selectedFiles.contains(filename) {
+            Logger.process.debugMessageOnly("Removing \(filename)")
             selectedFiles.remove(filename)
         } else {
+            Logger.process.debugMessageOnly("Inserting \(filename)")
             selectedFiles.insert(filename)
         }
         saveToJSON()

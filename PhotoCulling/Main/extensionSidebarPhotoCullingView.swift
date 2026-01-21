@@ -63,7 +63,10 @@ extension SidebarPhotoCullingView {
             }
 
             if cullingmanager.selectedFiles.isEmpty == false {
-                PhotoGridView(cullingmanager: cullingmanager, files: filteredFiles)
+                PhotoGridView(
+                    cullingmanager: cullingmanager,
+                    files: filteredFiles
+                )
             }
         }
     }
@@ -98,7 +101,10 @@ extension SidebarPhotoCullingView {
             }
 
             if cullingmanager.selectedFiles.isEmpty == false {
-                PhotoGridView(cullingmanager: cullingmanager, files: filteredFiles)
+                PhotoGridView(
+                    cullingmanager: cullingmanager,
+                    files: filteredFiles
+                )
             }
         }
     }

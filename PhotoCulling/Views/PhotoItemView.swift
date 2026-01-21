@@ -5,6 +5,7 @@
 //  Created by Thomas Evensen on 21/01/2026.
 //
 
+import OSLog
 import SwiftUI
 
 struct PhotoItemView: View {
@@ -58,6 +59,7 @@ struct PhotoItemView: View {
         }
         .task(id: photoURL) {
             guard let url = photoURL else { return }
+            Logger.process.debugMessageOnly("PhotoItemView loading thumbnail for \(url)")
             isLoading = true
             thumbnailImage = await ThumbnailCacheService.shared.thumbnail(for: url, targetSize: 200)
             isLoading = false

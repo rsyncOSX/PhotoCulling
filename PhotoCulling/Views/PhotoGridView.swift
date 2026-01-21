@@ -10,7 +10,11 @@ struct PhotoGridView: View {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))]) {
                 ForEach(Array(cullingmanager.selectedFiles).sorted(), id: \.self) { photo in
                     let photoURL = files.first(where: { $0.name == photo })?.url
-                    PhotoItemView(photo: photo, photoURL: photoURL, cullingmanager: cullingmanager)
+                    PhotoItemView(
+                        photo: photo,
+                        photoURL: photoURL,
+                        cullingmanager: cullingmanager
+                    )
                 }
             }
             .padding()
