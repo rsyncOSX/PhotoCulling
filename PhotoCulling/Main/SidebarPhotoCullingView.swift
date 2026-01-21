@@ -116,7 +116,11 @@ struct SidebarPhotoCullingView: View {
             Task(priority: .background) {
                 if let url = newSource?.url {
                     files = await ScanFiles().scanFiles(url: url)
-                    filteredFiles = await ScanFiles().sortFiles(files, by: sortOrder, searchText: searchText)
+                    filteredFiles = await ScanFiles().sortFiles(
+                        files,
+                        by: sortOrder,
+                        searchText: searchText
+                    )
                     syncSavedSelections()
                 }
             }
@@ -124,14 +128,22 @@ struct SidebarPhotoCullingView: View {
         .onChange(of: sortOrder) {
             Task(priority: .background) {
                 issorting = true
-                filteredFiles = await ScanFiles().sortFiles(files, by: sortOrder, searchText: searchText)
+                filteredFiles = await ScanFiles().sortFiles(
+                    files,
+                    by: sortOrder,
+                    searchText: searchText
+                )
                 issorting = false
             }
         }
         .onChange(of: searchText) {
             Task(priority: .background) {
                 issorting = true
-                filteredFiles = await ScanFiles().sortFiles(files, by: sortOrder, searchText: searchText)
+                filteredFiles = await ScanFiles().sortFiles(
+                    files,
+                    by: sortOrder,
+                    searchText: searchText
+                )
                 issorting = false
             }
         }

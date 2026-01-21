@@ -6,6 +6,7 @@
 //
 import Cocoa
 import Foundation
+import OSLog
 
 actor ThumbnailCacheService {
     static let shared = ThumbnailCacheService()
@@ -14,6 +15,7 @@ actor ThumbnailCacheService {
     private let cache = NSCache<NSURL, NSImage>()
 
     func thumbnail(for url: URL, targetSize: Int) -> NSImage? {
+        Logger.process.debugThreadOnly("ThumbnailCacheService: thumbnail()")
         let nsUrl = url as NSURL
 
         // 1. Check Cache

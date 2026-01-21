@@ -59,7 +59,7 @@ struct PhotoItemView: View {
         }
         .task(id: photoURL) {
             guard let url = photoURL else { return }
-            Logger.process.debugMessageOnly("PhotoItemView loading thumbnail for \(url)")
+            Logger.process.debugMessageOnly("PhotoItemView (in GRID) loading thumbnail for \(url)")
             isLoading = true
             thumbnailImage = await ThumbnailCacheService.shared.thumbnail(for: url, targetSize: 200)
             isLoading = false

@@ -22,10 +22,10 @@ class ObservableCullingManager {
 
     func toggleSelection(filename: String) {
         if selectedFiles.contains(filename) {
-            Logger.process.debugMessageOnly("Removing \(filename)")
+            Logger.process.debugMessageOnly("ObservableCullingManager: removing \(filename)")
             selectedFiles.remove(filename)
         } else {
-            Logger.process.debugMessageOnly("Inserting \(filename)")
+            Logger.process.debugMessageOnly("ObservableCullingManager: inserting \(filename)")
             selectedFiles.insert(filename)
         }
         saveToJSON()
@@ -42,6 +42,7 @@ class ObservableCullingManager {
 
     func loadFromJSON() {
         guard FileManager.default.fileExists(atPath: savePath.path) else { return }
+        Logger.process.debugMessageOnly("ObservableCullingManager: loading stored filenames from JSON")
         do {
             let data = try Data(contentsOf: savePath)
             selectedFiles = try JSONDecoder().decode(Set<String>.self, from: data)
