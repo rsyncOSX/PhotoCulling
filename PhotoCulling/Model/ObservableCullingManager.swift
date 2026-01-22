@@ -2,10 +2,16 @@ import Foundation
 import Observation
 import OSLog
 
+struct StringIntPair: Hashable {
+    let string: String
+    let int: Int
+}
+
 @Observable
-class ObservableCullingManager {
+final class ObservableCullingManager {
     // Standard property - Observation handles this automatically
     var selectedFiles: Set<String> = []
+    var numberofPreselectedFiles: Set<StringIntPair> = []
 
     private let fileName = "selections.json"
 
@@ -20,7 +26,13 @@ class ObservableCullingManager {
         loadFromJSON()
     }
 
-    func toggleSelection(filename: String) {
+    private func removeCatalogEntry(forPath catalogPath: String) {
+        for item in numberofPreselectedFiles where item.string == catalogPath {
+            numberofPreselectedFiles.remove(item)
+        }
+    }
+
+    func toggleSelection(in catalog: URL?, filename: String) {
         if selectedFiles.contains(filename) {
             Logger.process.debugMessageOnly("ObservableCullingManager: removing \(filename)")
             selectedFiles.remove(filename)
@@ -28,7 +40,29 @@ class ObservableCullingManager {
             Logger.process.debugMessageOnly("ObservableCullingManager: inserting \(filename)")
             selectedFiles.insert(filename)
         }
+
+        // Update numberofPreselectedFiles with catalog count
+        if let catalog = catalog {
+            let catalogPath = catalog.path
+            let count = countSelectedFiles(in: catalog)
+
+            // Remove old entry for this catalog if it exists
+            removeCatalogEntry(forPath: catalogPath)
+
+            // Add new entry with updated count
+            if count > 0 {
+                numberofPreselectedFiles.insert(StringIntPair(string: catalogPath, int: count))
+            }
+        }
+
         saveToJSON()
+    }
+
+    func countSelectedFiles(in catalog: URL) -> Int {
+        let catalogPath = catalog.path
+        return selectedFiles.filter { filename in
+            filename.hasPrefix(catalogPath)
+        }.count
     }
 
     func saveToJSON() {

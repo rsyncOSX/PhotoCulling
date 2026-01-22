@@ -112,7 +112,10 @@ extension SidebarPhotoCullingView {
     // MARK: - Helper Functions
 
     func handleToggleSelection(for file: FileItem) {
-        cullingmanager.toggleSelection(filename: file.name)
+        cullingmanager.toggleSelection(
+            in: file.url,
+            filename: file.name
+        )
 
         // Update UI selection and inspector
         if cullingmanager.selectedFiles.contains(file.name) {

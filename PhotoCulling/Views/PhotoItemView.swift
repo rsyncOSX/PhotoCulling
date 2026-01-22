@@ -40,15 +40,17 @@ struct PhotoItemView: View {
                             Rectangle()
                                 .fill(Color.gray.opacity(0.1))
                                 .frame(height: 100)
-                            
+
                             Label("No image available", systemImage: "xmark")
                         }
-                        
                     }
                 }
                 .background(cullingmanager.selectedFiles.contains(photo) ? Color.blue.opacity(0.2) : Color.clear)
                 .onTapGesture {
-                    cullingmanager.toggleSelection(filename: photo)
+                    cullingmanager.toggleSelection(
+                        in: photoURL,
+                        filename: photo
+                    )
                 }
 
                 Text(photo)
