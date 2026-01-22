@@ -51,30 +51,45 @@ actor SonyThumbnailProvider {
     func preloadCatalog(at catalogURL: URL, targetSize: Int, recursive: Bool = true) async -> Int {
         Logger.process.debugThreadOnly("SonyThumbnailProvider: preloadCatalog()")
         
-        let fileManager = FileManager.default
-        var successCount = 0
+        // Collect URLs synchronously first
+        let arwURLs = await Task.detached {
+            let fileManager = FileManager.default
+            var urls: [URL] = []
+            
+            guard let enumerator = fileManager.enumerator(
+                at: catalogURL,
+                includingPropertiesForKeys: [.isRegularFileKey],
+                options: recursive ? [] : [.skipsSubdirectoryDescendants]
+            ) else {
+                return urls
+            }
+            
+            // Use nextObject() instead of for-in to avoid makeIterator() in async context
+            while let fileURL = enumerator.nextObject() as? URL {
+                // Filter for .ARW files
+                guard fileURL.pathExtension.lowercased() == "arw" else { continue }
+                
+                // Check if it's a regular file
+                guard let resourceValues = try? fileURL.resourceValues(forKeys: [.isRegularFileKey]),
+                      let isRegularFile = resourceValues.isRegularFile,
+                      isRegularFile else {
+                    continue
+                }
+                
+                urls.append(fileURL)
+            }
+            
+            return urls
+        }.value
         
-        guard let enumerator = fileManager.enumerator(
-            at: catalogURL,
-            includingPropertiesForKeys: [.isRegularFileKey],
-            options: recursive ? [] : [.skipsSubdirectoryDescendants]
-        ) else {
-            Logger.process.debugMessageOnly("SonyThumbnailProvider: Failed to create enumerator for \(catalogURL.path)")
+        guard !arwURLs.isEmpty else {
+            Logger.process.debugMessageOnly("SonyThumbnailProvider: No ARW files found in \(catalogURL.path)")
             return 0
         }
         
-        for case let fileURL as URL in enumerator {
-            // Filter for .ARW files
-            guard fileURL.pathExtension.lowercased() == "arw" else { continue }
-            
-            // Check if it's a regular file
-            guard let resourceValues = try? fileURL.resourceValues(forKeys: [.isRegularFileKey]),
-                  let isRegularFile = resourceValues.isRegularFile,
-                  isRegularFile else {
-                continue
-            }
-            
-            // Generate and cache thumbnail
+        // Process thumbnails asynchronously
+        var successCount = 0
+        for fileURL in arwURLs {
             if let _ = await thumbnail(for: fileURL, targetSize: targetSize) {
                 successCount += 1
             }
