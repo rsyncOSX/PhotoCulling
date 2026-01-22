@@ -13,6 +13,7 @@ opt_in_rules:
   - implicit_return
   - discouraged_optional_boolean
   - multiline_arguments
+  - multiline_parameters
   - vertical_whitespace_closing_braces
   - redundant_nil_coalescing
   - unused_declaration
