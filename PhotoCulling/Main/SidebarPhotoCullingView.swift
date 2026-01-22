@@ -82,7 +82,6 @@ struct SidebarPhotoCullingView: View {
 
             if let file = selectedFile {
                 VStack(spacing: 20) {
-                    
                     CachedThumbnailView(url: file.url)
 
                     VStack {

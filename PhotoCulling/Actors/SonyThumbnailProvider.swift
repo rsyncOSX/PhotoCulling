@@ -34,8 +34,8 @@ actor SonyThumbnailProvider {
         do {
             let image = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize))
             cache.setObject(image, forKey: nsUrl)
-        } catch {
-            Logger.process.debugMessageOnly("SonyThumbnailProvider: thumbnail() failed")
+        } catch let err {
+            Logger.process.debugMessageOnly("SonyThumbnailProvider: thumbnail() failed with error: \(err)")
             return nil
         }
         return nil
