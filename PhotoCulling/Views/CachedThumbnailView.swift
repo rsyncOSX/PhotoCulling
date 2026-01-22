@@ -31,6 +31,7 @@ struct CachedThumbnailView: View {
             }
         }
         // The .task modifier cancels automatically if the user switches selection quickly
+        /*
         .task(id: url) {
             isLoading = true
             // Offload to background actor
@@ -42,5 +43,6 @@ struct CachedThumbnailView: View {
             }
             isLoading = false
         }
+         */
     }
 }

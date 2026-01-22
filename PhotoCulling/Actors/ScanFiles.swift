@@ -15,11 +15,20 @@ actor ScanFiles {
         // Essential for Sandbox apps
         guard url.startAccessingSecurityScopedResource() else { return [] }
 
-        let keys: [URLResourceKey] = [.nameKey, .fileSizeKey, .contentTypeKey, .contentModificationDateKey]
+        let keys: [URLResourceKey] = [
+            .nameKey,
+            .fileSizeKey,
+            .contentTypeKey,
+            .contentModificationDateKey
+        ]
         let manager = FileManager.default
 
         do {
-            let contents = try manager.contentsOfDirectory(at: url, includingPropertiesForKeys: keys, options: [.skipsHiddenFiles])
+            let contents = try manager.contentsOfDirectory(
+                at: url,
+                includingPropertiesForKeys: keys,
+                options: [.skipsHiddenFiles]
+            )
 
             let scannedFiles = contents.compactMap { fileURL -> FileItem? in
                 let res = try? fileURL.resourceValues(forKeys: Set(keys))

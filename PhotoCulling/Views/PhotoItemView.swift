@@ -68,7 +68,7 @@ struct PhotoItemView: View {
             guard let url = photoURL else { return }
             Logger.process.debugMessageOnly("PhotoItemView (in GRID) loading thumbnail for \(url)")
             isLoading = true
-            thumbnailImage = await SonyThumbnailProvider.shared.thumbnail(for: url, targetSize: 200)
+            thumbnailImage = await SonyThumbnailProvider.shared.thumbnail(for: url, targetSize: 500)
             isLoading = false
         }
     }
