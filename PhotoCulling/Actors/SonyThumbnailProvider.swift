@@ -10,14 +10,14 @@ import Foundation
 import ImageIO
 import OSLog
 
+enum ThumbnailError: Error {
+    case invalidSource
+    case generationFailed
+}
+
 /// macOS Tahoe Optimized Thumbnail Generator
 actor SonyThumbnailProvider {
     static let shared = SonyThumbnailProvider()
-
-    enum ThumbnailError: Error {
-        case invalidSource
-        case generationFailed
-    }
 
     // NSCache works with classes, so we wrap URL in NSURL and use NSImage for macOS
     private let cache = NSCache<NSURL, NSImage>()
@@ -32,7 +32,10 @@ actor SonyThumbnailProvider {
         }
         // 2. Generate
         do {
-            let image = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize))
+            let image = try await extractSonyThumbnail(
+                from: url,
+                maxDimension: CGFloat(targetSize)
+            )
             cache.setObject(image, forKey: nsUrl)
             return image
         } catch let err {
@@ -125,7 +128,11 @@ actor SonyThumbnailProvider {
                 kCGImageSourceCreateThumbnailFromImageAlways: false
             ]
 
-            guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, thumbnailOptions as CFDictionary) else {
+            guard let cgImage = CGImageSourceCreateThumbnailAtIndex(
+                source,
+                0,
+                thumbnailOptions as CFDictionary
+            ) else {
                 throw ThumbnailError.generationFailed
             }
 

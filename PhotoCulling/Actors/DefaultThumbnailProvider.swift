@@ -22,33 +22,115 @@ actor DefaultThumbnailProvider {
         if let cached = cache.object(forKey: nsUrl) {
             return cached
         }
-
         // 2. Generate
-        if let image = generateThumbnail(for: url, maxPixelSize: targetSize) {
+        do {
+            let image = try await extractDefaultThumbnail(
+                from: url,
+                maxDimension: CGFloat(targetSize)
+            )
             cache.setObject(image, forKey: nsUrl)
             return image
-        } else {
-            Logger.process.debugMessageOnly("DefaultThumbnailProvider: thumbnail() failed")
+        } catch let err {
+            Logger.process.debugMessageOnly("SonyThumbnailProvider: thumbnail() failed with error: \(err)")
             return nil
         }
     }
 
-    private func generateThumbnail(for url: URL, maxPixelSize: Int) -> NSImage? {
-        let options: [CFString: Any] = [
-            kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceCreateThumbnailWithTransform: true,
-            kCGImageSourceShouldCacheImmediately: true,
-            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize
-        ]
+    /// Preloads thumbnails for all .ARW files in a catalog directory
+    /// - Parameters:
+    ///   - catalogURL: The directory URL containing .ARW files
+    ///   - targetSize: The target size for thumbnails
+    ///   - recursive: Whether to search subdirectories (default: true)
+    /// - Returns: The number of thumbnails successfully cached
+    @discardableResult
+    func preloadCatalog(at catalogURL: URL, targetSize: Int, recursive: Bool = true) async -> Int {
+        Logger.process.debugThreadOnly("SonyThumbnailProvider: preloadCatalog()")
 
-        guard let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil),
-              let cgImage = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary)
-        else {
-            return nil
+        // Collect URLs synchronously first
+        let arwURLs = await Task.detached {
+            let fileManager = FileManager.default
+            var urls: [URL] = []
+
+            guard let enumerator = fileManager.enumerator(
+                at: catalogURL,
+                includingPropertiesForKeys: [.isRegularFileKey],
+                options: recursive ? [] : [.skipsSubdirectoryDescendants]
+            ) else {
+                return urls
+            }
+
+            // Use nextObject() instead of for-in to avoid makeIterator() in async context
+            while let fileURL = enumerator.nextObject() as? URL {
+                // Filter for .ARW files
+                guard fileURL.pathExtension.lowercased() == "arw" else { continue }
+
+                // Check if it's a regular file
+                guard let resourceValues = try? fileURL.resourceValues(forKeys: [.isRegularFileKey]),
+                      let isRegularFile = resourceValues.isRegularFile,
+                      isRegularFile
+                else {
+                    continue
+                }
+
+                urls.append(fileURL)
+            }
+
+            return urls
+        }.value
+
+        guard !arwURLs.isEmpty else {
+            Logger.process.debugMessageOnly("SonyThumbnailProvider: No ARW files found in \(catalogURL.path)")
+            return 0
         }
 
-        // macOS uses NSImage, initializing from CGImage requires size
-        let nsImage = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
-        return nsImage
+        // Process thumbnails asynchronously
+        var successCount = 0
+        for fileURL in arwURLs {
+            do {
+                let nsimage = try await extractDefaultThumbnail(from: fileURL, maxDimension: CGFloat(targetSize))
+                cache.setObject(nsimage, forKey: fileURL as NSURL)
+                successCount += 1
+                print(successCount)
+            } catch {}
+        }
+
+        Logger.process.debugMessageOnly("SonyThumbnailProvider: Preloaded \(successCount) thumbnails from \(catalogURL.path)")
+        return successCount
+    }
+
+    /// Generates a thumbnail for a  file
+    /// - Parameters:
+    ///   - url: The file path to the .ARW file
+    ///   - maxDimension: The maximum width or height of the thumbnail
+    /// - Returns: An NSImage thumbnail
+    private func extractDefaultThumbnail(from url: URL, maxDimension: CGFloat) async throws -> NSImage {
+        // Use a background task for the heavy decoding
+        try await Task.detached(priority: .userInitiated) {
+            let options = [kCGImageSourceShouldCache: false] as CFDictionary
+
+            guard let source = CGImageSourceCreateWithURL(url as CFURL, options) else {
+                throw ThumbnailError.invalidSource
+            }
+
+            let thumbnailOptions: [CFString: Any] = [
+                kCGImageSourceCreateThumbnailFromImageAlways: true,
+                kCGImageSourceCreateThumbnailWithTransform: true,
+                kCGImageSourceShouldCacheImmediately: true,
+                kCGImageSourceThumbnailMaxPixelSize: maxDimension
+            ]
+
+            guard let cgImage = CGImageSourceCreateThumbnailAtIndex(
+                source,
+                0,
+                thumbnailOptions as CFDictionary
+            )
+            else {
+                throw ThumbnailError.generationFailed
+            }
+
+            // macOS uses NSImage, initializing from CGImage requires size
+            let nsImage = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+            return nsImage
+        }.value
     }
 }
