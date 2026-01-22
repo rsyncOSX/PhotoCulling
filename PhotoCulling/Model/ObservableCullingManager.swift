@@ -89,11 +89,6 @@ final class ObservableCullingManager {
             if count > 0 {
                 Logger.process.debugMessageOnly("ObservableCullingManager: loaded \(count) filenames from JSON")
                 numberofPreselectedFiles.insert(StringIntPair(string: catalog.absoluteString, int: count))
-            } else {
-                // Reset counters when new catalog is open
-                Logger.process.debugMessageOnly("ObservableCullingManager: reset selectedFiles and filename-count pairs")
-                numberofPreselectedFiles.removeAll()
-                selectedFiles.removeAll()
             }
         } catch {
             print("Load failed: \(error)")

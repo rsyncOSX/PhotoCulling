@@ -16,6 +16,7 @@ extension SidebarPhotoCullingView {
             ToolbarItem {
                 Button {
                     cullingmanager.selectedFiles.removeAll()
+                    cullingmanager.numberofPreselectedFiles.removeAll()
                     cullingmanager.saveToJSON()
                 }
                 label: { Image(systemName: "trash.fill") }

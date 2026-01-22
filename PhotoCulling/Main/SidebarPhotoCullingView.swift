@@ -21,6 +21,8 @@ struct SidebarPhotoCullingView: View {
     @State var cullingmanager = ObservableCullingManager(catalog: nil)
 
     @State var issorting: Bool = false
+    
+    @State private var processedURLs: Set<URL> = []
 
     var body: some View {
         NavigationSplitView {
@@ -55,6 +57,7 @@ struct SidebarPhotoCullingView: View {
                     ProgressView("Scanning directory...")
                 } else {
                     ZStack {
+                        
                         filetableview
 
                         if issorting {
@@ -82,6 +85,7 @@ struct SidebarPhotoCullingView: View {
 
             if let file = selectedFile {
                 VStack(spacing: 20) {
+                    
                     CachedThumbnailView(url: file.url)
 
                     VStack {
@@ -115,6 +119,7 @@ struct SidebarPhotoCullingView: View {
         .onChange(of: selectedSource) { _, newSource in
             Task(priority: .background) {
                 if let url = newSource?.url {
+                    
                     files = await ScanFiles().scanFiles(url: url)
                     filteredFiles = await ScanFiles().sortFiles(
                         files,
@@ -123,16 +128,23 @@ struct SidebarPhotoCullingView: View {
                     )
                     cullingmanager.loadFromJSON(in: url)
                     syncSavedSelections()
-                    await SonyThumbnailProvider.shared.preloadCatalog(
-                        at: url,
-                        targetSize: 500,
-                        recursive: false
-                    )
-                    await DefaultThumbnailProvider.shared.preloadCatalog(
-                        at: url,
-                        targetSize: 500,
-                        recursive: false
-                    )
+                
+                    if processedURLs.contains(url) == false {
+                        
+                        processedURLs.insert(url)
+                        
+                        await SonyThumbnailProvider.shared.preloadCatalog(
+                            at: url,
+                            targetSize: 500,
+                            recursive: false
+                        )
+                    
+                        await DefaultThumbnailProvider.shared.preloadCatalog(
+                            at: url,
+                            targetSize: 500,
+                            recursive: false
+                        )
+                    }
                 }
             }
         }
