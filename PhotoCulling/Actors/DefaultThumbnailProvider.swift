@@ -38,7 +38,7 @@ actor DefaultThumbnailProvider {
 
     /// Preloads thumbnails for all .ARW files in a catalog directory
     /// - Parameters:
-    ///   - catalogURL: The directory URL containing .ARW files
+    ///   - catalogURL: The directory URL containing  files
     ///   - targetSize: The target size for thumbnails
     ///   - recursive: Whether to search subdirectories (default: true)
     /// - Returns: The number of thumbnails successfully cached
@@ -61,8 +61,12 @@ actor DefaultThumbnailProvider {
 
             // Use nextObject() instead of for-in to avoid makeIterator() in async context
             while let fileURL = enumerator.nextObject() as? URL {
-                // Filter for .ARW files
-                guard fileURL.pathExtension.lowercased() == "arw" else { continue }
+                // Filter for .TIFF, .TIF, .jpeg, .jpg files
+                let supportedExtensions: Set<String> = ["tiff", "tif", "jpeg", "jpg"]
+                // Refactored guard statement
+                guard supportedExtensions.contains(fileURL.pathExtension.lowercased()) else {
+                    continue
+                }
 
                 // Check if it's a regular file
                 guard let resourceValues = try? fileURL.resourceValues(forKeys: [.isRegularFileKey]),
@@ -100,7 +104,7 @@ actor DefaultThumbnailProvider {
 
     /// Generates a thumbnail for a  file
     /// - Parameters:
-    ///   - url: The file path to the .ARW file
+    ///   - url: The file path to the  file
     ///   - maxDimension: The maximum width or height of the thumbnail
     /// - Returns: An NSImage thumbnail
     private func extractDefaultThumbnail(from url: URL, maxDimension: CGFloat) async throws -> NSImage {

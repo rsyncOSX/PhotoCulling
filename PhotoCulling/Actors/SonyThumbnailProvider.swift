@@ -69,8 +69,11 @@ actor SonyThumbnailProvider {
 
             // Use nextObject() instead of for-in to avoid makeIterator() in async context
             while let fileURL = enumerator.nextObject() as? URL {
-                // Filter for .ARW files
-                guard fileURL.pathExtension.lowercased() == "arw" else { continue }
+                let supportedExtensions: Set<String> = ["arw"]
+                // Refactored guard statement
+                guard supportedExtensions.contains(fileURL.pathExtension.lowercased()) else {
+                    continue
+                }
 
                 // Check if it's a regular file
                 guard let resourceValues = try? fileURL.resourceValues(forKeys: [.isRegularFileKey]),
