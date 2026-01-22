@@ -43,8 +43,9 @@ final class ObservableCullingManager {
 
         // Update numberofPreselectedFiles with catalog count
         if let catalog = catalog {
-            let catalogPath = catalog.path
-            let count = countSelectedFiles(in: catalog)
+            let folderURL = catalog.deletingLastPathComponent()
+            let catalogPath = folderURL.path
+            let count = countSelectedFiles(in: folderURL)
 
             // Remove old entry for this catalog if it exists
             removeCatalogEntry(forPath: catalogPath)
@@ -59,10 +60,12 @@ final class ObservableCullingManager {
     }
 
     func countSelectedFiles(in catalog: URL) -> Int {
-        let catalogPath = catalog.path
-        return selectedFiles.filter { filename in
-            filename.hasPrefix(catalogPath)
-        }.count
+        selectedFiles.reduce(into: 0) { count, filename in
+            let fileURL = catalog.appendingPathComponent(filename)
+            if FileManager.default.fileExists(atPath: fileURL.path) {
+                count += 1
+            }
+        }
     }
 
     func saveToJSON() {
