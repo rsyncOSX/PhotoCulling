@@ -41,6 +41,49 @@ actor SonyThumbnailProvider {
         return nil
     }
 
+    /// Preloads thumbnails for all .ARW files in a catalog directory
+    /// - Parameters:
+    ///   - catalogURL: The directory URL containing .ARW files
+    ///   - targetSize: The target size for thumbnails
+    ///   - recursive: Whether to search subdirectories (default: true)
+    /// - Returns: The number of thumbnails successfully cached
+    @discardableResult
+    func preloadCatalog(at catalogURL: URL, targetSize: Int, recursive: Bool = true) async -> Int {
+        Logger.process.debugThreadOnly("SonyThumbnailProvider: preloadCatalog()")
+        
+        let fileManager = FileManager.default
+        var successCount = 0
+        
+        guard let enumerator = fileManager.enumerator(
+            at: catalogURL,
+            includingPropertiesForKeys: [.isRegularFileKey],
+            options: recursive ? [] : [.skipsSubdirectoryDescendants]
+        ) else {
+            Logger.process.debugMessageOnly("SonyThumbnailProvider: Failed to create enumerator for \(catalogURL.path)")
+            return 0
+        }
+        
+        for case let fileURL as URL in enumerator {
+            // Filter for .ARW files
+            guard fileURL.pathExtension.lowercased() == "arw" else { continue }
+            
+            // Check if it's a regular file
+            guard let resourceValues = try? fileURL.resourceValues(forKeys: [.isRegularFileKey]),
+                  let isRegularFile = resourceValues.isRegularFile,
+                  isRegularFile else {
+                continue
+            }
+            
+            // Generate and cache thumbnail
+            if let _ = await thumbnail(for: fileURL, targetSize: targetSize) {
+                successCount += 1
+            }
+        }
+        
+        Logger.process.debugMessageOnly("SonyThumbnailProvider: Preloaded \(successCount) thumbnails from \(catalogURL.path)")
+        return successCount
+    }
+
     /// Generates a thumbnail for a Sony .ARW file
     /// - Parameters:
     ///   - url: The file path to the .ARW file
