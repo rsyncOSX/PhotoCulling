@@ -81,14 +81,19 @@ final class ObservableCullingManager {
 
     func loadFromJSON(in catalog: URL) {
         guard FileManager.default.fileExists(atPath: savePath.path) else { return }
-        Logger.process.debugMessageOnly("ObservableCullingManager: loading stored filenames from JSON")
         do {
             let data = try Data(contentsOf: savePath)
             selectedFiles = try JSONDecoder().decode(Set<String>.self, from: data)
             let count = countSelectedFiles(in: catalog)
-            Logger.process.debugMessageOnly("ObservableCullingManager: loaded \(count) filenames")
+
             if count > 0 {
+                Logger.process.debugMessageOnly("ObservableCullingManager: loaded \(count) filenames from JSON")
                 numberofPreselectedFiles.insert(StringIntPair(string: catalog.absoluteString, int: count))
+            } else {
+                // Reset counters when new catalog is open
+                Logger.process.debugMessageOnly("ObservableCullingManager: reset selectedFiles and filename-count pairs")
+                numberofPreselectedFiles.removeAll()
+                selectedFiles.removeAll()
             }
         } catch {
             print("Load failed: \(error)")
