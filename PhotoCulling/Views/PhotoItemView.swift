@@ -36,9 +36,14 @@ struct PhotoItemView: View {
                                     .controlSize(.small)
                             }
                     } else {
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.1))
-                            .frame(height: 100)
+                        ZStack {
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.1))
+                                .frame(height: 100)
+                            
+                            Label("No image available", systemImage: "xmark")
+                        }
+                        
                     }
                 }
                 .background(cullingmanager.selectedFiles.contains(photo) ? Color.blue.opacity(0.2) : Color.clear)

@@ -18,9 +18,6 @@ opt_in_rules:
   - unused_declaration
   - weak_delegate
 
-#disabled_rules:
-#  - cyclomatic_complexity  # Keep disabled for SwiftUI views
-
 line_length: 135
 type_body_length: 320
 function_body_length: 80
