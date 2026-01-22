@@ -18,7 +18,7 @@ struct SidebarPhotoCullingView: View {
     @State var isInspectorPresented = false
 
     @State var selectedFile: FileItem?
-    @State var cullingmanager = ObservableCullingManager()
+    @State var cullingmanager = ObservableCullingManager(catalog: nil)
 
     @State var issorting: Bool = false
 
@@ -121,6 +121,7 @@ struct SidebarPhotoCullingView: View {
                         by: sortOrder,
                         searchText: searchText
                     )
+                    cullingmanager.loadFromJSON(in: url)
                     syncSavedSelections()
                 }
             }

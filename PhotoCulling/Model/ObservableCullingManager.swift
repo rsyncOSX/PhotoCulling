@@ -22,8 +22,10 @@ final class ObservableCullingManager {
             .appendingPathComponent(fileName)
     }
 
-    init() {
-        loadFromJSON()
+    init(catalog: URL?) {
+        if let catalog {
+            loadFromJSON(in: catalog)
+        }
     }
 
     private func removeCatalogEntry(forPath catalogPath: String) {
@@ -44,7 +46,7 @@ final class ObservableCullingManager {
         // Update numberofPreselectedFiles with catalog count
         if let catalog = catalog {
             let folderURL = catalog.deletingLastPathComponent()
-            let catalogPath = folderURL.path
+            let catalogPath = folderURL.absoluteString
             let count = countSelectedFiles(in: folderURL)
 
             // Remove old entry for this catalog if it exists
@@ -77,12 +79,17 @@ final class ObservableCullingManager {
         }
     }
 
-    func loadFromJSON() {
+    func loadFromJSON(in catalog: URL) {
         guard FileManager.default.fileExists(atPath: savePath.path) else { return }
         Logger.process.debugMessageOnly("ObservableCullingManager: loading stored filenames from JSON")
         do {
             let data = try Data(contentsOf: savePath)
             selectedFiles = try JSONDecoder().decode(Set<String>.self, from: data)
+            let count = countSelectedFiles(in: catalog)
+            Logger.process.debugMessageOnly("ObservableCullingManager: loaded \(count) filenames")
+            if count > 0 {
+                numberofPreselectedFiles.insert(StringIntPair(string: catalog.absoluteString, int: count))
+            }
         } catch {
             print("Load failed: \(error)")
         }
