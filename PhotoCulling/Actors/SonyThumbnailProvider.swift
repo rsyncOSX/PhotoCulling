@@ -19,6 +19,8 @@ enum ThumbnailError: Error {
 actor SonyThumbnailProvider {
     static let shared = SonyThumbnailProvider()
 
+    var processHandlers: ProcessHandlers?
+    
     // NSCache works with classes, so we wrap URL in NSURL and use NSImage for macOS
     private let cache = NSCache<NSURL, NSImage>()
 
@@ -89,6 +91,8 @@ actor SonyThumbnailProvider {
             return urls
         }.value
 
+        processHandlers?.maxfilesHandler(arwURLs.count)
+        
         guard !arwURLs.isEmpty else {
             Logger.process.debugMessageOnly("SonyThumbnailProvider: No ARW files found in \(catalogURL.path)")
             return 0
@@ -101,7 +105,9 @@ actor SonyThumbnailProvider {
                 let nsimage = try await extractSonyThumbnail(from: fileURL, maxDimension: CGFloat(targetSize))
                 cache.setObject(nsimage, forKey: fileURL as NSURL)
                 successCount += 1
-                print(successCount)
+                
+                processHandlers?.fileHandler(successCount)
+                
             } catch {}
         }
 
@@ -145,3 +151,4 @@ actor SonyThumbnailProvider {
         }.value
     }
 }
+
