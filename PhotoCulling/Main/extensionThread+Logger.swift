@@ -27,7 +27,7 @@ extension Logger {
         #endif
     }
 
-    func debugMessageOnly(_ message: String) {
+    nonisolated func debugMessageOnly(_ message: String) {
         #if DEBUG
             debug("\(message)")
         #endif

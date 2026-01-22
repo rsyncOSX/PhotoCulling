@@ -8,14 +8,14 @@ import Cocoa
 import Foundation
 import OSLog
 
-actor ThumbnailCacheService {
-    static let shared = ThumbnailCacheService()
+actor DefaultThumbnailProvider {
+    static let shared = DefaultThumbnailProvider()
 
     // NSCache works with classes, so we wrap URL in NSURL and use NSImage for macOS
     private let cache = NSCache<NSURL, NSImage>()
 
     func thumbnail(for url: URL, targetSize: Int) async -> NSImage? {
-        Logger.process.debugThreadOnly("ThumbnailCacheService: thumbnail()")
+        Logger.process.debugThreadOnly("DefaultThumbnailProvider: thumbnail()")
         let nsUrl = url as NSURL
 
         // 1. Check Cache
@@ -27,9 +27,10 @@ actor ThumbnailCacheService {
         if let image = generateThumbnail(for: url, maxPixelSize: targetSize) {
             cache.setObject(image, forKey: nsUrl)
             return image
+        } else {
+            Logger.process.debugMessageOnly("DefaultThumbnailProvider: thumbnail() failed")
+            return nil
         }
-
-        return nil
     }
 
     private func generateThumbnail(for url: URL, maxPixelSize: Int) -> NSImage? {

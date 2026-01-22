@@ -34,7 +34,7 @@ struct CachedThumbnailView: View {
         .task(id: url) {
             isLoading = true
             // Offload to background actor
-            image = await ThumbnailCacheService.shared.thumbnail(for: url, targetSize: 500)
+            image = await DefaultThumbnailProvider.shared.thumbnail(for: url, targetSize: 500)
             isLoading = false
         }
     }
