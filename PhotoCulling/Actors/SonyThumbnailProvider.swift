@@ -34,26 +34,11 @@ actor SonyThumbnailProvider {
         do {
             let image = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize))
             cache.setObject(image, forKey: nsUrl)
+            return image
         } catch let err {
             Logger.process.debugMessageOnly("SonyThumbnailProvider: thumbnail() failed with error: \(err)")
             return nil
         }
-        return nil
-    }
-
-    private func createthumbnail(for url: URL, targetSize: Int) async {
-        Logger.process.debugThreadOnly("SonyThumbnailProvider START: createthumbnail()")
-        let nsUrl = url as NSURL
-        cache.removeAllObjects()
-
-        do {
-            let image = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize))
-            cache.setObject(image, forKey: nsUrl)
-        } catch let err {
-            Logger.process.debugMessageOnly("SonyThumbnailProvider: thumbnail() failed with error: \(err)")
-            return
-        }
-        Logger.process.debugMessageOnly("SonyThumbnailProvider COMPLETED: createthumbnail()")
     }
 
     /// Preloads thumbnails for all .ARW files in a catalog directory
@@ -106,9 +91,12 @@ actor SonyThumbnailProvider {
         // Process thumbnails asynchronously
         var successCount = 0
         for fileURL in arwURLs {
-            await createthumbnail(for: fileURL, targetSize: targetSize)
-            successCount += 1
-            print(successCount)
+            do {
+                let nsimage = try await extractSonyThumbnail(from: fileURL, maxDimension: CGFloat(targetSize))
+                cache.setObject(nsimage, forKey: fileURL as NSURL)
+                successCount += 1
+                print(successCount)
+            } catch {}
         }
 
         Logger.process.debugMessageOnly("SonyThumbnailProvider: Preloaded \(successCount) thumbnails from \(catalogURL.path)")
