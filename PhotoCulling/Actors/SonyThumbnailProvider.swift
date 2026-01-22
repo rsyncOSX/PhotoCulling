@@ -41,7 +41,7 @@ actor SonyThumbnailProvider {
         return nil
     }
 
-    private func createthumbnail(for url: URL, targetSize: Int) async{
+    private func createthumbnail(for url: URL, targetSize: Int) async {
         Logger.process.debugThreadOnly("SonyThumbnailProvider START: createthumbnail()")
         let nsUrl = url as NSURL
         cache.removeAllObjects()
@@ -54,9 +54,8 @@ actor SonyThumbnailProvider {
             return
         }
         Logger.process.debugMessageOnly("SonyThumbnailProvider COMPLETED: createthumbnail()")
-        return
     }
-    
+
     /// Preloads thumbnails for all .ARW files in a catalog directory
     /// - Parameters:
     ///   - catalogURL: The directory URL containing .ARW files
@@ -66,12 +65,12 @@ actor SonyThumbnailProvider {
     @discardableResult
     func preloadCatalog(at catalogURL: URL, targetSize: Int, recursive: Bool = true) async -> Int {
         Logger.process.debugThreadOnly("SonyThumbnailProvider: preloadCatalog()")
-        
+
         // Collect URLs synchronously first
         let arwURLs = await Task.detached {
             let fileManager = FileManager.default
             var urls: [URL] = []
-            
+
             guard let enumerator = fileManager.enumerator(
                 at: catalogURL,
                 includingPropertiesForKeys: [.isRegularFileKey],
@@ -79,39 +78,39 @@ actor SonyThumbnailProvider {
             ) else {
                 return urls
             }
-            
+
             // Use nextObject() instead of for-in to avoid makeIterator() in async context
             while let fileURL = enumerator.nextObject() as? URL {
                 // Filter for .ARW files
                 guard fileURL.pathExtension.lowercased() == "arw" else { continue }
-                
+
                 // Check if it's a regular file
                 guard let resourceValues = try? fileURL.resourceValues(forKeys: [.isRegularFileKey]),
                       let isRegularFile = resourceValues.isRegularFile,
-                      isRegularFile else {
+                      isRegularFile
+                else {
                     continue
                 }
-                
+
                 urls.append(fileURL)
             }
-            
+
             return urls
         }.value
-        
+
         guard !arwURLs.isEmpty else {
             Logger.process.debugMessageOnly("SonyThumbnailProvider: No ARW files found in \(catalogURL.path)")
             return 0
         }
-        
+
         // Process thumbnails asynchronously
         var successCount = 0
         for fileURL in arwURLs {
-                await createthumbnail(for: fileURL, targetSize: targetSize)
-                successCount += 1
-                print(successCount)
-            
+            await createthumbnail(for: fileURL, targetSize: targetSize)
+            successCount += 1
+            print(successCount)
         }
-        
+
         Logger.process.debugMessageOnly("SonyThumbnailProvider: Preloaded \(successCount) thumbnails from \(catalogURL.path)")
         return successCount
     }

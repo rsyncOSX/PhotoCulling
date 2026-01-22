@@ -32,17 +32,17 @@ struct CachedThumbnailView: View {
         }
         // The .task modifier cancels automatically if the user switches selection quickly
         /*
-        .task(id: url) {
-            isLoading = true
-            // Offload to background actor
-            // Use SonyThumbnailProvider for .ARW files
-            if url.pathExtension.uppercased() == "ARW" {
-                image = await SonyThumbnailProvider.shared.thumbnail(for: url, targetSize: 500)
-            } else {
-                image = await DefaultThumbnailProvider.shared.thumbnail(for: url, targetSize: 500)
-            }
-            isLoading = false
-        }
-         */
+         .task(id: url) {
+             isLoading = true
+             // Offload to background actor
+             // Use SonyThumbnailProvider for .ARW files
+             if url.pathExtension.uppercased() == "ARW" {
+                 image = await SonyThumbnailProvider.shared.thumbnail(for: url, targetSize: 500)
+             } else {
+                 image = await DefaultThumbnailProvider.shared.thumbnail(for: url, targetSize: 500)
+             }
+             isLoading = false
+         }
+          */
     }
 }
