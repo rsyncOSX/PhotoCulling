@@ -123,7 +123,16 @@ struct SidebarPhotoCullingView: View {
                     )
                     cullingmanager.loadFromJSON(in: url)
                     syncSavedSelections()
-                    await SonyThumbnailProvider.shared.preloadCatalog(at: url, targetSize: 500, recursive: false)
+                    await SonyThumbnailProvider.shared.preloadCatalog(
+                        at: url,
+                        targetSize: 500,
+                        recursive: false
+                    )
+                    await DefaultThumbnailProvider.shared.preloadCatalog(
+                        at: url,
+                        targetSize: 500,
+                        recursive: false
+                    )
                 }
             }
         }

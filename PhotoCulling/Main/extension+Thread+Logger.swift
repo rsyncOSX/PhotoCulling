@@ -1,5 +1,5 @@
 //
-//  extensionThread+Logger.swift
+//  extension+Thread+Logger.swift
 //  PhotoCulling
 //
 //  Created by Thomas Evensen on 20/01/2026.

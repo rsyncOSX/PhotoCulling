@@ -31,7 +31,7 @@ actor DefaultThumbnailProvider {
             cache.setObject(image, forKey: nsUrl)
             return image
         } catch let err {
-            Logger.process.debugMessageOnly("SonyThumbnailProvider: thumbnail() failed with error: \(err)")
+            Logger.process.debugMessageOnly("DefaultThumbnailProvider: thumbnail() failed with error: \(err)")
             return nil
         }
     }
@@ -44,7 +44,7 @@ actor DefaultThumbnailProvider {
     /// - Returns: The number of thumbnails successfully cached
     @discardableResult
     func preloadCatalog(at catalogURL: URL, targetSize: Int, recursive: Bool = true) async -> Int {
-        Logger.process.debugThreadOnly("SonyThumbnailProvider: preloadCatalog()")
+        Logger.process.debugThreadOnly("DefaultThumbnailProvider: preloadCatalog()")
 
         // Collect URLs synchronously first
         let arwURLs = await Task.detached {
@@ -83,7 +83,7 @@ actor DefaultThumbnailProvider {
         }.value
 
         guard !arwURLs.isEmpty else {
-            Logger.process.debugMessageOnly("SonyThumbnailProvider: No ARW files found in \(catalogURL.path)")
+            Logger.process.debugMessageOnly("DefaultThumbnailProvider: No ARW files found in \(catalogURL.path)")
             return 0
         }
 
@@ -98,7 +98,7 @@ actor DefaultThumbnailProvider {
             } catch {}
         }
 
-        Logger.process.debugMessageOnly("SonyThumbnailProvider: Preloaded \(successCount) thumbnails from \(catalogURL.path)")
+        Logger.process.debugMessageOnly("DefaultThumbnailProvider: Preloaded \(successCount) thumbnails from \(catalogURL.path)")
         return successCount
     }
 
