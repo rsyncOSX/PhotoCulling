@@ -1,9 +1,9 @@
 import AppKit
-import UniformTypeIdentifiers
 import Foundation
 import ImageIO
 import os
 import OSLog
+import UniformTypeIdentifiers
 
 // MARK: - Discardable Wrapper
 
@@ -64,7 +64,7 @@ actor ThumbnailProviderRefactor {
     func setFileHandlers(_ fileHandlers: FileHandlers) {
         self.fileHandlers = fileHandlers
     }
-    
+
     func thumbnail(for url: URL, targetSize: Int) async -> NSImage? {
         let nsUrl = url as NSURL
 
@@ -73,6 +73,7 @@ actor ThumbnailProviderRefactor {
             if wrapper.beginContentAccess() {
                 let img = wrapper.image
                 wrapper.endContentAccess()
+                Logger.process.debugMessageOnly("ThumbnailProviderRefactor: thumbnail(): found in RAM Cache()")
                 return img
             }
         }
@@ -81,6 +82,7 @@ actor ThumbnailProviderRefactor {
         if let diskImage = await diskCache.load(for: url) {
             let wrapper = await DiscardableThumbnail(image: diskImage)
             memoryCache.setObject(wrapper, forKey: nsUrl, cost: wrapper.cost)
+            Logger.process.debugMessageOnly("ThumbnailProviderRefactor: thumbnail(): found in Disk Cache()")
             return diskImage
         }
 
@@ -89,11 +91,11 @@ actor ThumbnailProviderRefactor {
             let image = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize))
             let wrapper = await DiscardableThumbnail(image: image)
             memoryCache.setObject(wrapper, forKey: nsUrl, cost: wrapper.cost)
-
             let imgToSave = image
             Task.detached(priority: .background) { [diskCache] in
                 await diskCache.save(imgToSave, for: url)
             }
+            Logger.process.debugMessageOnly("ThumbnailProviderRefactor: thumbnail(): creating thumbnail")
             return image
         } catch {
             return nil
@@ -152,22 +154,25 @@ actor ThumbnailProviderRefactor {
         for fileURL in arwURLs {
             // 1. Check RAM Cache
             if memoryCache.object(forKey: fileURL as NSURL) != nil {
+                Logger.process.debugMessageOnly("ThumbnailProviderRefactor: preloadCatalog: found in RAM Cache()")
                 successCount += 1
+                await fileHandlers?.fileHandler(successCount)
                 continue
             }
             // 2. Check Disk Cache
-                // We check if the image exists on disk before attempting extraction
-                if let diskImage = await diskCache.load(for: fileURL) {
-                    let wrapper = await DiscardableThumbnail(image: diskImage)
-                    memoryCache.setObject(wrapper, forKey: fileURL as NSURL, cost: wrapper.cost)
-                    
-                    successCount += 1
-                    await fileHandlers?.fileHandler(successCount)
-                    continue // Move to next file, no extraction needed
-                }
-            
+            // We check if the image exists on disk before attempting extraction
+            if let diskImage = await diskCache.load(for: fileURL) {
+                let wrapper = await DiscardableThumbnail(image: diskImage)
+                memoryCache.setObject(wrapper, forKey: fileURL as NSURL, cost: wrapper.cost)
+                Logger.process.debugMessageOnly("ThumbnailProviderRefactor: preloadCatalog: found in Disk Cache()")
+                successCount += 1
+                await fileHandlers?.fileHandler(successCount)
+                continue // Move to next file, no extraction needed
+            }
+
             // 3. Extraction (Only if RAM and Disk both miss)
             do {
+                Logger.process.debugMessageOnly("ThumbnailProviderRefactor: preloadCatalog: creating thumbnail")
                 let image = try await extractSonyThumbnail(from: fileURL, maxDimension: CGFloat(targetSize))
                 let wrapper = await DiscardableThumbnail(image: image)
                 memoryCache.setObject(wrapper, forKey: fileURL as NSURL, cost: wrapper.cost)
@@ -201,7 +206,7 @@ actor DiskCacheManager {
 
     func load(for sourceURL: URL) -> NSImage? {
         let fileURL = cacheURL(for: sourceURL)
-        
+
         // Use ImageIO to read for better control, or stick to NSImage for simplicity
         // NSImage(contentsOf:) is generally efficient for reading JPEGs
         guard FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
@@ -210,7 +215,7 @@ actor DiskCacheManager {
 
     func save(_ image: NSImage, for sourceURL: URL) {
         let fileURL = cacheURL(for: sourceURL)
-        
+
         // 1. Get the underlying CGImage
         guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             return
@@ -230,11 +235,11 @@ actor DiskCacheManager {
         CGImageDestinationAddImage(destination, cgImage, options as CFDictionary)
         CGImageDestinationFinalize(destination)
     }
-    
+
     func pruneCache(maxAgeInDays: Int = 30) {
         let fileManager = FileManager.default
         let resourceKeys: [URLResourceKey] = [.contentModificationDateKey, .totalFileAllocatedSizeKey]
-        
+
         guard let enumerator = fileManager.enumerator(
             at: cacheDirectory,
             includingPropertiesForKeys: resourceKeys,
