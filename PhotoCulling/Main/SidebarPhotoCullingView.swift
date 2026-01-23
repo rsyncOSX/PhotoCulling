@@ -107,6 +107,13 @@ struct SidebarPhotoCullingView: View {
                 )
             }
         }
+        .task {
+            let handlers = CreateFileHandlers().createFileHandlers(
+                fileHandler: fileHandler,
+                maxfilesHandler: maxfilesHandler
+            )
+            await SonyThumbnailProvider.shared.setFileHandlers(handlers)
+        }
         // --- RIGHT INSPECTOR ---
         .inspector(isPresented: $isInspectorPresented) {
             if let file = selectedFile {
@@ -174,4 +181,13 @@ struct SidebarPhotoCullingView: View {
             syncSavedSelections()
         }
     }
+    
+    func fileHandler(_ update: Int) {
+        print(update)
+    }
+    
+    func maxfilesHandler(_ maxfiles: Int) {
+        print(maxfiles)
+    }
 }
+
