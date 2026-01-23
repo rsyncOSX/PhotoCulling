@@ -68,7 +68,8 @@ struct PhotoItemView: View {
             guard let url = photoURL else { return }
             Logger.process.debugMessageOnly("PhotoItemView (in GRID) loading thumbnail for \(url)")
             isLoading = true
-            thumbnailImage = await ThumbnailProvider.shared.thumbnail(for: url, targetSize: 500)
+            // Most likely a thumbnail is received from the populated NSCache<NSURL, NSImage>().
+            thumbnailImage = await ThumbnailProvider.shared.thumbnail(for: url, targetSize: 100)
             isLoading = false
         }
     }

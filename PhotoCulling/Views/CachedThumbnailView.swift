@@ -33,9 +33,8 @@ struct CachedThumbnailView: View {
         // The .task modifier cancels automatically if the user switches selection quickly
         .task(id: url) {
             isLoading = true
-            // Offload to background actor
-            // Use SonyThumbnailProvider for .ARW files
-            image = await ThumbnailProvider.shared.thumbnail(for: url, targetSize: 500)
+            // Most likely a thumbnail is received from the populated NSCache<NSURL, NSImage>().
+            image = await ThumbnailProvider.shared.thumbnail(for: url, targetSize: 1024)
             isLoading = false
         }
     }

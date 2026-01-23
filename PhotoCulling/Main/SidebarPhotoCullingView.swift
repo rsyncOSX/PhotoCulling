@@ -147,7 +147,7 @@ struct SidebarPhotoCullingView: View {
 
                         await ThumbnailProvider.shared.preloadCatalog(
                             at: url,
-                            targetSize: 500,
+                            targetSize: 1024,
                             recursive: false
                         )
 
