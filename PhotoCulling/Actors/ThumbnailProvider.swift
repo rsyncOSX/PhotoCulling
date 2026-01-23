@@ -40,7 +40,7 @@ actor ThumbnailProvider {
             if wrapper.beginContentAccess() {
                 let img = wrapper.image
                 wrapper.endContentAccess()
-                Logger.process.debugMessageOnly("ThumbnailProviderRefactor: thumbnail(): found in RAM Cache()")
+                Logger.process.debugMessageOnly("ThumbnailProvider: thumbnail(): found in RAM Cache()")
                 return img
             }
         }
@@ -50,7 +50,7 @@ actor ThumbnailProvider {
         if let diskImage = await diskCache.load(for: url) {
             let wrapper = await DiscardableThumbnail(image: diskImage)
             memoryCache.setObject(wrapper, forKey: nsUrl, cost: wrapper.cost)
-            Logger.process.debugMessageOnly("ThumbnailProviderRefactor: thumbnail(): found in Disk Cache()")
+            Logger.process.debugMessageOnly("ThumbnailProvider: thumbnail(): found in Disk Cache()")
             return diskImage
         }
 
@@ -63,7 +63,7 @@ actor ThumbnailProvider {
             Task.detached(priority: .background) { [diskCache] in
                 await diskCache.save(imgToSave, for: url)
             }
-            Logger.process.debugMessageOnly("ThumbnailProviderRefactor: thumbnail(): creating thumbnail")
+            Logger.process.debugMessageOnly("ThumbnailProvider: thumbnail(): creating thumbnail")
             return image
         } catch {
             return nil
@@ -122,7 +122,7 @@ actor ThumbnailProvider {
         for fileURL in arwURLs {
             // 1. Check RAM Cache
             if memoryCache.object(forKey: fileURL as NSURL) != nil {
-                Logger.process.debugMessageOnly("ThumbnailProviderRefactor: preloadCatalog: found in RAM Cache()")
+                Logger.process.debugMessageOnly("ThumbnailProvider: preloadCatalog: found in RAM Cache()")
                 successCount += 1
                 await fileHandlers?.fileHandler(successCount)
                 continue
@@ -133,7 +133,7 @@ actor ThumbnailProvider {
             if let diskImage = await diskCache.load(for: fileURL) {
                 let wrapper = await DiscardableThumbnail(image: diskImage)
                 memoryCache.setObject(wrapper, forKey: fileURL as NSURL, cost: wrapper.cost)
-                Logger.process.debugMessageOnly("ThumbnailProviderRefactor: preloadCatalog: found in Disk Cache()")
+                Logger.process.debugMessageOnly("ThumbnailProvider: preloadCatalog: found in Disk Cache()")
                 successCount += 1
                 await fileHandlers?.fileHandler(successCount)
                 continue // Move to next file, no extraction needed
@@ -141,7 +141,7 @@ actor ThumbnailProvider {
 
             // 3. Extraction (Only if RAM and Disk both miss)
             do {
-                Logger.process.debugMessageOnly("ThumbnailProviderRefactor: preloadCatalog: creating thumbnail")
+                Logger.process.debugMessageOnly("ThumbnailProvider: preloadCatalog: creating thumbnail")
                 let image = try await extractSonyThumbnail(from: fileURL, maxDimension: CGFloat(targetSize))
                 let wrapper = await DiscardableThumbnail(image: image)
                 memoryCache.setObject(wrapper, forKey: fileURL as NSURL, cost: wrapper.cost)
