@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import CryptoKit
 import Foundation
 import ImageIO
 import UniformTypeIdentifiers
@@ -21,7 +22,12 @@ actor DiskCacheManager {
     }
 
     private func cacheURL(for sourceURL: URL) -> URL {
-        let hash = String(sourceURL.path.hashValue)
+        // Standardize the URL to ensure consistent hashing
+        let standardizedPath = sourceURL.standardized.path
+        // Use MD5 for a stable, deterministic hash
+        let data = Data(standardizedPath.utf8)
+        let digest = Insecure.MD5.hash(data: data)
+        let hash = digest.map { String(format: "%02x", $0) }.joined()
         return cacheDirectory.appendingPathComponent(hash).appendingPathExtension("jpg")
     }
 
