@@ -46,6 +46,7 @@ actor ThumbnailProvider {
         }
 
         // 3. Disk
+        print(url)
         if let diskImage = await diskCache.load(for: url) {
             let wrapper = await DiscardableThumbnail(image: diskImage)
             memoryCache.setObject(wrapper, forKey: nsUrl, cost: wrapper.cost)
@@ -128,6 +129,7 @@ actor ThumbnailProvider {
             }
             // 2. Check Disk Cache
             // We check if the image exists on disk before attempting extraction
+            print(fileURL)
             if let diskImage = await diskCache.load(for: fileURL) {
                 let wrapper = await DiscardableThumbnail(image: diskImage)
                 memoryCache.setObject(wrapper, forKey: fileURL as NSURL, cost: wrapper.cost)
