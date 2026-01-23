@@ -3,8 +3,8 @@ import Foundation
 import ImageIO
 import OSLog
 
-
 // MARK: - Discardable Wrapper
+
 final class DiscardableThumbnail: NSObject, NSDiscardableContent {
     let image: NSImage
     let cost: Int
@@ -13,7 +13,7 @@ final class DiscardableThumbnail: NSObject, NSDiscardableContent {
 
     init(image: NSImage) {
         self.image = image
-        self.cost = Int(image.size.width * image.size.height * 4)
+        cost = Int(image.size.width * image.size.height * 4)
     }
 
     func beginContentAccess() -> Bool {
@@ -33,25 +33,31 @@ final class DiscardableThumbnail: NSObject, NSDiscardableContent {
     }
 
     func isContentDiscarded() -> Bool {
-        return discarded
+        discarded
     }
 }
 
 // MARK: - Thumbnail Provider Actor
+
 actor ThumbnailProviderRefactor {
-    static let shared = ThumbnailProviderRefactor()
+    nonisolated static let shared = ThumbnailProviderRefactor()
+
     var fileHandlers: FileHandlers?
-    
-    private let cache = NSCache<NSURL, DiscardableThumbnail>()
+    private let memoryCache = NSCache<NSURL, DiscardableThumbnail>()
+    private let diskCache: DiskCacheManager
 
     private init() {
+        // Initialize disk cache
+        self.diskCache = DiskCacheManager()
+        
+        // Memory Cache Settings
         let totalMemory = ProcessInfo.processInfo.physicalMemory
         let memoryLimit = min(Int(totalMemory / 10), 512 * 1024 * 1024)
-        
-        cache.countLimit = 250
-        cache.totalCostLimit = memoryLimit
-        cache.name = "no.blogspot.PhotoCulling.imageCache"
-        cache.evictsObjectsWithDiscardedContent = true
+
+        memoryCache.countLimit = 250
+        memoryCache.totalCostLimit = memoryLimit
+        memoryCache.name = "no.blogspot.PhotoCulling.imageCache"
+        memoryCache.evictsObjectsWithDiscardedContent = true
     }
 
     func setFileHandlers(_ fileHandlers: FileHandlers) {
@@ -59,16 +65,16 @@ actor ThumbnailProviderRefactor {
     }
 
     // MARK: - Cache Management
-    
+
     /// Completely clears the cache. Call this when switching catalogs.
     func clearCache() {
         Logger.process.debugMessageOnly("ThumbnailProvider: Clearing all cached thumbnails.")
-        cache.removeAllObjects()
+        memoryCache.removeAllObjects()
     }
 
     /// Removes a specific thumbnail (e.g., if a file was deleted)
     func removeThumbnail(for url: URL) {
-        cache.removeObject(forKey: url as NSURL)
+        memoryCache.removeObject(forKey: url as NSURL)
     }
 
     // MARK: - Core Logic
@@ -76,20 +82,30 @@ actor ThumbnailProviderRefactor {
     func thumbnail(for url: URL, targetSize: Int) async -> NSImage? {
         let nsUrl = url as NSURL
 
-        if let wrapper = cache.object(forKey: nsUrl) {
-            if await wrapper.beginContentAccess() {
-                let img = wrapper.image
-                await wrapper.endContentAccess()
-                return img
-            } else {
-                cache.removeObject(forKey: nsUrl)
-            }
+        // 1. Check Memory Cache
+        if let wrapper = memoryCache.object(forKey: nsUrl), await wrapper.beginContentAccess() {
+            let img = wrapper.image
+            await wrapper.endContentAccess()
+            return img
         }
 
+        // 2. Check Disk Cache
+        if let diskImage = await diskCache.load(for: url) {
+            // Put it back in memory cache for faster subsequent access
+            let wrapper = await DiscardableThumbnail(image: diskImage)
+            memoryCache.setObject(wrapper, forKey: nsUrl, cost: wrapper.cost)
+            return diskImage
+        }
+
+        // 3. Generate from Scratch (Slowest)
         do {
             let image = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize))
+
+            // Save to both caches
             let wrapper = await DiscardableThumbnail(image: image)
-            cache.setObject(wrapper, forKey: nsUrl, cost: wrapper.cost)
+            memoryCache.setObject(wrapper, forKey: nsUrl, cost: wrapper.cost)
+            await diskCache.save(image, for: url) // NEW
+
             return image
         } catch {
             return nil
@@ -116,11 +132,11 @@ actor ThumbnailProviderRefactor {
         }.value
 
         await fileHandlers?.maxfilesHandler(arwURLs.count)
-        
+
         var successCount = 0
         for fileURL in arwURLs {
             // Check if already in cache to avoid double-processing
-            if cache.object(forKey: fileURL as NSURL) != nil {
+            if memoryCache.object(forKey: fileURL as NSURL) != nil {
                 successCount += 1
                 continue
             }
@@ -128,7 +144,7 @@ actor ThumbnailProviderRefactor {
             do {
                 let img = try await extractSonyThumbnail(from: fileURL, maxDimension: CGFloat(targetSize))
                 let wrapper = await DiscardableThumbnail(image: img)
-                cache.setObject(wrapper, forKey: fileURL as NSURL, cost: wrapper.cost)
+                memoryCache.setObject(wrapper, forKey: fileURL as NSURL, cost: wrapper.cost)
                 successCount += 1
                 await fileHandlers?.fileHandler(successCount)
             } catch {}
@@ -156,5 +172,41 @@ actor ThumbnailProviderRefactor {
 
             return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
         }.value
+    }
+}
+
+// 1. Ensure the Disk Manager is Sendable (Safe to pass across actors)
+struct DiskCacheManager: Sendable {
+    let cacheDirectory: URL
+
+    nonisolated init() {
+        let paths = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
+        let folder = paths[0].appendingPathComponent("no.blogspot.PhotoCulling/Thumbnails")
+        cacheDirectory = folder
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+    }
+
+    func save(_ image: NSImage, for sourceURL: URL) {
+        let fileURL = cacheURL(for: sourceURL)
+        guard let tiffData = image.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiffData),
+              let data = bitmap.representation(using: .jpeg, properties: [.compressionFactor: 0.8]) else { return }
+        try? data.write(to: fileURL)
+    }
+
+    func load(for sourceURL: URL) -> NSImage? {
+        let fileURL = cacheURL(for: sourceURL)
+        guard FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
+        return NSImage(contentsOf: fileURL)
+    }
+
+    private func cacheURL(for sourceURL: URL) -> URL {
+        let hash = String(sourceURL.path.hashValue)
+        return cacheDirectory.appendingPathComponent(hash).appendingPathExtension("jpg")
+    }
+
+    func clearDisk() {
+        try? FileManager.default.removeItem(at: cacheDirectory)
+        try? FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
     }
 }
