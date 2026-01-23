@@ -11,6 +11,12 @@ import OSLog
 actor DefaultThumbnailProvider {
     static let shared = DefaultThumbnailProvider()
 
+    var fileHandlers: FileHandlers?
+
+    func setFileHandlers(_ fileHandlers: FileHandlers) {
+        self.fileHandlers = fileHandlers
+    }
+
     // NSCache works with classes, so we wrap URL in NSURL and use NSImage for macOS
     private let cache = NSCache<NSURL, NSImage>()
 
@@ -47,7 +53,7 @@ actor DefaultThumbnailProvider {
         Logger.process.debugThreadOnly("DefaultThumbnailProvider: preloadCatalog()")
 
         // Collect URLs synchronously first
-        let arwURLs = await Task.detached {
+        let otherURLs = await Task.detached {
             let fileManager = FileManager.default
             var urls: [URL] = []
 
@@ -82,19 +88,22 @@ actor DefaultThumbnailProvider {
             return urls
         }.value
 
-        guard !arwURLs.isEmpty else {
+        await fileHandlers?.maxfilesHandler(otherURLs.count)
+
+        guard !otherURLs.isEmpty else {
             Logger.process.debugMessageOnly("DefaultThumbnailProvider: No ARW files found in \(catalogURL.path)")
             return 0
         }
 
         // Process thumbnails asynchronously
         var successCount = 0
-        for fileURL in arwURLs {
+        for fileURL in otherURLs {
             do {
                 let nsimage = try await extractDefaultThumbnail(from: fileURL, maxDimension: CGFloat(targetSize))
                 cache.setObject(nsimage, forKey: fileURL as NSURL)
                 successCount += 1
-                print(successCount)
+
+                await fileHandlers?.fileHandler(successCount)
             } catch {}
         }
 

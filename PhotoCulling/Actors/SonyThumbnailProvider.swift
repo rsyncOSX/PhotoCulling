@@ -20,11 +20,11 @@ actor SonyThumbnailProvider {
     static let shared = SonyThumbnailProvider()
 
     var fileHandlers: FileHandlers?
-    
+
     func setFileHandlers(_ fileHandlers: FileHandlers) {
         self.fileHandlers = fileHandlers
     }
-    
+
     // NSCache works with classes, so we wrap URL in NSURL and use NSImage for macOS
     private let cache = NSCache<NSURL, NSImage>()
 
@@ -96,7 +96,7 @@ actor SonyThumbnailProvider {
         }.value
 
         await fileHandlers?.maxfilesHandler(arwURLs.count)
-        
+
         guard !arwURLs.isEmpty else {
             Logger.process.debugMessageOnly("SonyThumbnailProvider: No ARW files found in \(catalogURL.path)")
             return 0
@@ -109,9 +109,8 @@ actor SonyThumbnailProvider {
                 let nsimage = try await extractSonyThumbnail(from: fileURL, maxDimension: CGFloat(targetSize))
                 cache.setObject(nsimage, forKey: fileURL as NSURL)
                 successCount += 1
-                
+
                 await fileHandlers?.fileHandler(successCount)
-                
             } catch {}
         }
 
@@ -155,4 +154,3 @@ actor SonyThumbnailProvider {
         }.value
     }
 }
-

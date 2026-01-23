@@ -12,7 +12,7 @@ struct CreateFileHandlers {
         fileHandler: @escaping @MainActor @Sendable (Int) -> Void,
         maxfilesHandler: @escaping @MainActor @Sendable (Int) -> Void
     ) -> FileHandlers {
-        return FileHandlers(
+        FileHandlers(
             fileHandler: fileHandler,
             maxfilesHandler: maxfilesHandler
         )
