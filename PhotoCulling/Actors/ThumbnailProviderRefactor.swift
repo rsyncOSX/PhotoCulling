@@ -1,4 +1,5 @@
 import AppKit
+import UniformTypeIdentifiers
 import Foundation
 import ImageIO
 import os
@@ -101,7 +102,7 @@ actor ThumbnailProviderRefactor {
 
     func clearCaches() async {
         memoryCache.removeAllObjects()
-        await diskCache.clearAll()
+        await diskCache.pruneCache()
     }
 
     private func extractSonyThumbnail(from url: URL, maxDimension: CGFloat) async throws -> NSImage {
@@ -149,14 +150,23 @@ actor ThumbnailProviderRefactor {
 
         var successCount = 0
         for fileURL in arwURLs {
-            // Check if already in cache to avoid double-processing
+            // 1. Check RAM Cache
             if memoryCache.object(forKey: fileURL as NSURL) != nil {
                 successCount += 1
                 continue
             }
+            // 2. Check Disk Cache
+                // We check if the image exists on disk before attempting extraction
+                if let diskImage = await diskCache.load(for: fileURL) {
+                    let wrapper = await DiscardableThumbnail(image: diskImage)
+                    memoryCache.setObject(wrapper, forKey: fileURL as NSURL, cost: wrapper.cost)
+                    
+                    successCount += 1
+                    await fileHandlers?.fileHandler(successCount)
+                    continue // Move to next file, no extraction needed
+                }
             
-            
-
+            // 3. Extraction (Only if RAM and Disk both miss)
             do {
                 let image = try await extractSonyThumbnail(from: fileURL, maxDimension: CGFloat(targetSize))
                 let wrapper = await DiscardableThumbnail(image: image)
@@ -178,55 +188,70 @@ actor DiskCacheManager {
     let cacheDirectory: URL
 
     init() {
-        Logger.process.debugMessageOnly("DiskCacheManager initialized")
         let paths = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
         let folder = paths[0].appendingPathComponent("no.blogspot.PhotoCulling/Thumbnails")
         cacheDirectory = folder
-
-        // Ensure the directory exists on startup
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
     }
 
-    // MARK: - Single Item Management
-
-    /// Removes a specific thumbnail from the disk (call this when a user deletes a photo)
-    func remove(for sourceURL: URL) {
-        Logger.process.debugMessageOnly("DiskCacheManager: remove() image")
-        let fileURL = cacheURL(for: sourceURL)
-        try? FileManager.default.removeItem(at: fileURL)
-    }
-
-    // MARK: - Global Management
-
-    /// Wipes the entire thumbnail folder
-    func clearAll() {
-        // We remove the whole directory and recreate it to ensure a clean slate
-        try? FileManager.default.removeItem(at: cacheDirectory)
-        try? FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
-    }
-
-    // MARK: - Helpers
-
-    /// Generates the path for the cached JPEG based on the source file's path
     private func cacheURL(for sourceURL: URL) -> URL {
-        // hashValue ensures uniqueness even if different folders have "DSC001.ARW"
         let hash = String(sourceURL.path.hashValue)
         return cacheDirectory.appendingPathComponent(hash).appendingPathExtension("jpg")
     }
 
     func load(for sourceURL: URL) -> NSImage? {
-        Logger.process.debugMessageOnly("DiskCacheManager: load() image")
-        let hash = String(sourceURL.path.hashValue)
-        let fileURL = cacheDirectory.appendingPathComponent(hash).appendingPathExtension("jpg")
+        let fileURL = cacheURL(for: sourceURL)
+        
+        // Use ImageIO to read for better control, or stick to NSImage for simplicity
+        // NSImage(contentsOf:) is generally efficient for reading JPEGs
+        guard FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
         return NSImage(contentsOf: fileURL)
     }
 
     func save(_ image: NSImage, for sourceURL: URL) {
-        Logger.process.debugMessageOnly("DiskCacheManager: save() image")
-        let hash = String(sourceURL.path.hashValue)
-        let fileURL = cacheDirectory.appendingPathComponent(hash).appendingPathExtension("jpg")
-        guard let data = image.tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?
-            .representation(using: .jpeg, properties: [.compressionFactor: 0.7]) else { return }
-        try? data.write(to: fileURL)
+        let fileURL = cacheURL(for: sourceURL)
+        
+        // 1. Get the underlying CGImage
+        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            return
+        }
+
+        // 2. Create a destination for the file
+        guard let destination = CGImageDestinationCreateWithURL(fileURL as CFURL, UTType.jpeg.identifier as CFString, 1, nil) else {
+            return
+        }
+
+        // 3. Set compression properties (0.7 is a good balance for thumbnails)
+        let options: [CFString: Any] = [
+            kCGImageDestinationLossyCompressionQuality: 0.7
+        ]
+
+        // 4. Write directly to disk
+        CGImageDestinationAddImage(destination, cgImage, options as CFDictionary)
+        CGImageDestinationFinalize(destination)
+    }
+    
+    func pruneCache(maxAgeInDays: Int = 30) {
+        let fileManager = FileManager.default
+        let resourceKeys: [URLResourceKey] = [.contentModificationDateKey, .totalFileAllocatedSizeKey]
+        
+        guard let enumerator = fileManager.enumerator(
+            at: cacheDirectory,
+            includingPropertiesForKeys: resourceKeys,
+            options: .skipsHiddenFiles
+        ) else { return }
+
+        let expirationDate = Calendar.current.date(byAdding: .day, value: -maxAgeInDays, to: Date())!
+
+        for case let fileURL as URL in enumerator {
+            do {
+                let values = try fileURL.resourceValues(forKeys: Set(resourceKeys))
+                if let date = values.contentModificationDate, date < expirationDate {
+                    try fileManager.removeItem(at: fileURL)
+                }
+            } catch {
+                // Log error
+            }
+        }
     }
 }
