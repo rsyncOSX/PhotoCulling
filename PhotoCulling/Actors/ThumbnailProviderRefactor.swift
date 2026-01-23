@@ -19,7 +19,7 @@ final class DiscardableThumbnail: NSObject, NSDiscardableContent, @unchecked Sen
         super.init()
     }
 
-    func beginContentAccess() -> Bool {
+    nonisolated func beginContentAccess() -> Bool {
         state.withLock {
             if $0.isDiscarded { return false }
             $0.accessCount += 1
@@ -27,15 +27,15 @@ final class DiscardableThumbnail: NSObject, NSDiscardableContent, @unchecked Sen
         }
     }
 
-    func endContentAccess() {
+    nonisolated func endContentAccess() {
         state.withLock { $0.accessCount = max(0, $0.accessCount - 1) }
     }
 
-    func discardContentIfPossible() {
+    nonisolated func discardContentIfPossible() {
         state.withLock { if $0.accessCount == 0 { $0.isDiscarded = true } }
     }
 
-    func isContentDiscarded() -> Bool {
+    nonisolated func isContentDiscarded() -> Bool {
         state.withLock { $0.isDiscarded }
     }
 }
@@ -60,26 +60,30 @@ actor ThumbnailProviderRefactor {
         memoryCache.evictsObjectsWithDiscardedContent = true
     }
 
+    func setFileHandlers(_ fileHandlers: FileHandlers) {
+        self.fileHandlers = fileHandlers
+    }
+    
     func thumbnail(for url: URL, targetSize: Int) async -> NSImage? {
         let nsUrl = url as NSURL
 
-        // 2. RAM - Should now work WITHOUT await
+        // 2. RAM - Access wrapper safely
         if let wrapper = memoryCache.object(forKey: nsUrl) {
-            if await wrapper.beginContentAccess() {
+            if wrapper.beginContentAccess() {
                 let img = wrapper.image
-                await wrapper.endContentAccess()
+                wrapper.endContentAccess()
                 return img
             }
         }
 
-        // 3. Disk - Should now work WITHOUT await because diskCache is nonisolated
+        // 3. Disk
         if let diskImage = await diskCache.load(for: url) {
             let wrapper = await DiscardableThumbnail(image: diskImage)
             memoryCache.setObject(wrapper, forKey: nsUrl, cost: wrapper.cost)
             return diskImage
         }
 
-        // 4. Extraction - MUST remain await (it's a Task)
+        // 4. Extraction
         do {
             let image = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize))
             let wrapper = await DiscardableThumbnail(image: image)
