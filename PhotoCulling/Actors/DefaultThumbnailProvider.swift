@@ -68,7 +68,7 @@ actor DefaultThumbnailProvider {
             // Use nextObject() instead of for-in to avoid makeIterator() in async context
             while let fileURL = enumerator.nextObject() as? URL {
                 // Filter for .TIFF, .TIF, .jpeg, .jpg files
-                let supportedExtensions: Set<String> = ["tiff", "tif", "jpeg", "jpg"]
+                let supportedExtensions: Set<String> = ["tiff", "tif", "jpeg", "jpg", "png"]
                 // Refactored guard statement
                 guard supportedExtensions.contains(fileURL.pathExtension.lowercased()) else {
                     continue
