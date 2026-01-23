@@ -18,6 +18,9 @@ extension SidebarPhotoCullingView {
                     cullingmanager.selectedFiles.removeAll()
                     cullingmanager.numberofPreselectedFiles.removeAll()
                     cullingmanager.saveToJSON()
+                    Task {
+                        await ThumbnailProvider.shared.clearCaches()
+                    }
                 }
                 label: { Image(systemName: "trash.fill") }
                 .help("Clear preseselcted files")
