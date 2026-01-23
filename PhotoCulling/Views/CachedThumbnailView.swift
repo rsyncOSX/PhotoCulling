@@ -35,11 +35,7 @@ struct CachedThumbnailView: View {
             isLoading = true
             // Offload to background actor
             // Use SonyThumbnailProvider for .ARW files
-            if url.pathExtension.lowercased() == "arw" {
-                image = await SonyThumbnailProvider.shared.thumbnail(for: url, targetSize: 500)
-            } else {
-                image = await DefaultThumbnailProvider.shared.thumbnail(for: url, targetSize: 500)
-            }
+            image = await ThumbnailProvider.shared.thumbnail(for: url, targetSize: 500)
             isLoading = false
         }
     }

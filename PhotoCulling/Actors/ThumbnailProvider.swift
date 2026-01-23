@@ -1,5 +1,5 @@
 //
-//  SonyThumbnailProvider.swift
+//  ThumbnailProvider.swift
 //  PhotoCulling
 //
 //  Created by Thomas Evensen on 22/01/2026.
@@ -16,8 +16,8 @@ enum ThumbnailError: Error {
 }
 
 /// macOS Tahoe Optimized Thumbnail Generator
-actor SonyThumbnailProvider {
-    static let shared = SonyThumbnailProvider()
+actor ThumbnailProvider {
+    static let shared = ThumbnailProvider()
 
     var fileHandlers: FileHandlers?
 
@@ -29,7 +29,7 @@ actor SonyThumbnailProvider {
     private let cache = NSCache<NSURL, NSImage>()
 
     func thumbnail(for url: URL, targetSize: Int) async -> NSImage? {
-        Logger.process.debugThreadOnly("SonyThumbnailProvider: thumbnail()")
+        Logger.process.debugThreadOnly("ThumbnailProvider: thumbnail()")
         let nsUrl = url as NSURL
 
         // 1. Check Cache
@@ -45,7 +45,7 @@ actor SonyThumbnailProvider {
             cache.setObject(image, forKey: nsUrl)
             return image
         } catch let err {
-            Logger.process.debugMessageOnly("SonyThumbnailProvider: thumbnail() failed with error: \(err)")
+            Logger.process.debugMessageOnly("ThumbnailProvider: thumbnail() failed with error: \(err)")
             return nil
         }
     }
@@ -58,7 +58,7 @@ actor SonyThumbnailProvider {
     /// - Returns: The number of thumbnails successfully cached
     @discardableResult
     func preloadCatalog(at catalogURL: URL, targetSize: Int, recursive: Bool = true) async -> Int {
-        Logger.process.debugThreadOnly("SonyThumbnailProvider: preloadCatalog()")
+        Logger.process.debugThreadOnly("ThumbnailProvider: preloadCatalog()")
 
         // Collect URLs synchronously first
         let arwURLs = await Task.detached {
@@ -75,7 +75,7 @@ actor SonyThumbnailProvider {
 
             // Use nextObject() instead of for-in to avoid makeIterator() in async context
             while let fileURL = enumerator.nextObject() as? URL {
-                let supportedExtensions: Set<String> = ["arw"]
+                let supportedExtensions: Set<String> = ["arw", "tiff", "tif", "jpeg", "jpg", "png"]
                 // Refactored guard statement
                 guard supportedExtensions.contains(fileURL.pathExtension.lowercased()) else {
                     continue
@@ -98,7 +98,7 @@ actor SonyThumbnailProvider {
         await fileHandlers?.maxfilesHandler(arwURLs.count)
 
         guard !arwURLs.isEmpty else {
-            Logger.process.debugMessageOnly("SonyThumbnailProvider: No ARW files found in \(catalogURL.path)")
+            Logger.process.debugMessageOnly("ThumbnailProvider: No ARW files found in \(catalogURL.path)")
             return 0
         }
 
@@ -108,13 +108,14 @@ actor SonyThumbnailProvider {
             do {
                 let nsimage = try await extractSonyThumbnail(from: fileURL, maxDimension: CGFloat(targetSize))
                 cache.setObject(nsimage, forKey: fileURL as NSURL)
+
                 successCount += 1
 
                 await fileHandlers?.fileHandler(successCount)
             } catch {}
         }
 
-        Logger.process.debugMessageOnly("SonyThumbnailProvider: Preloaded \(successCount) thumbnails from \(catalogURL.path)")
+        Logger.process.debugMessageOnly("ThumbnailProvider: Preloaded \(successCount) thumbnails from \(catalogURL.path)")
         return successCount
     }
 
@@ -126,6 +127,8 @@ actor SonyThumbnailProvider {
     private func extractSonyThumbnail(from url: URL, maxDimension: CGFloat) async throws -> NSImage {
         // Use a background task for the heavy decoding
         try await Task.detached(priority: .userInitiated) {
+            Logger.process.debugThreadOnly("ThumbnailProvider: extractDefaultThumbnail()")
+
             let options = [kCGImageSourceShouldCache: false] as CFDictionary
 
             guard let source = CGImageSourceCreateWithURL(url as CFURL, options) else {
