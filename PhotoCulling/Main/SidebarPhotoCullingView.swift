@@ -21,8 +21,11 @@ struct SidebarPhotoCullingView: View {
     @State var cullingmanager = ObservableCullingManager(catalog: nil)
 
     @State var issorting: Bool = false
-
     @State private var processedURLs: Set<URL> = []
+
+    @State var progress: Double = 0
+    @State var max: Double = 0
+    @State var creatingthumbnails: Bool = false
 
     var body: some View {
         NavigationSplitView {
@@ -55,6 +58,10 @@ struct SidebarPhotoCullingView: View {
                     }
                 } else if files.isEmpty {
                     ProgressView("Scanning directory...")
+                } else if creatingthumbnails {
+                    ProgressCount(max: Double(max),
+                                  progress: min(Swift.max(progress, 0), Double(max)),
+                                  statusText: "Creating Thumbnails")
                 } else {
                     ZStack {
                         filetableview
@@ -137,6 +144,8 @@ struct SidebarPhotoCullingView: View {
                     if processedURLs.contains(url) == false {
                         processedURLs.insert(url)
 
+                        creatingthumbnails = true
+
                         await SonyThumbnailProvider.shared.preloadCatalog(
                             at: url,
                             targetSize: 500,
@@ -148,6 +157,8 @@ struct SidebarPhotoCullingView: View {
                             targetSize: 500,
                             recursive: false
                         )
+
+                        creatingthumbnails = false
                     }
                 }
             }
@@ -180,10 +191,10 @@ struct SidebarPhotoCullingView: View {
     }
 
     func fileHandler(_ update: Int) {
-        print(update)
+        progress = Double(update)
     }
 
     func maxfilesHandler(_ maxfiles: Int) {
-        print(maxfiles)
+        max = Double(maxfiles)
     }
 }
