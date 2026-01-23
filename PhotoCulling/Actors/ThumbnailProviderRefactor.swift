@@ -154,6 +154,8 @@ actor ThumbnailProviderRefactor {
                 successCount += 1
                 continue
             }
+            
+            
 
             do {
                 let image = try await extractSonyThumbnail(from: fileURL, maxDimension: CGFloat(targetSize))
