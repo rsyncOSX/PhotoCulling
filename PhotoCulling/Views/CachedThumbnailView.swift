@@ -34,7 +34,7 @@ struct CachedThumbnailView: View {
         .task(id: url) {
             isLoading = true
             // Most likely a thumbnail is received from the populated NSCache<NSURL, NSImage>().
-            image = await ThumbnailProviderRefactor.shared.thumbnail(for: url, targetSize: 1024)
+            image = await ThumbnailProvider.shared.thumbnail(for: url, targetSize: 1024)
             isLoading = false
         }
     }

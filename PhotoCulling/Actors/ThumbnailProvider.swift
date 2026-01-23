@@ -1,11 +1,4 @@
-//
-//  ThumbnailProvider.swift
-//  PhotoCulling
-//
-//  Created by Thomas Evensen on 22/01/2026.
-//
-
-import AppKit // Use AppKit for macOS, UIKit for iOS
+import AppKit
 import Foundation
 import ImageIO
 import OSLog
@@ -15,151 +8,148 @@ enum ThumbnailError: Error {
     case generationFailed
 }
 
-/// macOS Tahoe Optimized Thumbnail Generator
+// MARK: - Thumbnail Provider Actor
 actor ThumbnailProvider {
-    static let shared = ThumbnailProvider()
+    nonisolated static let shared = ThumbnailProvider()
 
     var fileHandlers: FileHandlers?
+    private let memoryCache = NSCache<NSURL, DiscardableThumbnail>()
+    // 1. Mark this nonisolated to allow synchronous calling of its methods
+    private nonisolated let diskCache = DiskCacheManager()
+
+    private init() {
+        let totalMemory = ProcessInfo.processInfo.physicalMemory
+        let memoryLimit = min(Int(totalMemory / 10), 512 * 1024 * 1024)
+
+        memoryCache.countLimit = 250
+        memoryCache.totalCostLimit = memoryLimit
+        memoryCache.name = "no.blogspot.PhotoCulling.imageCache"
+        memoryCache.evictsObjectsWithDiscardedContent = true
+    }
 
     func setFileHandlers(_ fileHandlers: FileHandlers) {
         self.fileHandlers = fileHandlers
     }
 
-    // NSCache works with classes, so we wrap URL in NSURL and use NSImage for macOS
-    private let cache = NSCache<NSURL, NSImage>()
-
-    private init() {
-        cache.countLimit = 100
-        cache.totalCostLimit = 100 * 1024 * 1024
-        cache.name = "no.blogspot.PhotoCulling.imageCache"
-    }
-
     func thumbnail(for url: URL, targetSize: Int) async -> NSImage? {
-        Logger.process.debugThreadOnly("ThumbnailProvider: thumbnail()")
         let nsUrl = url as NSURL
 
-        // 1. Check Cache
-        if let cached = cache.object(forKey: nsUrl) {
-            return cached
+        // 2. RAM - Access wrapper safely
+        if let wrapper = memoryCache.object(forKey: nsUrl) {
+            if wrapper.beginContentAccess() {
+                let img = wrapper.image
+                wrapper.endContentAccess()
+                Logger.process.debugMessageOnly("ThumbnailProviderRefactor: thumbnail(): found in RAM Cache()")
+                return img
+            }
         }
-        // 2. Generate
+
+        // 3. Disk
+        if let diskImage = await diskCache.load(for: url) {
+            let wrapper = await DiscardableThumbnail(image: diskImage)
+            memoryCache.setObject(wrapper, forKey: nsUrl, cost: wrapper.cost)
+            Logger.process.debugMessageOnly("ThumbnailProviderRefactor: thumbnail(): found in Disk Cache()")
+            return diskImage
+        }
+
+        // 4. Extraction
         do {
-            let image = try await extractSonyThumbnail(
-                from: url,
-                maxDimension: CGFloat(targetSize)
-            )
-            cache.setObject(image, forKey: nsUrl)
+            let image = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize))
+            let wrapper = await DiscardableThumbnail(image: image)
+            memoryCache.setObject(wrapper, forKey: nsUrl, cost: wrapper.cost)
+            let imgToSave = image
+            Task.detached(priority: .background) { [diskCache] in
+                await diskCache.save(imgToSave, for: url)
+            }
+            Logger.process.debugMessageOnly("ThumbnailProviderRefactor: thumbnail(): creating thumbnail")
             return image
-        } catch let err {
-            Logger.process.debugMessageOnly("ThumbnailProvider: thumbnail() failed with error: \(err)")
+        } catch {
             return nil
         }
     }
 
-    /// Preloads thumbnails for all .ARW files in a catalog directory
-    /// - Parameters:
-    ///   - catalogURL: The directory URL containing .ARW files
-    ///   - targetSize: The target size for thumbnails
-    ///   - recursive: Whether to search subdirectories (default: true)
-    /// - Returns: The number of thumbnails successfully cached
+    func clearCaches() async {
+        memoryCache.removeAllObjects()
+        await diskCache.pruneCache()
+    }
+
+    private func extractSonyThumbnail(from url: URL, maxDimension: CGFloat) async throws -> NSImage {
+        try await Task.detached(priority: .userInitiated) {
+            let options = [kCGImageSourceShouldCache: false] as CFDictionary
+            guard let source = CGImageSourceCreateWithURL(url as CFURL, options) else {
+                throw ThumbnailError.invalidSource
+            }
+
+            let thumbOptions: [CFString: Any] = [
+                kCGImageSourceCreateThumbnailFromImageIfAbsent: true,
+                kCGImageSourceCreateThumbnailWithTransform: true,
+                kCGImageSourceThumbnailMaxPixelSize: maxDimension,
+                kCGImageSourceCreateThumbnailFromImageAlways: false
+            ]
+
+            guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, thumbOptions as CFDictionary) else {
+                throw ThumbnailError.generationFailed
+            }
+
+            return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+        }.value
+    }
+
     @discardableResult
     func preloadCatalog(at catalogURL: URL, targetSize: Int, recursive: Bool = true) async -> Int {
-        Logger.process.debugThreadOnly("ThumbnailProvider: preloadCatalog()")
-
-        // Collect URLs synchronously first
-        let arwURLs = await Task.detached {
+        let arwURLs = await Task.detached(priority: .utility) {
             let fileManager = FileManager.default
             var urls: [URL] = []
-
             guard let enumerator = fileManager.enumerator(
                 at: catalogURL,
                 includingPropertiesForKeys: [.isRegularFileKey],
                 options: recursive ? [] : [.skipsSubdirectoryDescendants]
-            ) else {
-                return urls
-            }
+            ) else { return urls }
 
-            // Use nextObject() instead of for-in to avoid makeIterator() in async context
+            let supported: Set<String> = ["arw", "tiff", "tif", "jpeg", "jpg", "png"]
             while let fileURL = enumerator.nextObject() as? URL {
-                let supportedExtensions: Set<String> = ["arw", "tiff", "tif", "jpeg", "jpg", "png"]
-                // Refactored guard statement
-                guard supportedExtensions.contains(fileURL.pathExtension.lowercased()) else {
-                    continue
-                }
-
-                // Check if it's a regular file
-                guard let resourceValues = try? fileURL.resourceValues(forKeys: [.isRegularFileKey]),
-                      let isRegularFile = resourceValues.isRegularFile,
-                      isRegularFile
-                else {
-                    continue
-                }
-
+                guard supported.contains(fileURL.pathExtension.lowercased()) else { continue }
                 urls.append(fileURL)
             }
-
             return urls
         }.value
 
         await fileHandlers?.maxfilesHandler(arwURLs.count)
 
-        guard !arwURLs.isEmpty else {
-            Logger.process.debugMessageOnly("ThumbnailProvider: No ARW files found in \(catalogURL.path)")
-            return 0
-        }
-
-        // Process thumbnails asynchronously
         var successCount = 0
         for fileURL in arwURLs {
-            do {
-                let nsimage = try await extractSonyThumbnail(from: fileURL, maxDimension: CGFloat(targetSize))
-                cache.setObject(nsimage, forKey: fileURL as NSURL)
-
+            // 1. Check RAM Cache
+            if memoryCache.object(forKey: fileURL as NSURL) != nil {
+                Logger.process.debugMessageOnly("ThumbnailProviderRefactor: preloadCatalog: found in RAM Cache()")
                 successCount += 1
+                await fileHandlers?.fileHandler(successCount)
+                continue
+            }
+            // 2. Check Disk Cache
+            // We check if the image exists on disk before attempting extraction
+            if let diskImage = await diskCache.load(for: fileURL) {
+                let wrapper = await DiscardableThumbnail(image: diskImage)
+                memoryCache.setObject(wrapper, forKey: fileURL as NSURL, cost: wrapper.cost)
+                Logger.process.debugMessageOnly("ThumbnailProviderRefactor: preloadCatalog: found in Disk Cache()")
+                successCount += 1
+                await fileHandlers?.fileHandler(successCount)
+                continue // Move to next file, no extraction needed
+            }
 
+            // 3. Extraction (Only if RAM and Disk both miss)
+            do {
+                Logger.process.debugMessageOnly("ThumbnailProviderRefactor: preloadCatalog: creating thumbnail")
+                let image = try await extractSonyThumbnail(from: fileURL, maxDimension: CGFloat(targetSize))
+                let wrapper = await DiscardableThumbnail(image: image)
+                memoryCache.setObject(wrapper, forKey: fileURL as NSURL, cost: wrapper.cost)
+                let imgToSave = image
+                Task.detached(priority: .background) { [diskCache] in
+                    await diskCache.save(imgToSave, for: fileURL)
+                }
+                successCount += 1
                 await fileHandlers?.fileHandler(successCount)
             } catch {}
         }
-
-        Logger.process.debugMessageOnly("ThumbnailProvider: Preloaded \(successCount) thumbnails from \(catalogURL.path)")
         return successCount
-    }
-
-    /// Generates a thumbnail for a Sony .ARW file
-    /// - Parameters:
-    ///   - url: The file path to the .ARW file
-    ///   - maxDimension: The maximum width or height of the thumbnail
-    /// - Returns: An NSImage thumbnail
-    private func extractSonyThumbnail(from url: URL, maxDimension: CGFloat) async throws -> NSImage {
-        // Use a background task for the heavy decoding
-        try await Task.detached(priority: .userInitiated) {
-            Logger.process.debugThreadOnly("ThumbnailProvider: extractDefaultThumbnail()")
-
-            let options = [kCGImageSourceShouldCache: false] as CFDictionary
-
-            guard let source = CGImageSourceCreateWithURL(url as CFURL, options) else {
-                throw ThumbnailError.invalidSource
-            }
-
-            let thumbnailOptions: [CFString: Any] = [
-                kCGImageSourceCreateThumbnailFromImageIfAbsent: true,
-                kCGImageSourceCreateThumbnailWithTransform: true,
-                kCGImageSourceThumbnailMaxPixelSize: maxDimension,
-                // Ensure we use the embedded preview for speed (crucial for Tahoe performance)
-                kCGImageSourceCreateThumbnailFromImageAlways: false
-            ]
-
-            guard let cgImage = CGImageSourceCreateThumbnailAtIndex(
-                source,
-                0,
-                thumbnailOptions as CFDictionary
-            ) else {
-                throw ThumbnailError.generationFailed
-            }
-
-            // Create NSImage from the generated CGImage
-            let size = NSSize(width: cgImage.width, height: cgImage.height)
-            return NSImage(cgImage: cgImage, size: size)
-        }.value
     }
 }

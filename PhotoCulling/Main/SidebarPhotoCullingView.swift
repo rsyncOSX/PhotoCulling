@@ -117,7 +117,7 @@ struct SidebarPhotoCullingView: View {
                 fileHandler: fileHandler,
                 maxfilesHandler: maxfilesHandler
             )
-            await ThumbnailProviderRefactor.shared.setFileHandlers(handlers)
+            await ThumbnailProvider.shared.setFileHandlers(handlers)
         }
         // --- RIGHT INSPECTOR ---
         .inspector(isPresented: $isInspectorPresented) {
@@ -145,7 +145,7 @@ struct SidebarPhotoCullingView: View {
 
                         creatingthumbnails = true
 
-                        await ThumbnailProviderRefactor.shared.preloadCatalog(
+                        await ThumbnailProvider.shared.preloadCatalog(
                             at: url,
                             targetSize: 1024,
                             recursive: false
