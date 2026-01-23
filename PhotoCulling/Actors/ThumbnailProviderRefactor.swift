@@ -156,9 +156,13 @@ actor ThumbnailProviderRefactor {
             }
 
             do {
-                let img = try await extractSonyThumbnail(from: fileURL, maxDimension: CGFloat(targetSize))
-                let wrapper = await DiscardableThumbnail(image: img)
+                let image = try await extractSonyThumbnail(from: fileURL, maxDimension: CGFloat(targetSize))
+                let wrapper = await DiscardableThumbnail(image: image)
                 memoryCache.setObject(wrapper, forKey: fileURL as NSURL, cost: wrapper.cost)
+                let imgToSave = image
+                Task.detached(priority: .background) { [diskCache] in
+                    await diskCache.save(imgToSave, for: fileURL)
+                }
                 successCount += 1
                 await fileHandlers?.fileHandler(successCount)
             } catch {}
@@ -172,6 +176,7 @@ actor DiskCacheManager {
     let cacheDirectory: URL
 
     init() {
+        Logger.process.debugMessageOnly("DiskCacheManager initialized")
         let paths = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
         let folder = paths[0].appendingPathComponent("no.blogspot.PhotoCulling/Thumbnails")
         cacheDirectory = folder
@@ -184,6 +189,7 @@ actor DiskCacheManager {
 
     /// Removes a specific thumbnail from the disk (call this when a user deletes a photo)
     func remove(for sourceURL: URL) {
+        Logger.process.debugMessageOnly("DiskCacheManager: remove() image")
         let fileURL = cacheURL(for: sourceURL)
         try? FileManager.default.removeItem(at: fileURL)
     }
@@ -207,12 +213,14 @@ actor DiskCacheManager {
     }
 
     func load(for sourceURL: URL) -> NSImage? {
+        Logger.process.debugMessageOnly("DiskCacheManager: load() image")
         let hash = String(sourceURL.path.hashValue)
         let fileURL = cacheDirectory.appendingPathComponent(hash).appendingPathExtension("jpg")
         return NSImage(contentsOf: fileURL)
     }
 
     func save(_ image: NSImage, for sourceURL: URL) {
+        Logger.process.debugMessageOnly("DiskCacheManager: save() image")
         let hash = String(sourceURL.path.hashValue)
         let fileURL = cacheDirectory.appendingPathComponent(hash).appendingPathExtension("jpg")
         guard let data = image.tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?
