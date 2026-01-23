@@ -20,12 +20,22 @@ extension SidebarPhotoCullingView {
                     cullingmanager.saveToJSON()
                 }
                 label: { Image(systemName: "trash.fill") }
-                .help("Clear preseselcted files")
+                .help("Clear preseselect files")
             }
+        }
 
-            ToolbarItem {
-                Spacer()
+        ToolbarItem(placement: .status) {
+            Button {
+                Task {
+                    await ThumbnailProvider.shared.clearCaches()
+                }
             }
+            label: { Image(systemName: "document.on.trash") }
+            .help("Clear memory and disk cache")
+        }
+
+        ToolbarItem {
+            Spacer()
         }
 
         // Only show toolbar items when this tab is active

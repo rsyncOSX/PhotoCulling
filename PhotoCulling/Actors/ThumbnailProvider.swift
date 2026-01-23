@@ -72,7 +72,7 @@ actor ThumbnailProvider {
 
     func clearCaches() async {
         memoryCache.removeAllObjects()
-        // await diskCache.pruneCache()
+        await diskCache.pruneCache()
     }
 
     private func extractSonyThumbnail(from url: URL, maxDimension: CGFloat) async throws -> NSImage {
