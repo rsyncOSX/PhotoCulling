@@ -5,9 +5,9 @@
 //  Created by Thomas Evensen on 23/01/2026.
 //
 
+import AppKit
 import Foundation
 import ImageIO
-import AppKit
 import UniformTypeIdentifiers
 
 actor DiskCacheManager {

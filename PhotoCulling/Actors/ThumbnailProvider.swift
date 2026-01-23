@@ -9,6 +9,7 @@ enum ThumbnailError: Error {
 }
 
 // MARK: - Thumbnail Provider Actor
+
 actor ThumbnailProvider {
     nonisolated static let shared = ThumbnailProvider()
 

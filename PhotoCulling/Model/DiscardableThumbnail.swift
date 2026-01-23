@@ -4,9 +4,9 @@
 //
 //  Created by Thomas Evensen on 23/01/2026.
 //
+import AppKit
 import Foundation
 import os
-import AppKit
 
 final class DiscardableThumbnail: NSObject, NSDiscardableContent, @unchecked Sendable {
     let image: NSImage
