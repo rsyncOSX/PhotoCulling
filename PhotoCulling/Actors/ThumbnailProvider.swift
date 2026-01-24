@@ -90,10 +90,6 @@ actor ThumbnailProvider {
                         await self.processSingleFile(url, targetSize: targetSize)
                     }
                 }
-
-                // Update stats only here
-                let newCount = incrementAndGetCount()
-                await fileHandlers?.fileHandler(newCount)
                 return successCount
             }
         }
@@ -103,7 +99,24 @@ actor ThumbnailProvider {
     }
 
     private func processSingleFile(_ url: URL, targetSize: Int) async {
-        // ... Cache checks ...
+        // A. Check RAM
+        if let wrapper = memoryCache.object(forKey: url as NSURL), wrapper.beginContentAccess() {
+            wrapper.endContentAccess()
+            let newCount = incrementAndGetCount()
+            // Assuming fileHandlers is accessible or passed in
+            await fileHandlers?.fileHandler(newCount)
+            Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - found in RAM Cache")
+            return
+        }
+
+        // B. Check Disk
+        if let diskImage = await diskCache.load(for: url) {
+            storeInMemory(diskImage, for: url)
+            let newCount = incrementAndGetCount()
+            await fileHandlers?.fileHandler(newCount)
+            Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - found in DISK Cache")
+            return
+        }
 
         // C. Extract
         do {
@@ -117,7 +130,16 @@ actor ThumbnailProvider {
             // 3. Store the NSImage
             storeInMemory(image, for: url)
 
-            // ... rest of logic (counters, handlers) ...
+            let newCount = incrementAndGetCount()
+            await fileHandlers?.fileHandler(newCount)
+
+            Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - CREATING thumbnail")
+
+            // Background save
+            // We can pass the 'cgImage' directly now. No Data conversion needed!
+            Task.detached(priority: .background) {
+                await self.diskCache.save(cgImage, for: url)
+            }
         } catch {
             print("Failed: \(url.lastPathComponent)")
         }
@@ -210,44 +232,3 @@ actor ThumbnailProvider {
         return image
     }
 }
-
-/*
- // This method is actor-isolated: only one thread can be here at a time
- private func processSingleFileOld(_ url: URL, targetSize: Int) async {
-     // A. Check RAM
-     if let wrapper = memoryCache.object(forKey: url as NSURL), wrapper.beginContentAccess() {
-         wrapper.endContentAccess()
-         let newCount = incrementAndGetCount()
-         // Assuming fileHandlers is accessible or passed in
-         await fileHandlers?.fileHandler(newCount)
-         Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - found in RAM Cache")
-         return
-     }
-
-     // B. Check Disk
-     if let diskImage = await diskCache.load(for: url) {
-         storeInMemory(diskImage, for: url)
-         let newCount = incrementAndGetCount()
-         await fileHandlers?.fileHandler(newCount)
-         Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - found in DISK Cache")
-         return
-     }
-
-     // C. Extract (Heavy lifting)
-     do {
-         // We call this but the ACTUAL work happens off the actor
-         // because extractSonyThumbnail is 'nonisolated'
-         let image = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize))
-         storeInMemory(image, for: url)
-         let newCount = incrementAndGetCount()
-         await fileHandlers?.fileHandler(newCount)
-         Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - CREATING thumbnail")
-         // Background save to disk
-         Task.detached(priority: .background) {
-             await self.diskCache.save(image, for: url)
-         }
-     } catch {
-         print("Failed: \(url.lastPathComponent)")
-     }
- }
- */
