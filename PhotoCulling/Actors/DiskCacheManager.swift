@@ -1,5 +1,5 @@
 import AppKit
-import CryptoKit // Required for Insecure.MD5
+import CryptoKit
 import Foundation
 import UniformTypeIdentifiers
 
@@ -14,9 +14,7 @@ actor DiskCacheManager {
     }
 
     private func cacheURL(for sourceURL: URL) -> URL {
-        // Standardize the URL to ensure consistent hashing
         let standardizedPath = sourceURL.standardized.path
-        // Use MD5 for a stable, deterministic hash
         let data = Data(standardizedPath.utf8)
         let digest = Insecure.MD5.hash(data: data)
         let hash = digest.map { String(format: "%02x", $0) }.joined()
@@ -24,6 +22,7 @@ actor DiskCacheManager {
     }
 
     func load(for sourceURL: URL) async -> NSImage? {
+        // Calculate URL while on the actor
         let fileURL = cacheURL(for: sourceURL)
 
         // 1. Read Data off the actor to prevent blocking
@@ -38,28 +37,27 @@ actor DiskCacheManager {
     }
 
     func save(_ cgImage: CGImage, for sourceURL: URL) async {
-        // 1. Perform the heavy IO and JPEG compression off the actor
-        await Task.detached(priority: .background) { [cacheDirectory = self.cacheDirectory] in
-            // We need a local copy of cacheURL logic or capture self properly.
-            // Since self is an actor, we can't capture it synchronously in the detached closure
-            // unless we calculate the path outside or await.
-            // Ideally, calculate path before detaching, or do the work inside a nonisolated func.
-            // For simplicity here, we just reconstruct the path logic or call a helper.
-            try? Self.performSave(cgImage: cgImage, for: sourceURL, cacheDir: cacheDirectory)
+        // 1. Calculate the hash path while on the actor.
+        // Avoids sending 'self' (the actor) into the detached task.
+        let fileURL = cacheURL(for: sourceURL)
+
+        // 2. Perform compression and IO off the actor
+        await Task.detached(priority: .background) {
+            // cgImage is sent here. Since CGImage is a type-less wrapper and Sendable,
+            // this is generally safe, though the compiler might warn about strict concurrency.
+            try? Self.writeImageToDisk(cgImage, to: fileURL)
         }.value
     }
 
-    // Helper to keep the detached closure clean and non-isolated
-    private nonisolated static func performSave(cgImage: CGImage, for sourceURL: URL, cacheDir: URL) throws {
-        // Reconstruct path (or refactor this to take the URL directly)
-        let standardizedPath = sourceURL.standardized.path
-        let data = Data(standardizedPath.utf8)
-        let digest = Insecure.MD5.hash(data: data)
-        let hash = digest.map { String(format: "%02x", $0) }.joined()
-        let fileURL = cacheDir.appendingPathComponent(hash).appendingPathExtension("jpg")
-
-        guard let destination = CGImageDestinationCreateWithURL(fileURL as CFURL, UTType.jpeg.identifier as CFString, 1, nil) else {
-            throw ThumbnailError.generationFailed // Or a specific disk error
+    // Helper isolated to the detached task context
+    private nonisolated static func writeImageToDisk(_ cgImage: CGImage, to fileURL: URL) throws {
+        guard let destination = CGImageDestinationCreateWithURL(
+            fileURL as CFURL,
+            UTType.jpeg.identifier as CFString,
+            1,
+            nil
+        ) else {
+            throw ThumbnailError.generationFailed
         }
 
         let options: [CFString: Any] = [
@@ -67,28 +65,28 @@ actor DiskCacheManager {
         ]
 
         CGImageDestinationAddImage(destination, cgImage, options as CFDictionary)
+
         if !CGImageDestinationFinalize(destination) {
             throw ThumbnailError.generationFailed
         }
     }
 
     func pruneCache(maxAgeInDays: Int = 30) async {
-        // Offload IO to background task
-        await Task.detached(priority: .utility) { [cacheDirectory = self.cacheDirectory] in
+        // Capture cacheDirectory to avoid capturing 'self'
+        let directory = cacheDirectory
+
+        await Task.detached(priority: .utility) {
             let fileManager = FileManager.default
             let resourceKeys: [URLResourceKey] = [.contentModificationDateKey, .totalFileAllocatedSizeKey]
 
-            // 1. Get all files at once into an Array.
-            // Arrays are safe to iterate in Swift 6 async contexts.
             guard let urls = try? fileManager.contentsOfDirectory(
-                at: cacheDirectory,
+                at: directory,
                 includingPropertiesForKeys: resourceKeys,
                 options: .skipsHiddenFiles
             ) else { return }
 
             let expirationDate = Calendar.current.date(byAdding: .day, value: -maxAgeInDays, to: Date())!
 
-            // 2. Iterate over the array of URLs
             for fileURL in urls {
                 do {
                     let values = try fileURL.resourceValues(forKeys: Set(resourceKeys))
@@ -96,7 +94,8 @@ actor DiskCacheManager {
                         try fileManager.removeItem(at: fileURL)
                     }
                 } catch {
-                    // Log error if needed, e.g., print("Failed to delete \(fileURL): \(error)")
+                    // Optional: Log error to console
+                    print("DiskCacheManager: Failed to delete \(fileURL.path): \(error)")
                 }
             }
         }.value

@@ -12,40 +12,49 @@ import UniformTypeIdentifiers
 extension SidebarPhotoCullingView {
     @ToolbarContentBuilder
     var toolbarContent: some ToolbarContent {
-        if cullingmanager.selectedFiles.isEmpty == false {
-            ToolbarItem {
-                Button {
-                    cullingmanager.selectedFiles.removeAll()
-                    cullingmanager.numberofPreselectedFiles.removeAll()
-                    cullingmanager.saveToJSON()
-                }
-                label: { Image(systemName: "trash.fill") }
-                .help("Clear preseselect files")
-            }
-        }
-
-        ToolbarItem(placement: .status) {
-            Button {
-                Task {
-                    await ThumbnailProvider.shared.clearCaches()
-                }
-            }
-            label: { Image(systemName: "document.on.trash") }
-            .help("Clear memory and disk cache")
-        }
-
-        ToolbarItem {
-            Spacer()
-        }
-
         // Only show toolbar items when this tab is active
         if !files.isEmpty {
-            ToolbarItem(placement: .status) {
+            ToolbarItem {
                 Text("\(filteredFiles.count) items")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .padding()
             }
+        }
+
+        if cullingmanager.selectedFiles.isEmpty == false {
+            ToolbarItem {
+                ConditionalGlassButton(
+                    systemImage: "trash.fill",
+                    text: "Clear selected",
+                    helpText: "Clear preseselect files"
+                ) {
+                    cullingmanager.selectedFiles.removeAll()
+                    cullingmanager.numberofPreselectedFiles.removeAll()
+                    cullingmanager.saveToJSON()
+                }
+            }
+        }
+
+        ToolbarItem {
+            ConditionalGlassButton(
+                systemImage: "document.on.trash",
+                text: "Clear memory",
+                helpText: "Clear memory and disk cache"
+            ) {
+                Task {
+                    await ThumbnailProvider.shared.clearCaches()
+                    sources.removeAll()
+                    selectedSource = nil
+                    filteredFiles.removeAll()
+                    files.removeAll()
+                    selectedFile = nil
+                }
+            }
+        }
+
+        ToolbarItem {
+            Spacer()
         }
     }
 

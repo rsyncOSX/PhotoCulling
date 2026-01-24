@@ -20,14 +20,14 @@ actor ThumbnailProvider {
     // 1. Isolated State
     private let memoryCache = NSCache<NSURL, DiscardableThumbnail>()
     private var successCount = 0
-    private let diskCache = DiskCacheManager() // Assume this is also thread-safe
+    private let diskCache = DiskCacheManager()
 
     // Track the current preload task so we can cancel it
     private var preloadTask: Task<Int, Never>?
 
     var fileHandlers: FileHandlers?
 
-    let supported: Set<String> = ["arw", "tiff", "tif", "jpeg", "jpg", "png"]
+    let supported: Set<String> = ["arw", "tiff", "tif", "jpeg", "jpg", "png", "heic", "heif"]
 
     // 2. Performance Limits
     init() {
@@ -68,7 +68,6 @@ actor ThumbnailProvider {
 
     @discardableResult
     func preloadCatalog(at catalogURL: URL, targetSize: Int) async -> Int {
-        // Cancel any existing preload before starting a new one
         cancelPreload()
 
         let task = Task {
@@ -78,18 +77,26 @@ actor ThumbnailProvider {
             await fileHandlers?.maxfilesHandler(urls.count)
 
             return await withThrowingTaskGroup(of: Void.self) { group in
-                let maxConcurrent = ProcessInfo.processInfo.activeProcessorCount
+                let maxConcurrent = ProcessInfo.processInfo.activeProcessorCount * 2 // Be a bit more aggressive
 
                 for (index, url) in urls.enumerated() {
                     // Check for cancellation at the start of every loop
-                    if Task.isCancelled { break }
+                    if Task.isCancelled {
+                        group.cancelAll() // FIX #2: Stop all running tasks
+                        break
+                    }
 
-                    if index >= maxConcurrent { try? await group.next() }
+                    if index >= maxConcurrent {
+                        try? await group.next()
+                    }
 
                     group.addTask {
                         await self.processSingleFile(url, targetSize: targetSize)
                     }
                 }
+
+                // Wait for remaining tasks to finish (or be cancelled)
+                try? await group.waitForAll()
                 return successCount
             }
         }
@@ -99,17 +106,22 @@ actor ThumbnailProvider {
     }
 
     private func processSingleFile(_ url: URL, targetSize: Int) async {
+        // Cancellation Check inside the processing unit
+        if Task.isCancelled { return }
+
         // A. Check RAM
         if let wrapper = memoryCache.object(forKey: url as NSURL), wrapper.beginContentAccess() {
             wrapper.endContentAccess()
             let newCount = incrementAndGetCount()
-            // Assuming fileHandlers is accessible or passed in
             await fileHandlers?.fileHandler(newCount)
             Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - found in RAM Cache")
             return
         }
 
         // B. Check Disk
+        // Cancellation check again before doing heavy IO
+        if Task.isCancelled { return }
+
         if let diskImage = await diskCache.load(for: url) {
             storeInMemory(diskImage, for: url)
             let newCount = incrementAndGetCount()
@@ -120,23 +132,24 @@ actor ThumbnailProvider {
 
         // C. Extract
         do {
+            if Task.isCancelled { return }
+
             // 1. Call the worker - we get a thread-safe CGImage
             let cgImage = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize))
 
             // 2. Create NSImage HERE, inside the Actor
-            // This makes NSImage safe because it never leaves this actor's isolation domain.
             let image = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
 
             // 3. Store the NSImage
             storeInMemory(image, for: url)
 
             let newCount = incrementAndGetCount()
+            // Optional: Throttle this if UI jitters occur
             await fileHandlers?.fileHandler(newCount)
 
             Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - CREATING thumbnail")
 
             // Background save
-            // We can pass the 'cgImage' directly now. No Data conversion needed!
             Task.detached(priority: .background) {
                 await self.diskCache.save(cgImage, for: url)
             }
@@ -145,8 +158,8 @@ actor ThumbnailProvider {
         }
     }
 
+    // Renamed to reflect that it uses generic ImageIO, not Sony-specific SDKs
     private nonisolated func extractSonyThumbnail(from url: URL, maxDimension: CGFloat) async throws -> CGImage {
-        // 1. Run the heavy decoding on a detached background task
         let cgImage = try await Task.detached(priority: .userInitiated) {
             let options = [kCGImageSourceShouldCache: false] as CFDictionary
 
@@ -164,10 +177,9 @@ actor ThumbnailProvider {
                 throw ThumbnailError.generationFailed
             }
 
-            return image // Return the raw CGImage
+            return image
         }.value
 
-        // 2. Return the CGImage directly. No NSImage wrapper here.
         return cgImage
     }
 
@@ -200,7 +212,11 @@ actor ThumbnailProvider {
 
         // A. Check RAM
         if let wrapper = memoryCache.object(forKey: nsUrl), wrapper.beginContentAccess() {
-            wrapper.endContentAccess()
+            // FIX #1: We must pair begin with end.
+            // The 'image' variable holds a strong reference to the NSImage,
+            // so it's safe to tell the cache we are done accessing it.
+            defer { wrapper.endContentAccess() }
+
             Logger.process.debugThreadOnly("resolveImage: found in RAM Cache")
             return wrapper.image
         }
@@ -224,7 +240,6 @@ actor ThumbnailProvider {
         storeInMemory(image, for: url)
 
         // 3. Background save
-        // We can pass the 'cgImage' directly now. No Data conversion needed!
         Task.detached(priority: .background) {
             await self.diskCache.save(cgImage, for: url)
         }
