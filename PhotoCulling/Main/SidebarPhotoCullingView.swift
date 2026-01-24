@@ -32,6 +32,8 @@ struct SidebarPhotoCullingView: View {
     @State var max: Double = 0
     @State var creatingthumbnails: Bool = false
 
+    @State var arwfileisselected: Bool = false
+
     var body: some View {
         NavigationSplitView {
             // --- SIDEBAR ---

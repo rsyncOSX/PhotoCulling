@@ -12,23 +12,25 @@ import UniformTypeIdentifiers
 extension SidebarPhotoCullingView {
     @ToolbarContentBuilder
     var toolbarContent: some ToolbarContent {
-        ToolbarItem {
-            ConditionalGlassButton(
-                systemImage: "plus.magnifyingglass",
-                text: "",
-                helpText: "Zoom ARW"
-            ) {
-                openWindow(id: "zoom-window-arw")
+        if arwfileisselected {
+            ToolbarItem {
+                ConditionalGlassButton(
+                    systemImage: "plus.magnifyingglass",
+                    text: "",
+                    helpText: "Zoom"
+                ) {
+                    openWindow(id: "zoom-window-arw")
+                }
             }
-        }
-
-        ToolbarItem {
-            ConditionalGlassButton(
-                systemImage: "plus.magnifyingglass",
-                text: "",
-                helpText: "Zoom"
-            ) {
-                openWindow(id: "zoom-window")
+        } else {
+            ToolbarItem {
+                ConditionalGlassButton(
+                    systemImage: "plus.magnifyingglass",
+                    text: "",
+                    helpText: "Zoom"
+                ) {
+                    openWindow(id: "zoom-window")
+                }
             }
         }
 
@@ -118,8 +120,10 @@ extension SidebarPhotoCullingView {
                 Task {
                     if files[index].url.pathExtension.lowercased() == "arw" {
                         cgImage = ExtractEmbeddedPreview().extractEmbeddedPreview(from: files[index].url)
+                        arwfileisselected = true
                     } else {
                         nsImage = await ThumbnailProvider.shared.thumbnail(for: files[index].url, targetSize: 2560)
+                        arwfileisselected = false
                     }
                 }
             } else {
