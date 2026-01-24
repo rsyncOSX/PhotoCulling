@@ -90,6 +90,15 @@ extension SidebarPhotoCullingView {
                 )
             }
         }
+        .onChange(of: selectedFileID) {
+            if let index = files.firstIndex(where: { $0.id == selectedFileID }) {
+                selectedFileID = files[index].id
+                selectedFile = files[index]
+                isInspectorPresented = true
+            } else {
+                isInspectorPresented = false
+            }
+        }
     }
 
     var filetableview2: some View {
@@ -137,19 +146,20 @@ extension SidebarPhotoCullingView {
             in: file.url,
             filename: file.name
         )
-
-        // Update UI selection and inspector
-        if cullingmanager.selectedFiles.contains(file.name) {
-            selectedFileID = file.id
-            selectedFile = file
-            isInspectorPresented = true
-        } else {
-            // If this was the selected file and it's being deselected
-            if selectedFile?.id == file.id {
-                selectedFile = nil
-                isInspectorPresented = false
-            }
-        }
+        /*
+         // Update UI selection and inspector
+         if cullingmanager.selectedFiles.contains(file.name) {
+             selectedFileID = file.id
+             selectedFile = file
+             isInspectorPresented = true
+         } else {
+             // If this was the selected file and it's being deselected
+             if selectedFile?.id == file.id {
+                 selectedFile = nil
+                 isInspectorPresented = false
+             }
+         }
+         */
     }
 
     func handlePickerResult(_ result: Result<URL, Error>) {
