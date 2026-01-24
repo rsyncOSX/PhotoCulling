@@ -99,6 +99,7 @@ actor ThumbnailProviderRefactor {
             let newCount = incrementAndGetCount()
             // Assuming fileHandlers is accessible or passed in
             await fileHandlers?.fileHandler(newCount)
+            Logger.process.debugMessageOnly("ThumbnailProvider: processSingleFile() - found in RAM Cache")
             return
         }
 
@@ -107,6 +108,7 @@ actor ThumbnailProviderRefactor {
             storeInMemory(diskImage, for: url)
             let newCount = incrementAndGetCount()
             await fileHandlers?.fileHandler(newCount)
+            Logger.process.debugMessageOnly("ThumbnailProvider: processSingleFile() - found in DISK Cache")
             return
         }
 
@@ -118,7 +120,7 @@ actor ThumbnailProviderRefactor {
             storeInMemory(image, for: url)
             let newCount = incrementAndGetCount()
             await fileHandlers?.fileHandler(newCount)
-
+            Logger.process.debugMessageOnly("ThumbnailProvider: processSingleFile() - CREATING thumbnail")
             // Background save to disk
             Task.detached(priority: .background) {
                 await self.diskCache.save(image, for: url)
