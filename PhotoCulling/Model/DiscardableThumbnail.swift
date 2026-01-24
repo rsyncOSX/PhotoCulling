@@ -13,7 +13,7 @@ final class DiscardableThumbnail: NSObject, NSDiscardableContent, @unchecked Sen
     let cost: Int
     private let state = OSAllocatedUnfairLock(initialState: (isDiscarded: false, accessCount: 0))
 
-    init(image: NSImage) {
+    nonisolated init(image: NSImage) {
         self.image = image
         cost = Int(image.size.width * image.size.height * 4)
         super.init()

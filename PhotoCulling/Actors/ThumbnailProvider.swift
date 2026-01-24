@@ -35,29 +35,32 @@ actor ThumbnailProvider {
     func thumbnail(for url: URL, targetSize: Int) async -> NSImage? {
         let nsUrl = url as NSURL
 
-        // 2. RAM - Access wrapper safely
+        // 1. RAM - Access wrapper safely
         if let wrapper = memoryCache.object(forKey: nsUrl) {
             if wrapper.beginContentAccess() {
                 let img = wrapper.image
                 wrapper.endContentAccess()
-                Logger.process.debugMessageOnly("ThumbnailProvider: thumbnail(): found in RAM Cache()")
+                Logger.process.debugMessageOnly("ThumbnailProvider: Found in RAM Cache")
                 return img
+            } else {
+                // Content was discarded by the OS; clean up the "dead" wrapper
+                memoryCache.removeObject(forKey: nsUrl)
+                Logger.process.debugMessageOnly("ThumbnailProvider: Wrapper found but content discarded")
             }
         }
 
-        // 3. Disk
-        print(url)
+        // 2. Disk
         if let diskImage = await diskCache.load(for: url) {
-            let wrapper = await DiscardableThumbnail(image: diskImage)
+            let wrapper = DiscardableThumbnail(image: diskImage)
             memoryCache.setObject(wrapper, forKey: nsUrl, cost: wrapper.cost)
             Logger.process.debugMessageOnly("ThumbnailProvider: thumbnail(): found in Disk Cache()")
             return diskImage
         }
 
-        // 4. Extraction
+        // 3. Extraction
         do {
             let image = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize))
-            let wrapper = await DiscardableThumbnail(image: image)
+            let wrapper = DiscardableThumbnail(image: image)
             memoryCache.setObject(wrapper, forKey: nsUrl, cost: wrapper.cost)
             let imgToSave = image
             Task.detached(priority: .background) { [diskCache] in
@@ -75,26 +78,34 @@ actor ThumbnailProvider {
         await diskCache.pruneCache()
     }
 
-    private func extractSonyThumbnail(from url: URL, maxDimension: CGFloat) async throws -> NSImage {
-        try await Task.detached(priority: .userInitiated) {
+    private nonisolated func extractSonyThumbnail(from url: URL, maxDimension: CGFloat) async throws -> NSImage {
+        // 1. Run the heavy decoding on a detached background task
+        let cgImage = try await Task.detached(priority: .userInitiated) {
+            // Use ShouldCache: false to prevent the OS from caching the HUGE raw data globally
             let options = [kCGImageSourceShouldCache: false] as CFDictionary
+
             guard let source = CGImageSourceCreateWithURL(url as CFURL, options) else {
                 throw ThumbnailError.invalidSource
             }
 
             let thumbOptions: [CFString: Any] = [
-                kCGImageSourceCreateThumbnailFromImageIfAbsent: true,
+                // FORCE a high-quality decode from the RAW data
+                // instead of the tiny embedded Sony preview
+                kCGImageSourceCreateThumbnailFromImageAlways: true,
                 kCGImageSourceCreateThumbnailWithTransform: true,
-                kCGImageSourceThumbnailMaxPixelSize: maxDimension,
-                kCGImageSourceCreateThumbnailFromImageAlways: false
+                kCGImageSourceThumbnailMaxPixelSize: maxDimension
             ]
 
-            guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, thumbOptions as CFDictionary) else {
+            guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, thumbOptions as CFDictionary) else {
                 throw ThumbnailError.generationFailed
             }
 
-            return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+            return image // Return the CGImage (which is thread-safe/Sendable)
         }.value
+
+        // 2. Convert to NSImage back on the Main Actor or calling thread
+        // This avoids NSImage thread-safety issues
+        return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
     }
 
     @discardableResult
@@ -121,17 +132,24 @@ actor ThumbnailProvider {
         var successCount = 0
         for fileURL in arwURLs {
             // 1. Check RAM Cache
-            if memoryCache.object(forKey: fileURL as NSURL) != nil {
-                Logger.process.debugMessageOnly("ThumbnailProvider: preloadCatalog: found in RAM Cache()")
-                successCount += 1
-                await fileHandlers?.fileHandler(successCount)
-                continue
+            if let wrapper = memoryCache.object(forKey: fileURL as NSURL) {
+                // Check if the pixels are actually still in RAM
+                if wrapper.beginContentAccess() {
+                    wrapper.endContentAccess() // We just wanted to check, so release immediately
+                    Logger.process.debugMessageOnly("ThumbnailProvider: preloadCatalog: Valid in RAM")
+                    successCount += 1
+                    await fileHandlers?.fileHandler(successCount)
+                    continue
+                } else {
+                    // The wrapper exists, but the image is gone.
+                    // Don't 'continue'—let the code below regenerate it.
+                    memoryCache.removeObject(forKey: fileURL as NSURL)
+                }
             }
             // 2. Check Disk Cache
             // We check if the image exists on disk before attempting extraction
-            print(fileURL)
             if let diskImage = await diskCache.load(for: fileURL) {
-                let wrapper = await DiscardableThumbnail(image: diskImage)
+                let wrapper = DiscardableThumbnail(image: diskImage)
                 memoryCache.setObject(wrapper, forKey: fileURL as NSURL, cost: wrapper.cost)
                 Logger.process.debugMessageOnly("ThumbnailProvider: preloadCatalog: found in Disk Cache()")
                 successCount += 1
@@ -143,7 +161,7 @@ actor ThumbnailProvider {
             do {
                 Logger.process.debugMessageOnly("ThumbnailProvider: preloadCatalog: creating thumbnail")
                 let image = try await extractSonyThumbnail(from: fileURL, maxDimension: CGFloat(targetSize))
-                let wrapper = await DiscardableThumbnail(image: image)
+                let wrapper = DiscardableThumbnail(image: image)
                 memoryCache.setObject(wrapper, forKey: fileURL as NSURL, cost: wrapper.cost)
                 let imgToSave = image
                 Task.detached(priority: .background) { [diskCache] in

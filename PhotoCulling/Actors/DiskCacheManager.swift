@@ -35,9 +35,6 @@ actor DiskCacheManager {
         let fileURL = cacheURL(for: sourceURL)
         // Use ImageIO to read for better control, or stick to NSImage for simplicity
         // NSImage(contentsOf:) is generally efficient for reading JPEGs
-        print("🔍 Loading cache for: \(sourceURL.path)")
-        print("🔍 Cache file: \(fileURL.path)")
-        print("🔍 Cache exists: \(FileManager.default.fileExists(atPath: fileURL.path))")
         guard FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
         return NSImage(contentsOf: fileURL)
     }
