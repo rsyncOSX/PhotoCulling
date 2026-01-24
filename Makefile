@@ -1,6 +1,6 @@
 APP = PhotoCulling
 BUNDLE_ID = no.blogspot.$(APP)
-VERSION = 0.1.0
+VERSION = 0.2.0
 BUILD_PATH = $(PWD)/build
 APP_PATH = "$(BUILD_PATH)/$(APP).app"
 ZIP_PATH = "$(BUILD_PATH)/$(APP).$(VERSION).zip"

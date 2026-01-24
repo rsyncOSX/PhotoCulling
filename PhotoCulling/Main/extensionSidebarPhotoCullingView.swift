@@ -27,7 +27,7 @@ extension SidebarPhotoCullingView {
         ToolbarItem(placement: .status) {
             Button {
                 Task {
-                    await ThumbnailProviderRefactor.shared.clearCaches()
+                    await ThumbnailProvider.shared.clearCaches()
                 }
             }
             label: { Image(systemName: "document.on.trash") }

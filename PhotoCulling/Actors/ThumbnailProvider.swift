@@ -1,6 +1,12 @@
+//
+//  ThumbnailProvider.swift
+//  PhotoCulling
+//
+//  Created by Thomas Evensen on 24/01/2026.
+//
+
 import AppKit
 import Foundation
-import ImageIO
 import OSLog
 
 enum ThumbnailError: Error {
@@ -8,74 +14,125 @@ enum ThumbnailError: Error {
     case generationFailed
 }
 
-// MARK: - Thumbnail Provider Actor
-
 actor ThumbnailProvider {
     nonisolated static let shared = ThumbnailProvider()
 
-    var fileHandlers: FileHandlers?
+    // 1. Isolated State
     private let memoryCache = NSCache<NSURL, DiscardableThumbnail>()
-    // 1. Mark this nonisolated to allow synchronous calling of its methods
-    private nonisolated let diskCache = DiskCacheManager()
+    private var successCount = 0
+    private let diskCache = DiskCacheManager() // Assume this is also thread-safe
 
-    private init() {
-        let totalMemory = ProcessInfo.processInfo.physicalMemory
-        let memoryLimit = min(Int(totalMemory / 10), 512 * 1024 * 1024)
+    // Track the current preload task so we can cancel it
+    private var preloadTask: Task<Int, Never>?
 
-        memoryCache.countLimit = 250
-        memoryCache.totalCostLimit = memoryLimit
-        memoryCache.name = "no.blogspot.PhotoCulling.imageCache"
-        memoryCache.evictsObjectsWithDiscardedContent = true
+    var fileHandlers: FileHandlers?
+
+    // 2. Performance Limits
+    init() {
+        memoryCache.totalCostLimit = 200 * 1024 * 1024 // 200MB
+        memoryCache.countLimit = 500
     }
 
     func setFileHandlers(_ fileHandlers: FileHandlers) {
         self.fileHandlers = fileHandlers
     }
 
-    func thumbnail(for url: URL, targetSize: Int) async -> NSImage? {
-        let nsUrl = url as NSURL
-
-        // 1. RAM - Access wrapper safely
-        if let wrapper = memoryCache.object(forKey: nsUrl) {
-            if wrapper.beginContentAccess() {
-                let img = wrapper.image
-                wrapper.endContentAccess()
-                Logger.process.debugMessageOnly("ThumbnailProvider: Found in RAM Cache")
-                return img
-            } else {
-                // Content was discarded by the OS; clean up the "dead" wrapper
-                memoryCache.removeObject(forKey: nsUrl)
-                Logger.process.debugMessageOnly("ThumbnailProvider: Wrapper found but content discarded")
-            }
-        }
-
-        // 2. Disk
-        if let diskImage = await diskCache.load(for: url) {
-            let wrapper = DiscardableThumbnail(image: diskImage)
-            memoryCache.setObject(wrapper, forKey: nsUrl, cost: wrapper.cost)
-            Logger.process.debugMessageOnly("ThumbnailProvider: thumbnail(): found in Disk Cache()")
-            return diskImage
-        }
-
-        // 3. Extraction
-        do {
-            let image = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize))
-            let wrapper = DiscardableThumbnail(image: image)
-            memoryCache.setObject(wrapper, forKey: nsUrl, cost: wrapper.cost)
-            let imgToSave = image
-            Task.detached(priority: .background) { [diskCache] in
-                await diskCache.save(imgToSave, for: url)
-            }
-            Logger.process.debugMessageOnly("ThumbnailProvider: thumbnail(): creating thumbnail")
-            return image
-        } catch {
-            return nil
-        }
+    func cancelPreload() {
+        preloadTask?.cancel()
+        preloadTask = nil
+        Logger.process.debugMessageOnly("ThumbnailProvider: Preload Cancelled")
     }
 
-    func clearCaches() async {
-        memoryCache.removeAllObjects()
-        await diskCache.pruneCache()
+    private func discoverFiles(at catalogURL: URL, recursive: Bool) async -> [URL] {
+        await Task.detached(priority: .utility) {
+            let fileManager = FileManager.default
+            let supported: Set<String> = ["arw", "tiff", "tif", "jpeg", "jpg", "png"]
+            var urls: [URL] = []
+
+            guard let enumerator = fileManager.enumerator(
+                at: catalogURL,
+                includingPropertiesForKeys: [.isRegularFileKey],
+                options: recursive ? [] : [.skipsSubdirectoryDescendants]
+            ) else { return urls }
+
+            while let fileURL = enumerator.nextObject() as? URL {
+                if supported.contains(fileURL.pathExtension.lowercased()) {
+                    urls.append(fileURL)
+                }
+            }
+            return urls
+        }.value
+    }
+
+    @discardableResult
+    func preloadCatalog(at catalogURL: URL, targetSize: Int) async -> Int {
+        // Cancel any existing preload before starting a new one
+        cancelPreload()
+
+        let task = Task {
+            successCount = 0
+            let urls = await discoverFiles(at: catalogURL, recursive: false)
+
+            await fileHandlers?.maxfilesHandler(urls.count)
+
+            return await withThrowingTaskGroup(of: Void.self) { group in
+                let maxConcurrent = ProcessInfo.processInfo.activeProcessorCount
+
+                for (index, url) in urls.enumerated() {
+                    // Check for cancellation at the start of every loop
+                    if Task.isCancelled { break }
+
+                    if index >= maxConcurrent { try? await group.next() }
+
+                    group.addTask {
+                        await self.processSingleFile(url, targetSize: targetSize)
+                    }
+                }
+                return successCount
+            }
+        }
+
+        preloadTask = task
+        return await task.value
+    }
+
+    // This method is actor-isolated: only one thread can be here at a time
+    private func processSingleFile(_ url: URL, targetSize: Int) async {
+        // A. Check RAM
+        if let wrapper = memoryCache.object(forKey: url as NSURL), wrapper.beginContentAccess() {
+            wrapper.endContentAccess()
+            let newCount = incrementAndGetCount()
+            // Assuming fileHandlers is accessible or passed in
+            await fileHandlers?.fileHandler(newCount)
+            Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - found in RAM Cache")
+            return
+        }
+
+        // B. Check Disk
+        if let diskImage = await diskCache.load(for: url) {
+            storeInMemory(diskImage, for: url)
+            let newCount = incrementAndGetCount()
+            await fileHandlers?.fileHandler(newCount)
+            Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - found in DISK Cache")
+            return
+        }
+
+        // C. Extract (Heavy lifting)
+        do {
+            // We call this but the ACTUAL work happens off the actor
+            // because extractSonyThumbnail is 'nonisolated'
+            let image = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize))
+            storeInMemory(image, for: url)
+            let newCount = incrementAndGetCount()
+            await fileHandlers?.fileHandler(newCount)
+            Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - CREATING thumbnail")
+            // Background save to disk
+            Task.detached(priority: .background) {
+                await self.diskCache.save(image, for: url)
+            }
+        } catch {
+            print("Failed: \(url.lastPathComponent)")
+        }
     }
 
     private nonisolated func extractSonyThumbnail(from url: URL, maxDimension: CGFloat) async throws -> NSImage {
@@ -108,69 +165,63 @@ actor ThumbnailProvider {
         return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
     }
 
-    @discardableResult
-    func preloadCatalog(at catalogURL: URL, targetSize: Int, recursive: Bool = true) async -> Int {
-        let arwURLs = await Task.detached(priority: .utility) {
-            let fileManager = FileManager.default
-            var urls: [URL] = []
-            guard let enumerator = fileManager.enumerator(
-                at: catalogURL,
-                includingPropertiesForKeys: [.isRegularFileKey],
-                options: recursive ? [] : [.skipsSubdirectoryDescendants]
-            ) else { return urls }
+    private func storeInMemory(_ image: NSImage, for url: URL) {
+        let wrapper = DiscardableThumbnail(image: image)
+        memoryCache.setObject(wrapper, forKey: url as NSURL, cost: wrapper.cost)
+    }
 
-            let supported: Set<String> = ["arw", "tiff", "tif", "jpeg", "jpg", "png"]
-            while let fileURL = enumerator.nextObject() as? URL {
-                guard supported.contains(fileURL.pathExtension.lowercased()) else { continue }
-                urls.append(fileURL)
-            }
-            return urls
-        }.value
-
-        await fileHandlers?.maxfilesHandler(arwURLs.count)
-
-        var successCount = 0
-        for fileURL in arwURLs {
-            // 1. Check RAM Cache
-            if let wrapper = memoryCache.object(forKey: fileURL as NSURL) {
-                // Check if the pixels are actually still in RAM
-                if wrapper.beginContentAccess() {
-                    wrapper.endContentAccess() // We just wanted to check, so release immediately
-                    Logger.process.debugMessageOnly("ThumbnailProvider: preloadCatalog: Valid in RAM")
-                    successCount += 1
-                    await fileHandlers?.fileHandler(successCount)
-                    continue
-                } else {
-                    // The wrapper exists, but the image is gone.
-                    // Don't 'continue'—let the code below regenerate it.
-                    memoryCache.removeObject(forKey: fileURL as NSURL)
-                }
-            }
-            // 2. Check Disk Cache
-            // We check if the image exists on disk before attempting extraction
-            if let diskImage = await diskCache.load(for: fileURL) {
-                let wrapper = DiscardableThumbnail(image: diskImage)
-                memoryCache.setObject(wrapper, forKey: fileURL as NSURL, cost: wrapper.cost)
-                Logger.process.debugMessageOnly("ThumbnailProvider: preloadCatalog: found in Disk Cache()")
-                successCount += 1
-                await fileHandlers?.fileHandler(successCount)
-                continue // Move to next file, no extraction needed
-            }
-
-            // 3. Extraction (Only if RAM and Disk both miss)
-            do {
-                Logger.process.debugMessageOnly("ThumbnailProvider: preloadCatalog: creating thumbnail")
-                let image = try await extractSonyThumbnail(from: fileURL, maxDimension: CGFloat(targetSize))
-                let wrapper = DiscardableThumbnail(image: image)
-                memoryCache.setObject(wrapper, forKey: fileURL as NSURL, cost: wrapper.cost)
-                let imgToSave = image
-                Task.detached(priority: .background) { [diskCache] in
-                    await diskCache.save(imgToSave, for: fileURL)
-                }
-                successCount += 1
-                await fileHandlers?.fileHandler(successCount)
-            } catch {}
-        }
+    private func incrementAndGetCount() -> Int {
+        successCount += 1
         return successCount
+    }
+
+    func clearCaches() async {
+        memoryCache.removeAllObjects()
+        await diskCache.pruneCache(maxAgeInDays: 0)
+    }
+
+    func thumbnail(for url: URL, targetSize: Int) async -> NSImage? {
+        let nsUrl = url as NSURL
+
+        // 1. RAM - Access wrapper safely
+        if let wrapper = memoryCache.object(forKey: nsUrl) {
+            if wrapper.beginContentAccess() {
+                let img = wrapper.image
+                wrapper.endContentAccess()
+                Logger.process.debugThreadOnly("ThumbnailProvider: Found in RAM Cache")
+                return img
+            } else {
+                // Content was discarded by the OS; clean up the "dead" wrapper
+                memoryCache.removeObject(forKey: nsUrl)
+                Logger.process.debugThreadOnly("ThumbnailProvider: Wrapper found but content discarded")
+            }
+        }
+
+        // 2. Disk
+        if let diskImage = await diskCache.load(for: url) {
+            let wrapper = DiscardableThumbnail(image: diskImage)
+            memoryCache.setObject(wrapper, forKey: nsUrl, cost: wrapper.cost)
+            Logger.process.debugThreadOnly("ThumbnailProvider: thumbnail(): found in Disk Cache()")
+            return diskImage
+        }
+
+        // 3. Extraction
+        do {
+            // We call this but the ACTUAL work happens off the actor
+            // because extractSonyThumbnail is 'nonisolated'
+            let image = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize))
+            storeInMemory(image, for: url)
+            let newCount = incrementAndGetCount()
+            await fileHandlers?.fileHandler(newCount)
+            Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - CREATING thumbnail")
+            // Background save to disk
+            Task.detached(priority: .background) {
+                await self.diskCache.save(image, for: url)
+            }
+            return image
+        } catch {
+            print("Failed: \(url.lastPathComponent)")
+            return nil
+        }
     }
 }
