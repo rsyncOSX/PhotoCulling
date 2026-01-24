@@ -12,6 +12,17 @@ import UniformTypeIdentifiers
 extension SidebarPhotoCullingView {
     @ToolbarContentBuilder
     var toolbarContent: some ToolbarContent {
+        
+        ToolbarItem {
+            ConditionalGlassButton(
+                systemImage: "plus.magnifyingglass",
+                text: "",
+                helpText: "Zoom"
+            ) {
+                openWindow(id: "zoom-window")
+            }
+        }
+        
         // Only show toolbar items when this tab is active
         if !files.isEmpty {
             ToolbarItem {
@@ -26,7 +37,7 @@ extension SidebarPhotoCullingView {
             ToolbarItem {
                 ConditionalGlassButton(
                     systemImage: "trash.fill",
-                    text: "Clear selected",
+                    text: "",
                     helpText: "Clear preseselect files"
                 ) {
                     cullingmanager.selectedFiles.removeAll()
@@ -39,7 +50,7 @@ extension SidebarPhotoCullingView {
         ToolbarItem {
             ConditionalGlassButton(
                 systemImage: "document.on.trash",
-                text: "Clear memory",
+                text: "",
                 helpText: "Clear memory and disk cache"
             ) {
                 Task {
@@ -95,6 +106,9 @@ extension SidebarPhotoCullingView {
                 selectedFileID = files[index].id
                 selectedFile = files[index]
                 isInspectorPresented = true
+                Task {
+                    nsImage = await ThumbnailProvider.shared.thumbnail(for: files[index].url, targetSize: 2560)
+                }
             } else {
                 isInspectorPresented = false
             }

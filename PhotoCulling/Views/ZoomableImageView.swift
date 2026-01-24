@@ -10,6 +10,7 @@ import SwiftUI
 // MARK: - Zoomable & Panable View
 
 struct ZoomableImageView: View {
+    
     let nsImage: NSImage?
 
     @State private var currentScale: CGFloat = 1.0

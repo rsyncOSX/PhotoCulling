@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 extension KeyPath<FileItem, String>: @unchecked @retroactive Sendable {}
 
 struct SidebarPhotoCullingView: View {
+    @Environment(\.openWindow) var openWindow
     
     @Binding var nsImage: NSImage?
     
