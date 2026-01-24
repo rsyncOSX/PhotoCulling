@@ -91,6 +91,7 @@ struct SidebarPhotoCullingView: View {
 
             if let file = selectedFile {
                 VStack(spacing: 20) {
+                    
                     CachedThumbnailView(url: file.url)
 
                     VStack {
@@ -147,16 +148,9 @@ struct SidebarPhotoCullingView: View {
 
                         await ThumbnailProvider.shared.preloadCatalog(
                             at: url,
-                            targetSize: 1024
+                            targetSize: 2560
                         )
 
-                        /*
-                         await ThumbnailProvider.shared.preloadCatalog(
-                             at: url,
-                             targetSize: 1024,
-                             recursive: false
-                         )
-                          */
                         creatingthumbnails = false
                     }
                 }
