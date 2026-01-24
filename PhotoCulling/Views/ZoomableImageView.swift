@@ -1,24 +1,17 @@
-//
-//  ZoomableImageView.swift
-//  PhotoCulling
-//
-//  Created by Thomas Evensen on 24/01/2026.
-//
-
 import SwiftUI
 
-// MARK: - Zoomable & Panable View
-
 struct ZoomableImageView: View {
-    
     let nsImage: NSImage?
 
-    @State private var currentScale: CGFloat = 1.0
-    @State private var lastScale: CGFloat = 1.0
+    @State private var currentScale: CGFloat = 3.0 // Start at 3x as requested previously
+    @State private var lastScale: CGFloat = 3.0
     @State private var offset: CGSize = .zero
     @State private var lastOffset: CGSize = .zero
 
     @Environment(\.dismiss) var dismiss
+
+    // Define the zoom level you want to toggle to
+    private let zoomLevel: CGFloat = 3.0
 
     var body: some View {
         ZStack {
@@ -26,16 +19,10 @@ struct ZoomableImageView: View {
 
             if let nsImage {
                 GeometryReader { geo in
-                    // FIX: Use actual image size for the frame.
-                    // This ensures the image is rendered at its native resolution (or scaled down by 'fit')
-                    // rather than being forced into the window geometry incorrectly.
-                    let imageSize = nsImage.size
-
                     Image(nsImage: nsImage)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        // Bind the frame to the image's intrinsic size
-                        .frame(width: imageSize.width, height: imageSize.height)
+                        .frame(width: geo.size.width, height: geo.size.height)
                         .scaleEffect(currentScale)
                         .offset(offset)
                         .gesture(
@@ -43,18 +30,12 @@ struct ZoomableImageView: View {
                                 // 1. Zoom
                                 MagnificationGesture()
                                     .onChanged { value in
-                                        let delta = value / lastScale
-                                        lastScale = value
-                                        currentScale *= delta
+                                        currentScale = lastScale * value
                                     }
                                     .onEnded { _ in
-                                        lastScale = 1.0
+                                        lastScale = currentScale
                                         if currentScale < 1.0 {
-                                            withAnimation(.spring()) {
-                                                currentScale = 1.0
-                                                offset = .zero
-                                                lastOffset = .zero
-                                            }
+                                            resetToFit()
                                         }
                                     },
 
@@ -62,33 +43,36 @@ struct ZoomableImageView: View {
                                 DragGesture()
                                     .onChanged { value in
                                         if currentScale > 1.0 {
-                                            // Calculate new offset based on the drag delta
-                                            let newOffset = CGSize(
+                                            offset = CGSize(
                                                 width: lastOffset.width + value.translation.width,
                                                 height: lastOffset.height + value.translation.height
                                             )
-                                            offset = newOffset
                                         }
                                     }
                                     .onEnded { _ in
-                                        if currentScale > 1.0 {
-                                            lastOffset = offset
-                                        } else {
-                                            lastOffset = .zero
-                                            offset = .zero
-                                        }
+                                        lastOffset = offset
                                     }
                             )
                         )
-                        // Center the image container in the window
-                        .position(x: geo.size.width / 2, y: geo.size.height / 2)
+                        // Toggle Logic
+                        .onTapGesture(count: 2) {
+                            withAnimation(.spring()) {
+                                if currentScale > 1.0 {
+                                    // Currently Zoomed -> Reset to Fit
+                                    resetToFit()
+                                } else {
+                                    // Currently Fit -> Zoom to 3x
+                                    zoomToTarget()
+                                }
+                            }
+                        }
                 }
             } else {
                 Text("No Image Available")
                     .foregroundStyle(.white)
             }
 
-            // Close Button
+            // UI Overlay
             VStack {
                 HStack {
                     Spacer()
@@ -96,30 +80,40 @@ struct ZoomableImageView: View {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 24))
                             .foregroundStyle(.white.opacity(0.7))
-                            .background(Circle().fill(Color.black.opacity(0.1))) // Better hit target
                     }
                     .buttonStyle(.plain)
                     .padding()
                 }
                 Spacer()
 
-                // Instructions
                 if currentScale <= 1.0 {
-                    Text("Pinch to Zoom • Drag to Pan")
+                    Text("Double Tap to Zoom")
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.5))
                         .padding(.bottom, 20)
-                        .transition(.opacity)
+                } else {
+                    Text("Double Tap to Fit Screen")
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.5))
+                        .padding(.bottom, 20)
                 }
             }
         }
-        // Double click to reset
-        .onTapGesture(count: 2) {
-            withAnimation(.spring()) {
-                currentScale = 1.0
-                offset = .zero
-                lastOffset = .zero
-            }
-        }
+    }
+
+    // Helper: Reset to Fit View
+    private func resetToFit() {
+        currentScale = 1.0
+        lastScale = 1.0
+        offset = .zero
+        lastOffset = .zero
+    }
+
+    // Helper: Zoom to Target (3x)
+    private func zoomToTarget() {
+        currentScale = zoomLevel
+        lastScale = zoomLevel
+        offset = .zero
+        lastOffset = .zero
     }
 }

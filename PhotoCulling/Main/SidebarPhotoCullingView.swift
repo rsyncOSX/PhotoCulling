@@ -6,9 +6,9 @@ extension KeyPath<FileItem, String>: @unchecked @retroactive Sendable {}
 
 struct SidebarPhotoCullingView: View {
     @Environment(\.openWindow) var openWindow
-    
+
     @Binding var nsImage: NSImage?
-    
+
     @State var sources: [FolderSource] = []
     @State var selectedSource: FolderSource?
     @State var files: [FileItem] = []

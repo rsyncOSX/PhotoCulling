@@ -13,14 +13,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         true
     }
 
-    func applicationWillTerminate(_: Notification) { }
+    func applicationWillTerminate(_: Notification) {}
 }
 
 @main
 struct PhotoCullingApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var nsImage: NSImage?
-    
+
     var body: some Scene {
         Window("Photo Culling", id: "main-window") {
             SidebarPhotoCullingView(nsImage: $nsImage)
@@ -30,14 +30,14 @@ struct PhotoCullingApp: App {
                     NSApplication.shared.terminate(nil)
                 }
         }
-        
+
         Window("Zoom", id: "zoom-window") {
             ZoomableImageView(nsImage: nsImage)
         }
         .defaultPosition(.center)
         .defaultSize(width: 600, height: 400)
     }
-    
+
     private func performCleanupTask() {
         Logger.process.debugMessageOnly("PhotoCullingApp: performCleanupTask(), shutting down, doing clean up")
     }

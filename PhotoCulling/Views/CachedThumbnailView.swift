@@ -25,7 +25,6 @@ struct CachedThumbnailView: View {
         }
         .task(id: url) {
             isLoading = true
-            // Fetch high-res for the zoom view
             image = await ThumbnailProvider.shared.thumbnail(for: url, targetSize: 2560)
             isLoading = false
         }

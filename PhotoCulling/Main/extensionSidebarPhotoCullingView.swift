@@ -12,7 +12,6 @@ import UniformTypeIdentifiers
 extension SidebarPhotoCullingView {
     @ToolbarContentBuilder
     var toolbarContent: some ToolbarContent {
-        
         ToolbarItem {
             ConditionalGlassButton(
                 systemImage: "plus.magnifyingglass",
@@ -22,7 +21,7 @@ extension SidebarPhotoCullingView {
                 openWindow(id: "zoom-window")
             }
         }
-        
+
         // Only show toolbar items when this tab is active
         if !files.isEmpty {
             ToolbarItem {
