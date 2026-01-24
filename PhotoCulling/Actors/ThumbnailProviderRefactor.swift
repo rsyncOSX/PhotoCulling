@@ -169,4 +169,9 @@ actor ThumbnailProviderRefactor {
         successCount += 1
         return successCount
     }
+    
+    func clearCaches() async {
+        memoryCache.removeAllObjects()
+        await diskCache.pruneCache()
+    }
 }
