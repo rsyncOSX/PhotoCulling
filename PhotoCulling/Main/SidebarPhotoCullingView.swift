@@ -144,13 +144,19 @@ struct SidebarPhotoCullingView: View {
                         processedURLs.insert(url)
 
                         creatingthumbnails = true
-
+                        
                         await ThumbnailProviderRefactor.shared.preloadCatalog(
+                            at: url,
+                            targetSize: 1024
+                        )
+
+                        /*
+                        await ThumbnailProvider.shared.preloadCatalog(
                             at: url,
                             targetSize: 1024,
                             recursive: false
                         )
-
+                         */
                         creatingthumbnails = false
                     }
                 }

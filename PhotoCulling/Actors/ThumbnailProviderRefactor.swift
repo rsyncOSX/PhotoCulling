@@ -60,6 +60,7 @@ actor ThumbnailProviderRefactor {
         }.value
     }
 
+    @discardableResult
     func preloadCatalog(at catalogURL: URL, targetSize: Int) async -> Int {
         // Cancel any existing preload before starting a new one
         cancelPreload()
