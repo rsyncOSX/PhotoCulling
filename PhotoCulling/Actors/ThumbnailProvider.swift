@@ -31,7 +31,7 @@ actor ThumbnailProvider {
 
     // 2. Performance Limits
     init() {
-        memoryCache.totalCostLimit = 200 * 2560 * 2560 // 500MB
+        memoryCache.totalCostLimit = 200 * 2560 * 2560 // 1.25 GB
         memoryCache.countLimit = 500
     }
 

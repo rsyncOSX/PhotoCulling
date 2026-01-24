@@ -49,17 +49,15 @@ struct CachedThumbnailView: View {
         }
         .task(id: url) {
             isLoading = true
-            // Fetch a larger resolution for better zooming quality
+            // Fetch high-res for the zoom view
             image = await ThumbnailProvider.shared.thumbnail(for: url, targetSize: 2560)
             isLoading = false
         }
-        // FIX: Use .sheet instead of .fullScreenCover for macOS
         .sheet(isPresented: $isPresentingFullScreen) {
             ZoomableImageView(nsImage: image)
-                // Set a large default size for the sheet window
                 .frame(minWidth: 1000, minHeight: 800)
-                // Hide the standard window title bar for a cleaner "viewer" look
-                //.windowStyle(.hiddenTitleBar)
+                // Optional: Keep standard title bar for window management,
+                // or uncomment .windowStyle(.hiddenTitleBar) for immersion
         }
     }
 }
@@ -81,16 +79,21 @@ struct ZoomableImageView: View {
             
             if let nsImage {
                 GeometryReader { geo in
+                    // FIX: Use actual image size for the frame.
+                    // This ensures the image is rendered at its native resolution (or scaled down by 'fit')
+                    // rather than being forced into the window geometry incorrectly.
+                    let imageSize = nsImage.size
+                    
                     Image(nsImage: nsImage)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: geo.size.width, height: geo.size.height)
+                        // Bind the frame to the image's intrinsic size
+                        .frame(width: imageSize.width, height: imageSize.height)
                         .scaleEffect(currentScale)
                         .offset(offset)
-                        // Combine Pinch (Zoom) and Drag (Pan)
                         .gesture(
                             SimultaneousGesture(
-                                // 1. Zoom (Pinch on Trackpad)
+                                // 1. Zoom
                                 MagnificationGesture()
                                     .onChanged { value in
                                         let delta = value / lastScale
@@ -100,18 +103,19 @@ struct ZoomableImageView: View {
                                     .onEnded { _ in
                                         lastScale = 1.0
                                         if currentScale < 1.0 {
-                                            withAnimation {
+                                            withAnimation(.spring()) {
                                                 currentScale = 1.0
                                                 offset = .zero
+                                                lastOffset = .zero
                                             }
                                         }
                                     },
                                 
-                                // 2. Pan (Click & Drag OR Two-Finger Swipe on Trackpad)
+                                // 2. Pan
                                 DragGesture()
                                     .onChanged { value in
-                                        // Only allow panning if zoomed in
                                         if currentScale > 1.0 {
+                                            // Calculate new offset based on the drag delta
                                             let newOffset = CGSize(
                                                 width: lastOffset.width + value.translation.width,
                                                 height: lastOffset.height + value.translation.height
@@ -129,13 +133,15 @@ struct ZoomableImageView: View {
                                     }
                             )
                         )
+                        // Center the image container in the window
+                        .position(x: geo.size.width / 2, y: geo.size.height / 2)
                 }
             } else {
                 Text("No Image Available")
                     .foregroundStyle(.white)
             }
             
-            // Close Button (Top Right)
+            // Close Button
             VStack {
                 HStack {
                     Spacer()
@@ -143,14 +149,14 @@ struct ZoomableImageView: View {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 24))
                             .foregroundStyle(.white.opacity(0.7))
-                            //.hoverEffect(.highlight)
+                            .background(Circle().fill(Color.black.opacity(0.1))) // Better hit target
                     }
                     .buttonStyle(.plain)
                     .padding()
                 }
                 Spacer()
                 
-                // Instructions overlay
+                // Instructions
                 if currentScale <= 1.0 {
                     Text("Pinch to Zoom • Drag to Pan")
                         .font(.caption)
@@ -160,7 +166,7 @@ struct ZoomableImageView: View {
                 }
             }
         }
-        // Double click or double tap to reset
+        // Double click to reset
         .onTapGesture(count: 2) {
             withAnimation(.spring()) {
                 currentScale = 1.0
@@ -170,4 +176,3 @@ struct ZoomableImageView: View {
         }
     }
 }
-

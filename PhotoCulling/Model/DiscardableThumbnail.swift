@@ -14,10 +14,27 @@ final class DiscardableThumbnail: NSObject, NSDiscardableContent, @unchecked Sen
     private let state = OSAllocatedUnfairLock(initialState: (isDiscarded: false, accessCount: 0))
 
     nonisolated init(image: NSImage) {
-        self.image = image
-        cost = Int(image.size.width * image.size.height * 4)
-        super.init()
-    }
+            self.image = image
+            
+            // IMPROVEMENT: Calculate cost using actual pixel dimensions, not logical points.
+            // This ensures NSCache knows the true RAM footprint of your 2560px images.
+            let width: Int
+            let height: Int
+            
+            if let rep = image.representations.first {
+                width = rep.pixelsWide
+                height = rep.pixelsHigh
+            } else {
+                // Fallback to logical size if representations are missing
+                width = Int(image.size.width)
+                height = Int(image.size.height)
+            }
+            
+            // 4 bytes per pixel (RGBA)
+            self.cost = width * height * 4
+            
+            super.init()
+        }
 
     nonisolated func beginContentAccess() -> Bool {
         state.withLock {
