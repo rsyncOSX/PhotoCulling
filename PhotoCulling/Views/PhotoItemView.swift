@@ -69,7 +69,7 @@ struct PhotoItemView: View {
             Logger.process.debugMessageOnly("PhotoItemView (in GRID) loading thumbnail for \(url)")
             isLoading = true
             // Most likely a thumbnail is received from the populated NSCache<NSURL, NSImage>().
-            thumbnailImage = await ThumbnailProvider.shared.thumbnail(for: url, targetSize: 100)
+            thumbnailImage = await ThumbnailProviderRefactor.shared.thumbnail(for: url, targetSize: 100)
             isLoading = false
         }
     }

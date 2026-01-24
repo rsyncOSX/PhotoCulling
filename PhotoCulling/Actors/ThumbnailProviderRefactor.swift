@@ -174,4 +174,45 @@ actor ThumbnailProviderRefactor {
         memoryCache.removeAllObjects()
         await diskCache.pruneCache()
     }
+    
+    func thumbnail(for url: URL, targetSize: Int) async -> NSImage? {
+        let nsUrl = url as NSURL
+
+        // 1. RAM - Access wrapper safely
+        if let wrapper = memoryCache.object(forKey: nsUrl) {
+            if wrapper.beginContentAccess() {
+                let img = wrapper.image
+                wrapper.endContentAccess()
+                Logger.process.debugMessageOnly("ThumbnailProvider: Found in RAM Cache")
+                return img
+            } else {
+                // Content was discarded by the OS; clean up the "dead" wrapper
+                memoryCache.removeObject(forKey: nsUrl)
+                Logger.process.debugMessageOnly("ThumbnailProvider: Wrapper found but content discarded")
+            }
+        }
+
+        // 2. Disk
+        if let diskImage = await diskCache.load(for: url) {
+            let wrapper = DiscardableThumbnail(image: diskImage)
+            memoryCache.setObject(wrapper, forKey: nsUrl, cost: wrapper.cost)
+            Logger.process.debugMessageOnly("ThumbnailProvider: thumbnail(): found in Disk Cache()")
+            return diskImage
+        }
+
+        // 3. Extraction
+        do {
+            let image = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize))
+            let wrapper = DiscardableThumbnail(image: image)
+            memoryCache.setObject(wrapper, forKey: nsUrl, cost: wrapper.cost)
+            let imgToSave = image
+            Task.detached(priority: .background) { [diskCache] in
+                await diskCache.save(imgToSave, for: url)
+            }
+            Logger.process.debugMessageOnly("ThumbnailProvider: thumbnail(): creating thumbnail")
+            return image
+        } catch {
+            return nil
+        }
+    }
 }
