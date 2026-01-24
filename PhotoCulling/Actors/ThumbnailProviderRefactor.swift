@@ -173,7 +173,7 @@ actor ThumbnailProviderRefactor {
     
     func clearCaches() async {
         memoryCache.removeAllObjects()
-        await diskCache.pruneCache()
+        await diskCache.pruneCache(maxAgeInDays: 0)
     }
     
     func thumbnail(for url: URL, targetSize: Int) async -> NSImage? {
