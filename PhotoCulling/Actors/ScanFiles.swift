@@ -43,7 +43,7 @@ actor ScanFiles {
 
             return scannedFiles
         } catch {
-            print("Scan Error: \(error)")
+            Logger.process.warning("Scan Error: \(error)")
         }
 
         // Note: In a real app, you'd manage the scope lifecycle more carefully

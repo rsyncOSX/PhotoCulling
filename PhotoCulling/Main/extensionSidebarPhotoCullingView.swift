@@ -16,6 +16,16 @@ extension SidebarPhotoCullingView {
             ConditionalGlassButton(
                 systemImage: "plus.magnifyingglass",
                 text: "",
+                helpText: "Zoom ARW"
+            ) {
+                openWindow(id: "zoom-window-arw")
+            }
+        }
+
+        ToolbarItem {
+            ConditionalGlassButton(
+                systemImage: "plus.magnifyingglass",
+                text: "",
                 helpText: "Zoom"
             ) {
                 openWindow(id: "zoom-window")
@@ -106,7 +116,11 @@ extension SidebarPhotoCullingView {
                 selectedFile = files[index]
                 isInspectorPresented = true
                 Task {
-                    nsImage = await ThumbnailProvider.shared.thumbnail(for: files[index].url, targetSize: 2560)
+                    if files[index].url.pathExtension.lowercased() == "arw" {
+                        cgImage = ExtractEmbeddedPreview().extractEmbeddedPreview(from: files[index].url)
+                    } else {
+                        nsImage = await ThumbnailProvider.shared.thumbnail(for: files[index].url, targetSize: 2560)
+                    }
                 }
             } else {
                 isInspectorPresented = false

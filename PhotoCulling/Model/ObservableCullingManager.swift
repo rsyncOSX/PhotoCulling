@@ -75,7 +75,7 @@ final class ObservableCullingManager {
             let data = try JSONEncoder().encode(selectedFiles)
             try data.write(to: savePath, options: [.atomic])
         } catch {
-            print("Save failed: \(error)")
+            Logger.process.warning("Save failed: \(error)")
         }
     }
 
@@ -91,7 +91,7 @@ final class ObservableCullingManager {
                 numberofPreselectedFiles.insert(StringIntPair(string: catalog.absoluteString, int: count))
             }
         } catch {
-            print("Load failed: \(error)")
+            Logger.process.warning("Load failed: \(error)")
         }
     }
 }

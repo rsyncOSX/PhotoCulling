@@ -20,10 +20,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 struct PhotoCullingApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var nsImage: NSImage?
+    @State private var cgImage: CGImage?
 
     var body: some Scene {
         Window("Photo Culling", id: "main-window") {
-            SidebarPhotoCullingView(nsImage: $nsImage)
+            SidebarPhotoCullingView(nsImage: $nsImage, cgImage: $cgImage)
                 .onDisappear {
                     // Quit the app when the main window is closed
                     performCleanupTask()
@@ -33,6 +34,12 @@ struct PhotoCullingApp: App {
 
         Window("Zoom", id: "zoom-window") {
             ZoomableImageView(nsImage: nsImage)
+        }
+        .defaultPosition(.center)
+        .defaultSize(width: 600, height: 400)
+
+        Window("Zoom", id: "zoom-window-arw") {
+            ZoomableImageViewARW(cgImage: cgImage)
         }
         .defaultPosition(.center)
         .defaultSize(width: 600, height: 400)

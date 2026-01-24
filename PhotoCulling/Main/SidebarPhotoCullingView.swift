@@ -8,6 +8,7 @@ struct SidebarPhotoCullingView: View {
     @Environment(\.openWindow) var openWindow
 
     @Binding var nsImage: NSImage?
+    @Binding var cgImage: CGImage?
 
     @State var sources: [FolderSource] = []
     @State var selectedSource: FolderSource?

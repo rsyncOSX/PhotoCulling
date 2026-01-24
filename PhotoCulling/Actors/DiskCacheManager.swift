@@ -1,6 +1,7 @@
 import AppKit
 import CryptoKit
 import Foundation
+import OSLog
 import UniformTypeIdentifiers
 
 actor DiskCacheManager {
@@ -95,7 +96,7 @@ actor DiskCacheManager {
                     }
                 } catch {
                     // Optional: Log error to console
-                    print("DiskCacheManager: Failed to delete \(fileURL.path): \(error)")
+                    Logger.process.warning("DiskCacheManager: Failed to delete \(fileURL.path): \(error)")
                 }
             }
         }.value

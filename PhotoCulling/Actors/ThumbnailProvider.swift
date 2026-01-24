@@ -154,7 +154,7 @@ actor ThumbnailProvider {
                 await self.diskCache.save(cgImage, for: url)
             }
         } catch {
-            print("Failed: \(url.lastPathComponent)")
+            Logger.process.warning("Failed: \(url.lastPathComponent)")
         }
     }
 
@@ -202,7 +202,7 @@ actor ThumbnailProvider {
         do {
             return try await resolveImage(for: url, targetSize: targetSize)
         } catch {
-            print("Failed to resolve thumbnail: \(error)")
+            Logger.process.warning("Failed to resolve thumbnail: \(error)")
             return nil
         }
     }
