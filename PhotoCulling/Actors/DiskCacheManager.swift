@@ -86,7 +86,7 @@ actor DiskCacheManager {
                 options: .skipsHiddenFiles
             ) else { return }
 
-            let expirationDate = Calendar.current.date(byAdding: .day, value: -maxAgeInDays, to: Date())!
+            guard let expirationDate = Calendar.current.date(byAdding: .day, value: -maxAgeInDays, to: Date()) else { return }
 
             for fileURL in urls {
                 do {

@@ -81,13 +81,13 @@ struct ZoomableImageViewARW: View {
             VStack {
                 HStack {
                     Spacer()
-                    Button(action: { dismiss() }) {
+                    Button(action: { dismiss() }, label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 24))
                             .foregroundStyle(.white.opacity(0.7))
                             .background(Color.black.opacity(0.5))
                             .clipShape(Circle())
-                    }
+                    })
                     .buttonStyle(.plain)
                     .padding()
                 }
