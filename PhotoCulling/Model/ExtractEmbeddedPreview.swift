@@ -3,8 +3,9 @@ import ImageIO
 import OSLog
 import UniformTypeIdentifiers
 
-struct ExtractEmbeddedPreview {
-    func extractEmbeddedPreview(from arwURL: URL) -> CGImage? {
+actor ExtractEmbeddedPreview {
+    @concurrent
+    nonisolated func extractEmbeddedPreview(from arwURL: URL) async -> CGImage? {
         guard let imageSource = CGImageSourceCreateWithURL(arwURL as CFURL, nil) else {
             Logger.process.warning("Failed to create image source")
             return nil
@@ -109,7 +110,8 @@ struct ExtractEmbeddedPreview {
     ///   - image: The CGImage to save.
     ///   - originalURL: The URL of the source ARW file (used to generate the filename).
     /// - Returns: The URL of the saved file, or nil if saving failed.
-    func save(image: CGImage, originalURL: URL) -> URL? {
+    @concurrent
+    nonisolated func save(image: CGImage, originalURL: URL) async -> URL? {
         // 1. Create the destination URL
         // We take the original URL, delete the extension (e.g., .ARW), and add .jpg
         let outputURL = originalURL.deletingPathExtension().appendingPathExtension("jpg")

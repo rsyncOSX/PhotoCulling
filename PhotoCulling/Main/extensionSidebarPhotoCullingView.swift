@@ -121,7 +121,7 @@ extension SidebarPhotoCullingView {
                     let extractor = ExtractEmbeddedPreview()
                     if files[index].url.pathExtension.lowercased() == "arw" {
                         // 1. Extract the preview
-                        if let mycgImage = extractor.extractEmbeddedPreview(from: files[index].url) {
+                        if let mycgImage = await extractor.extractEmbeddedPreview(from: files[index].url) {
                             cgImage = mycgImage
                             arwfileisselected = true
                             /*
