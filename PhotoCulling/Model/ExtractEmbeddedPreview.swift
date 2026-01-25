@@ -14,10 +14,10 @@ struct ExtractEmbeddedPreview {
         Logger.process.debugThreadOnly("ExtractEmbeddedPreview: found \(imageCount) images in ARW file")
 
         var bestIndex: Int = -1
-        var largestWidth: Int = 0
-        
+        var largestWidth = 0
+
         var jpegIndex: Int = -1
-        var jpegWidth: Int = 0
+        var jpegWidth = 0
 
         for index in 0 ..< imageCount {
             guard let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, index, nil) as? [CFString: Any] else {
@@ -31,10 +31,10 @@ struct ExtractEmbeddedPreview {
             let tiffDict = properties[kCGImagePropertyTIFFDictionary] as? [CFString: Any]
             let compression = tiffDict?[kCGImagePropertyTIFFCompression] as? Int
             let isJPEG = hasJFIF || (compression == 6)
-            
+
             // 2. Get Width (Removed the non-existent TIFF constant)
             let width = ExtractEmbeddedPreview.getWidth(from: properties)
-            
+
             guard let w = width else {
                 Logger.process.debugMessageOnly("ExtractEmbeddedPreview: Index \(index) - Unknown dimensions")
                 continue
@@ -55,7 +55,7 @@ struct ExtractEmbeddedPreview {
                 // LOGIC:
                 // 1. Skip Index 0 (Always RAW on Sony).
                 // 2. Pick the largest remaining image.
-                if index != 0 && w > largestWidth {
+                if index != 0, w > largestWidth {
                     largestWidth = w
                     bestIndex = index
                 }
@@ -79,7 +79,7 @@ struct ExtractEmbeddedPreview {
                 kCGImageSourceShouldCacheImmediately: true,
                 kCGImageSourceShouldAllowFloat: false
             ]
-            
+
             if let image = CGImageSourceCreateImageAtIndex(imageSource, finalIndex, options as CFDictionary) {
                 return image
             }
@@ -88,7 +88,7 @@ struct ExtractEmbeddedPreview {
         Logger.process.warning("ExtractEmbeddedPreview: No suitable preview found")
         return nil
     }
-    
+
     // Helper to find width in nested dictionaries
     static func getWidth(from properties: [CFString: Any]) -> Int? {
         // Try Root
@@ -103,7 +103,7 @@ struct ExtractEmbeddedPreview {
 
         return nil
     }
-    
+
     /// Saves the extracted CGImage to disk as a JPEG.
     /// - Parameters:
     ///   - image: The CGImage to save.
@@ -113,7 +113,7 @@ struct ExtractEmbeddedPreview {
         // 1. Create the destination URL
         // We take the original URL, delete the extension (e.g., .ARW), and add .jpg
         let outputURL = originalURL.deletingPathExtension().appendingPathExtension("jpg")
-        
+
         Logger.process.info("ExtractEmbeddedPreview: Attempting to save to \(outputURL.path)")
 
         // 2. Create a CGImageDestination
@@ -133,7 +133,7 @@ struct ExtractEmbeddedPreview {
         CGImageDestinationAddImage(destination, image, options as CFDictionary)
 
         let success = CGImageDestinationFinalize(destination)
-        
+
         if success {
             Logger.process.info("ExtractEmbeddedPreview: Successfully saved JPEG to \(outputURL.path)")
             return outputURL

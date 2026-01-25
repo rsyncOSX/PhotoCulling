@@ -125,13 +125,13 @@ extension SidebarPhotoCullingView {
                             cgImage = mycgImage
                             arwfileisselected = true
                             /*
-                            // 2. Save it to disk
-                            if let savedURL = extractor.save(image: mycgImage, originalURL: files[index].url) {
-                                print("Success! Image saved to: \(savedURL.path)")
-                            } else {
-                                print("Failed to save image.")
-                            }
-                             */
+                             // 2. Save it to disk
+                             if let savedURL = extractor.save(image: mycgImage, originalURL: files[index].url) {
+                                 print("Success! Image saved to: \(savedURL.path)")
+                             } else {
+                                 print("Failed to save image.")
+                             }
+                              */
                         } else {
                             print("Could not extract preview.")
                         }
