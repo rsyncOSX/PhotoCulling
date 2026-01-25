@@ -103,4 +103,43 @@ struct ExtractEmbeddedPreview {
 
         return nil
     }
+    
+    /// Saves the extracted CGImage to disk as a JPEG.
+    /// - Parameters:
+    ///   - image: The CGImage to save.
+    ///   - originalURL: The URL of the source ARW file (used to generate the filename).
+    /// - Returns: The URL of the saved file, or nil if saving failed.
+    func save(image: CGImage, originalURL: URL) -> URL? {
+        // 1. Create the destination URL
+        // We take the original URL, delete the extension (e.g., .ARW), and add .jpg
+        let outputURL = originalURL.deletingPathExtension().appendingPathExtension("jpg")
+        
+        Logger.process.info("ExtractEmbeddedPreview: Attempting to save to \(outputURL.path)")
+
+        // 2. Create a CGImageDestination
+        // UTType.jpeg.identifier specifies the output format
+        guard let destination = CGImageDestinationCreateWithURL(outputURL as CFURL, UTType.jpeg.identifier as CFString, 1, nil) else {
+            Logger.process.error("ExtractEmbeddedPreview: Failed to create image destination at \(outputURL.path)")
+            return nil
+        }
+
+        // 3. Set options (Compression Quality)
+        // 1.0 is maximum quality, 0.0 is minimum. 0.9 is a good balance for previews.
+        let options: [CFString: Any] = [
+            kCGImageDestinationLossyCompressionQuality: 0.9
+        ]
+
+        // 4. Add the image and finalize
+        CGImageDestinationAddImage(destination, image, options as CFDictionary)
+
+        let success = CGImageDestinationFinalize(destination)
+        
+        if success {
+            Logger.process.info("ExtractEmbeddedPreview: Successfully saved JPEG to \(outputURL.path)")
+            return outputURL
+        } else {
+            Logger.process.error("ExtractEmbeddedPreview: Failed to finalize image writing")
+            return nil
+        }
+    }
 }

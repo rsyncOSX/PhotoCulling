@@ -118,9 +118,23 @@ extension SidebarPhotoCullingView {
                 selectedFile = files[index]
                 isInspectorPresented = true
                 Task {
+                    let extractor = ExtractEmbeddedPreview()
                     if files[index].url.pathExtension.lowercased() == "arw" {
-                        cgImage = ExtractEmbeddedPreview().extractEmbeddedPreview(from: files[index].url)
-                        arwfileisselected = true
+                        // 1. Extract the preview
+                        if let mycgImage = extractor.extractEmbeddedPreview(from: files[index].url) {
+                            cgImage = mycgImage
+                            arwfileisselected = true
+                            // 2. Save it to disk
+                            if let savedURL = extractor.save(image: mycgImage, originalURL: files[index].url) {
+                                print("Success! Image saved to: \(savedURL.path)")
+                            } else {
+                                print("Failed to save image.")
+                            }
+                        } else {
+                            print("Could not extract preview.")
+                        }
+                        // cgImage = ExtractEmbeddedPreview().extractEmbeddedPreview(from: files[index].url)
+                        // arwfileisselected = true
                     } else {
                         nsImage = await ThumbnailProvider.shared.thumbnail(for: files[index].url, targetSize: 2560)
                         arwfileisselected = false
