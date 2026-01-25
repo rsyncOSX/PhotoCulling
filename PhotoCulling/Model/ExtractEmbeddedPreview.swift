@@ -1,10 +1,3 @@
-//
-//  ExtractEmbeddedPreview.swift
-//  PhotoCulling
-//
-//  Created by Thomas Evensen on 24/01/2026.
-//
-
 import Foundation
 import ImageIO
 import OSLog
@@ -17,34 +10,97 @@ struct ExtractEmbeddedPreview {
             return nil
         }
 
-        // Get the count of images in the file (RAW + embedded previews)
         let imageCount = CGImageSourceGetCount(imageSource)
         Logger.process.debugThreadOnly("ExtractEmbeddedPreview: found \(imageCount) images in ARW file")
 
-        // Sony ARW typically has multiple images:
-        // Index 0: RAW data (not directly renderable)
-        // Index 1: Large preview (often 4032×2688)
-        // Index 2: Smaller preview (1616×1080)
-
-        // Try to get the largest embedded preview
-        var largestImage: CGImage?
-        var largestDimensions: (width: Int, height: Int) = (0, 0)
+        var bestIndex: Int = -1
+        var largestWidth: Int = 0
+        
+        var jpegIndex: Int = -1
+        var jpegWidth: Int = 0
 
         for index in 0 ..< imageCount {
-            if let image = CGImageSourceCreateImageAtIndex(imageSource, index, nil) {
-                let width = image.width
-                let height = image.height
+            guard let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, index, nil) as? [CFString: Any] else {
+                continue
+            }
 
-                Logger.process.debugMessageOnly("ExtractEmbeddedPreview: Image \(index): \(width)×\(height)")
+            // 1. Detect JPEG.
+            // JFIF dictionary is a strong indicator.
+            // Compression value of 6 is the definitive indicator for JPEG.
+            let hasJFIF = (properties[kCGImagePropertyJFIFDictionary] as? [CFString: Any]) != nil
+            let tiffDict = properties[kCGImagePropertyTIFFDictionary] as? [CFString: Any]
+            let compression = tiffDict?[kCGImagePropertyTIFFCompression] as? Int
+            let isJPEG = hasJFIF || (compression == 6)
+            
+            // 2. Get Width (Removed the non-existent TIFF constant)
+            let width = ExtractEmbeddedPreview.getWidth(from: properties)
+            
+            guard let w = width else {
+                Logger.process.debugMessageOnly("ExtractEmbeddedPreview: Index \(index) - Unknown dimensions")
+                continue
+            }
 
-                // Look for images around 4000px wide (Sony's large preview size)
-                if width > largestDimensions.width && width > 2000 {
-                    largestDimensions = (width, height)
-                    largestImage = image
+            Logger.process.debugMessageOnly("ExtractEmbeddedPreview: Index \(index) - \(w)px wide (\(isJPEG ? "JPEG" : "RAW/TIFF"))")
+
+            // Strategy:
+            // A. If we find a JPEG, track the largest one.
+            if isJPEG {
+                if w > jpegWidth {
+                    jpegWidth = w
+                    jpegIndex = index
+                }
+            }
+            // B. Backup Plan: If no JPEG found yet.
+            else if jpegIndex == -1 {
+                // LOGIC:
+                // 1. Skip Index 0 (Always RAW on Sony).
+                // 2. Pick the largest remaining image.
+                if index != 0 && w > largestWidth {
+                    largestWidth = w
+                    bestIndex = index
                 }
             }
         }
 
-        return largestImage
+        // Decision
+        var finalIndex = -1
+        if jpegIndex != -1 {
+            finalIndex = jpegIndex
+            Logger.process.info("ExtractEmbeddedPreview: Selected JPEG preview at index \(finalIndex)")
+        } else if bestIndex != -1 {
+            finalIndex = bestIndex
+            Logger.process.info("ExtractEmbeddedPreview: Selected fallback image at index \(finalIndex)")
+        }
+
+        // 3. Decode
+        if finalIndex != -1 {
+            // kCGImageSourceShouldCacheImmediately: true ensures we get the data now
+            let options: [CFString: Any] = [
+                kCGImageSourceShouldCacheImmediately: true,
+                kCGImageSourceShouldAllowFloat: false
+            ]
+            
+            if let image = CGImageSourceCreateImageAtIndex(imageSource, finalIndex, options as CFDictionary) {
+                return image
+            }
+        }
+
+        Logger.process.warning("ExtractEmbeddedPreview: No suitable preview found")
+        return nil
+    }
+    
+    // Helper to find width in nested dictionaries
+    static func getWidth(from properties: [CFString: Any]) -> Int? {
+        // Try Root
+        if let w = properties[kCGImagePropertyPixelWidth] as? Int { return w }
+        if let w = properties[kCGImagePropertyPixelWidth] as? Double { return Int(w) }
+
+        // Try EXIF Dictionary
+        if let exif = properties[kCGImagePropertyExifDictionary] as? [CFString: Any] {
+            if let w = exif[kCGImagePropertyExifPixelXDimension] as? Int { return w }
+            if let w = exif[kCGImagePropertyExifPixelXDimension] as? Double { return Int(w) }
+        }
+
+        return nil
     }
 }
