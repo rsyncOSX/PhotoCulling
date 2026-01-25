@@ -11,14 +11,14 @@ struct ZoomableImageViewARW: View {
     let cgImage: CGImage?
 
     // State variables for zoom and pan
-    @State private var currentScale: CGFloat = 3.0 // Starts zoomed in
-    @State private var lastScale: CGFloat = 3.0
+    @State private var currentScale: CGFloat = 6.0 // Starts zoomed in
+    @State private var lastScale: CGFloat = 6.0
     @State private var offset: CGSize = .zero
     @State private var lastOffset: CGSize = .zero
 
     @Environment(\.dismiss) var dismiss
 
-    private let zoomLevel: CGFloat = 3.0
+    private let zoomLevel: CGFloat = 6.0
 
     var body: some View {
         ZStack {
