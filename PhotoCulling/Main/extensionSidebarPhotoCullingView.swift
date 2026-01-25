@@ -12,25 +12,13 @@ import UniformTypeIdentifiers
 extension SidebarPhotoCullingView {
     @ToolbarContentBuilder
     var toolbarContent: some ToolbarContent {
-        if arwfileisselected {
-            ToolbarItem {
-                ConditionalGlassButton(
-                    systemImage: "plus.magnifyingglass",
-                    text: "",
-                    helpText: "Zoom"
-                ) {
-                    openWindow(id: "zoom-window-arw")
-                }
-            }
-        } else {
-            ToolbarItem {
-                ConditionalGlassButton(
-                    systemImage: "plus.magnifyingglass",
-                    text: "",
-                    helpText: "Zoom"
-                ) {
-                    openWindow(id: "zoom-window")
-                }
+        ToolbarItem {
+            ConditionalGlassButton(
+                systemImage: "plus.magnifyingglass",
+                text: "",
+                helpText: "Zoom"
+            ) {
+                openWindow(id: "zoom-window-arw")
             }
         }
 
@@ -117,71 +105,25 @@ extension SidebarPhotoCullingView {
                 selectedFileID = files[index].id
                 selectedFile = files[index]
                 isInspectorPresented = true
+                
                 Task {
-                    let extractor = ExtractEmbeddedPreview()
+                    let extractor = ExtractEmbeddedPreviewDownsampling()
                     if files[index].url.pathExtension.lowercased() == "arw" {
                         // 1. Extract the preview
                         if let mycgImage = await extractor.extractEmbeddedPreview(from: files[index].url) {
                             cgImage = mycgImage
-                            arwfileisselected = true
-                            /*
                              // 2. Save it to disk
-                             if let savedURL = extractor.save(image: mycgImage, originalURL: files[index].url) {
-                                 print("Success! Image saved to: \(savedURL.path)")
-                             } else {
-                                 print("Failed to save image.")
-                             }
-                              */
+                            // await extractor.save(image: mycgImage, originalURL: files[index].url)
                         } else {
                             print("Could not extract preview.")
                         }
-                        // cgImage = ExtractEmbeddedPreview().extractEmbeddedPreview(from: files[index].url)
-                        // arwfileisselected = true
                     } else {
-                        nsImage = await ThumbnailProvider.shared.thumbnail(for: files[index].url, targetSize: 2560)
-                        arwfileisselected = false
+                        // nsImage = await ThumbnailProvider.shared.thumbnail(for: files[index].url, targetSize: 2560)
                     }
                 }
+                
             } else {
                 isInspectorPresented = false
-            }
-        }
-    }
-
-    var filetableview2: some View {
-        VStack(alignment: .leading) {
-            Table(filteredFiles, selection: $selectedFileID, sortOrder: $sortOrder) {
-                TableColumn("", value: \.id) { file in
-                    Button(action: {
-                        handleToggleSelection(for: file)
-                    }, label: {
-                        Image(systemName: cullingmanager.selectedFiles.contains(file.name) ? "checkmark.square.fill" : "square")
-                            .foregroundStyle(.blue)
-                    })
-                    .buttonStyle(.plain)
-                }
-                .width(30)
-
-                TableColumn("Filename", value: \.name)
-
-                TableColumn("Size") { file in
-                    Text(ByteCountFormatter.string(fromByteCount: file.size, countStyle: .file))
-                        .foregroundStyle(.secondary)
-                }
-
-                TableColumn("Type") { file in
-                    Text(file.url.pathExtension.isEmpty ? "JPG" : file.url.pathExtension)
-                        .padding(4)
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(4)
-                }
-            }
-
-            if cullingmanager.selectedFiles.isEmpty == false {
-                PhotoGridView(
-                    cullingmanager: cullingmanager,
-                    files: filteredFiles
-                )
             }
         }
     }
@@ -193,20 +135,6 @@ extension SidebarPhotoCullingView {
             in: file.url,
             filename: file.name
         )
-        /*
-         // Update UI selection and inspector
-         if cullingmanager.selectedFiles.contains(file.name) {
-             selectedFileID = file.id
-             selectedFile = file
-             isInspectorPresented = true
-         } else {
-             // If this was the selected file and it's being deselected
-             if selectedFile?.id == file.id {
-                 selectedFile = nil
-                 isInspectorPresented = false
-             }
-         }
-         */
     }
 
     func handlePickerResult(_ result: Result<URL, Error>) {

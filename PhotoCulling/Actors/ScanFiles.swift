@@ -31,6 +31,10 @@ actor ScanFiles {
             )
 
             let scannedFiles = contents.compactMap { fileURL -> FileItem? in
+                
+                // Check for .arw extension (case-insensitive)
+                guard fileURL.pathExtension.lowercased() == "arw" else { return nil }
+                
                 let res = try? fileURL.resourceValues(forKeys: Set(keys))
                 return FileItem(
                     url: fileURL,

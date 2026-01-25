@@ -32,17 +32,11 @@ struct PhotoCullingApp: App {
                 }
         }
 
-        Window("Zoom", id: "zoom-window") {
-            ZoomableImageView(nsImage: nsImage)
-        }
-        .defaultPosition(.center)
-        .defaultSize(width: 600, height: 400)
-
         Window("Zoom", id: "zoom-window-arw") {
             ZoomableImageViewARW(cgImage: cgImage)
         }
         .defaultPosition(.center)
-        .defaultSize(width: 600, height: 400)
+        .defaultSize(width: 800, height: 600)
     }
 
     private func performCleanupTask() {

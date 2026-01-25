@@ -3,12 +3,16 @@ import ImageIO
 import OSLog
 import UniformTypeIdentifiers
 
-struct ExtractEmbeddedPreviewDownsampling {
+actor ExtractEmbeddedPreviewDownsampling {
     // Target size for culling previews (width or height)
     // The system will resize the image to fit within this box during extraction
-    let maxThumbnailSize: CGFloat = 4096
+    // Above 8640 extracs full size
+    let maxThumbnailSize: CGFloat = 8000
 
-    func extractEmbeddedPreview(from arwURL: URL) -> CGImage? {
+    // Cannot use @concurrent nonisolated here, the func getWidth
+    // will not work then.
+    // The func extractEmbeddedPreview and func getWidth must be on the same isolation
+    func extractEmbeddedPreview(from arwURL: URL) async -> CGImage? {
         guard let imageSource = CGImageSourceCreateWithURL(arwURL as CFURL, nil) else {
             Logger.process.warning("Failed to create image source")
             return nil
@@ -19,57 +23,48 @@ struct ExtractEmbeddedPreviewDownsampling {
 
         var targetIndex: Int = -1
         var targetWidth = 0
-        var requiresDownsampling = false
 
+        // 1. Find the LARGEST JPEG available
         for index in 0 ..< imageCount {
             guard let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, index, nil) as? [CFString: Any] else {
                 continue
             }
 
-            // 1. Detect JPEG
+            // Detect JPEG
             let hasJFIF = (properties[kCGImagePropertyJFIFDictionary] as? [CFString: Any]) != nil
             let tiffDict = properties[kCGImagePropertyTIFFDictionary] as? [CFString: Any]
             let compression = tiffDict?[kCGImagePropertyTIFFCompression] as? Int
             let isJPEG = hasJFIF || (compression == 6)
 
-            guard isJPEG else { continue } // Skip non-JPEGs (RAW)
+            guard isJPEG else { continue }
 
-            // 2. Get Width
-            let width = ExtractEmbeddedPreview.getWidth(from: properties)
-            guard let w = width else { continue }
-
-            Logger.process.debugMessageOnly("ExtractEmbeddedPreview: Index \(index) - JPEG \(w)px wide")
-
-            // Logic:
-            // If we find a small JPEG (< 3000px), take it immediately (it's the native preview).
-            // If we only find a huge JPEG (> 3000px), we'll take it, but flag it for downsampling.
-            if w < 3000 {
-                targetIndex = index
-                targetWidth = w
-                requiresDownsampling = false
-                // Found a native small preview, stop looking
-                break
-            } else if w > targetWidth {
-                // Track the largest JPEG (likely the full-size embedded one)
-                targetIndex = index
-                targetWidth = w
-                requiresDownsampling = true
+            if let width = getWidth(from: properties) {
+                // We track the widest JPEG found to get the best quality source
+                if width > targetWidth {
+                    targetWidth = width
+                    targetIndex = index
+                }
+                Logger.process.debugMessageOnly("ExtractEmbeddedPreview: Index \(index) - JPEG \(width)px wide")
             }
         }
 
-        // If no JPEG found, we are out of luck (or we'd have to decode RAW)
+        // If no JPEG found, we are out of luck
         guard targetIndex != -1 else {
             Logger.process.warning("ExtractEmbeddedPreview: No JPEG found in file")
             return nil
         }
 
-        Logger.process.info("ExtractEmbeddedPreview: Selected JPEG at index \(targetIndex) (\(targetWidth)px). Downsampling: \(requiresDownsampling)")
+        Logger.process.info("ExtractEmbeddedPreview: Selected JPEG at index \(targetIndex) (\(targetWidth)px). Target: \(self.maxThumbnailSize)")
 
-        // 3. Decode
+        // 2. Decide: Downsample or Decode Directly?
+        // We only downsample if the source image is LARGER than our desired maxThumbnailSize.
+        // If the source is smaller (e.g. a 2048px preview inside the ARW), we keep it as is (don't upscale).
+        
+        let requiresDownsampling = CGFloat(targetWidth) > maxThumbnailSize
+
         if requiresDownsampling {
-            // Create a Thumbnail. This is the magic:
-            // It decodes the JPEG but subsamples it to `maxThumbnailSize` during the read process.
-            // This avoids loading the full 17MB / 8640px image into memory.
+            Logger.process.info("ExtractEmbeddedPreview: Downsampling to \(self.maxThumbnailSize)px")
+            
             let options: [CFString: Any] = [
                 kCGImageSourceCreateThumbnailFromImageIfAbsent: true,
                 kCGImageSourceCreateThumbnailWithTransform: true, // Fixes rotation if needed
@@ -78,36 +73,59 @@ struct ExtractEmbeddedPreviewDownsampling {
 
             return CGImageSourceCreateThumbnailAtIndex(imageSource, targetIndex, options as CFDictionary)
         } else {
-            // It's already small, just decode normally
+            Logger.process.info("ExtractEmbeddedPreview: Using original preview size (\(targetWidth)px)")
+            // It's already small enough, just decode normally
             let options: [CFString: Any] = [
                 kCGImageSourceShouldCacheImmediately: true,
                 kCGImageSourceShouldAllowFloat: false
             ]
             return CGImageSourceCreateImageAtIndex(imageSource, targetIndex, options as CFDictionary)
         }
+        
+        
     }
-
-    static func getWidth(from properties: [CFString: Any]) -> Int? {
+    
+    func getWidth(from properties: [CFString: Any]) -> Int? {
+        // Try Root
         if let w = properties[kCGImagePropertyPixelWidth] as? Int { return w }
         if let w = properties[kCGImagePropertyPixelWidth] as? Double { return Int(w) }
+
+        // Try EXIF Dictionary
         if let exif = properties[kCGImagePropertyExifDictionary] as? [CFString: Any] {
             if let w = exif[kCGImagePropertyExifPixelXDimension] as? Int { return w }
             if let w = exif[kCGImagePropertyExifPixelXDimension] as? Double { return Int(w) }
         }
+
         return nil
     }
-
-    // Save function remains the same...
-    func save(image: CGImage, originalURL: URL) -> URL? {
+    
+    /// Saves the extracted CGImage to disk as a JPEG.
+    /// - Parameters:
+    ///   - image: The CGImage to save.
+    ///   - originalURL: The URL of the source ARW file (used to generate the filename).
+    @concurrent
+    nonisolated func save(image: CGImage, originalURL: URL) async  {
         let outputURL = originalURL.deletingPathExtension().appendingPathExtension("jpg")
-        guard let destination = CGImageDestinationCreateWithURL(outputURL as CFURL, UTType.jpeg.identifier as CFString, 1, nil) else { return nil }
 
-        // If we downsampled, we save at high quality (0.9).
-        // If it was originally 17MB, it will now be roughly 500KB - 1MB.
-        let options: [CFString: Any] = [kCGImageDestinationLossyCompressionQuality: 0.9]
+        Logger.process.info("ExtractEmbeddedPreview: Attempting to save to \(outputURL.path)")
+
+        guard let destination = CGImageDestinationCreateWithURL(outputURL as CFURL, UTType.jpeg.identifier as CFString, 1, nil) else {
+            Logger.process.error("ExtractEmbeddedPreview: Failed to create image destination at \(outputURL.path)")
+            return
+        }
+
+        let options: [CFString: Any] = [
+            kCGImageDestinationLossyCompressionQuality: 1.0
+        ]
+
         CGImageDestinationAddImage(destination, image, options as CFDictionary)
+        let success = CGImageDestinationFinalize(destination)
 
-        if CGImageDestinationFinalize(destination) { return outputURL }
-        return nil
+        if success {
+            // Log the actual output size for verification
+            Logger.process.info("ExtractEmbeddedPreview: Successfully saved JPEG. Output Dimensions: \(image.width)x\(image.height)")
+        } else {
+            Logger.process.error("ExtractEmbeddedPreview: Failed to finalize image writing")
+        }
     }
 }

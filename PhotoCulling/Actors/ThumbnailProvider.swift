@@ -26,8 +26,8 @@ actor ThumbnailProvider {
     private var preloadTask: Task<Int, Never>?
 
     var fileHandlers: FileHandlers?
-
-    let supported: Set<String> = ["arw", "tiff", "tif", "jpeg", "jpg", "png", "heic", "heif"]
+    // let supported: Set<String> = ["arw", "tiff", "tif", "jpeg", "jpg", "png", "heic", "heif"]
+    let supported: Set<String> = ["arw"]
 
     // 2. Performance Limits
     init() {
