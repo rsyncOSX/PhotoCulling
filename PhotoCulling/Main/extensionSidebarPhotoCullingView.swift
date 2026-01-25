@@ -105,14 +105,17 @@ extension SidebarPhotoCullingView {
                 selectedFileID = files[index].id
                 selectedFile = files[index]
                 isInspectorPresented = true
-                
+
                 Task {
                     let extractor = ExtractEmbeddedPreviewDownsampling()
                     if files[index].url.pathExtension.lowercased() == "arw" {
+                        guard files[index].url.startAccessingSecurityScopedResource() else { return }
+                        defer { files[index].url.stopAccessingSecurityScopedResource() }
+
                         // 1. Extract the preview
                         if let mycgImage = await extractor.extractEmbeddedPreview(from: files[index].url) {
                             cgImage = mycgImage
-                             // 2. Save it to disk
+                            // 2. Save it to disk
                             // await extractor.save(image: mycgImage, originalURL: files[index].url)
                         } else {
                             print("Could not extract preview.")
@@ -121,7 +124,6 @@ extension SidebarPhotoCullingView {
                         // nsImage = await ThumbnailProvider.shared.thumbnail(for: files[index].url, targetSize: 2560)
                     }
                 }
-                
             } else {
                 isInspectorPresented = false
             }

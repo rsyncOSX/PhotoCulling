@@ -54,17 +54,17 @@ actor ExtractEmbeddedPreviewDownsampling {
             return nil
         }
 
-        Logger.process.info("ExtractEmbeddedPreview: Selected JPEG at index \(targetIndex) (\(targetWidth)px). Target: \(self.maxThumbnailSize)")
+        Logger.process.info("ExtractEmbeddedPreview: Selected JPEG at index \(targetIndex) (\(targetWidth)px). Target: \(maxThumbnailSize)")
 
         // 2. Decide: Downsample or Decode Directly?
         // We only downsample if the source image is LARGER than our desired maxThumbnailSize.
         // If the source is smaller (e.g. a 2048px preview inside the ARW), we keep it as is (don't upscale).
-        
+
         let requiresDownsampling = CGFloat(targetWidth) > maxThumbnailSize
 
         if requiresDownsampling {
-            Logger.process.info("ExtractEmbeddedPreview: Downsampling to \(self.maxThumbnailSize)px")
-            
+            Logger.process.info("ExtractEmbeddedPreview: Downsampling to \(maxThumbnailSize)px")
+
             let options: [CFString: Any] = [
                 kCGImageSourceCreateThumbnailFromImageIfAbsent: true,
                 kCGImageSourceCreateThumbnailWithTransform: true, // Fixes rotation if needed
@@ -81,10 +81,8 @@ actor ExtractEmbeddedPreviewDownsampling {
             ]
             return CGImageSourceCreateImageAtIndex(imageSource, targetIndex, options as CFDictionary)
         }
-        
-        
     }
-    
+
     func getWidth(from properties: [CFString: Any]) -> Int? {
         // Try Root
         if let w = properties[kCGImagePropertyPixelWidth] as? Int { return w }
@@ -98,13 +96,13 @@ actor ExtractEmbeddedPreviewDownsampling {
 
         return nil
     }
-    
+
     /// Saves the extracted CGImage to disk as a JPEG.
     /// - Parameters:
     ///   - image: The CGImage to save.
     ///   - originalURL: The URL of the source ARW file (used to generate the filename).
     @concurrent
-    nonisolated func save(image: CGImage, originalURL: URL) async  {
+    nonisolated func save(image: CGImage, originalURL: URL) async {
         let outputURL = originalURL.deletingPathExtension().appendingPathExtension("jpg")
 
         Logger.process.info("ExtractEmbeddedPreview: Attempting to save to \(outputURL.path)")
