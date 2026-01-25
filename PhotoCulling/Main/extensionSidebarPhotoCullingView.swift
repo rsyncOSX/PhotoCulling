@@ -109,8 +109,8 @@ extension SidebarPhotoCullingView {
                 Task {
                     let extractor = ExtractEmbeddedPreviewDownsampling()
                     if files[index].url.pathExtension.lowercased() == "arw" {
-                        guard files[index].url.startAccessingSecurityScopedResource() else { return }
-                        defer { files[index].url.stopAccessingSecurityScopedResource() }
+                        // guard files[index].url.startAccessingSecurityScopedResource() else { return }
+                        // defer { files[index].url.stopAccessingSecurityScopedResource() }
 
                         // 1. Extract the preview
                         if let mycgImage = await extractor.extractEmbeddedPreview(from: files[index].url) {

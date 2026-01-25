@@ -54,7 +54,7 @@ actor ExtractEmbeddedPreviewDownsampling {
             return nil
         }
 
-        Logger.process.info("ExtractEmbeddedPreview: Selected JPEG at index \(targetIndex) (\(targetWidth)px). Target: \(maxThumbnailSize)")
+        Logger.process.info("ExtractEmbeddedPreview: Selected JPEG at index \(targetIndex) (\(targetWidth)px). Target: \(self.maxThumbnailSize)")
 
         // 2. Decide: Downsample or Decode Directly?
         // We only downsample if the source image is LARGER than our desired maxThumbnailSize.
@@ -63,7 +63,7 @@ actor ExtractEmbeddedPreviewDownsampling {
         let requiresDownsampling = CGFloat(targetWidth) > maxThumbnailSize
 
         if requiresDownsampling {
-            Logger.process.info("ExtractEmbeddedPreview: Downsampling to \(maxThumbnailSize)px")
+            Logger.process.info("ExtractEmbeddedPreview: Downsampling to \(self.maxThumbnailSize)px")
 
             let options: [CFString: Any] = [
                 kCGImageSourceCreateThumbnailFromImageIfAbsent: true,
