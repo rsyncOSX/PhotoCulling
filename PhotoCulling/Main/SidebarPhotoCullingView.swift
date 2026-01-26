@@ -92,8 +92,6 @@ struct SidebarPhotoCullingView: View {
             .searchable(text: $searchText, placement: .toolbar, prompt: "Search in \(selectedSource?.name ?? "catalog")...")
             .toolbar { toolbarContent }
         } detail: {
-            // MARK: Detail View
-
             if let file = selectedFile {
                 VStack(spacing: 20) {
                     CachedThumbnailView(url: file.url)

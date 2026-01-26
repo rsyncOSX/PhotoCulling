@@ -18,6 +18,22 @@ extension SidebarPhotoCullingView {
                 text: "",
                 helpText: "Zoom"
             ) {
+                guard let selectedID = selectedFileID,
+                      let file = files.first(where: { $0.id == selectedID }) else { return }
+
+                Task {
+                    let extractor = ExtractEmbeddedPreview()
+                    if file.url.pathExtension.lowercased() == "arw" {
+                        if let mycgImage = await extractor.extractEmbeddedPreview(from: file.url, fullSize: true) {
+                            cgImage = mycgImage
+                        } else {
+                            print("Could not extract preview.")
+                        }
+                    } else {
+                        // nsImage = await ThumbnailProvider.shared.thumbnail(for: file.url, targetSize: 2560)
+                    }
+                }
+
                 openWindow(id: "zoom-window-arw")
             }
         }
@@ -105,28 +121,29 @@ extension SidebarPhotoCullingView {
                 selectedFileID = files[index].id
                 selectedFile = files[index]
                 isInspectorPresented = true
-
-                Task {
-                    let extractor = ExtractEmbeddedPreview()
-                    if files[index].url.pathExtension.lowercased() == "arw" {
-                        // guard files[index].url.startAccessingSecurityScopedResource() else { return }
-                        // defer { files[index].url.stopAccessingSecurityScopedResource() }
-
-                        // 1. Extract the preview
-                        if let mycgImage = await extractor.extractEmbeddedPreview(from: files[index].url, fullSize: true) {
-                            cgImage = mycgImage
-                            // 2. Save it to disk
-                            // await extractor.save(image: mycgImage, originalURL: files[index].url)
-                        } else {
-                            print("Could not extract preview.")
-                        }
-                    } else {
-                        // nsImage = await ThumbnailProvider.shared.thumbnail(for: files[index].url, targetSize: 2560)
-                    }
-                }
             } else {
                 isInspectorPresented = false
             }
+        }
+        .contextMenu(forSelectionType: FileItem.ID.self) { _ in
+        } primaryAction: { _ in
+            // Only allow double click if one item is selected and resolvable
+            guard let selectedID = selectedFileID,
+                  let file = files.first(where: { $0.id == selectedID }) else { return }
+
+            Task {
+                let extractor = ExtractEmbeddedPreview()
+                if file.url.pathExtension.lowercased() == "arw" {
+                    if let mycgImage = await extractor.extractEmbeddedPreview(from: file.url, fullSize: true) {
+                        cgImage = mycgImage
+                    } else {
+                        print("Could not extract preview.")
+                    }
+                } else {
+                    // nsImage = await ThumbnailProvider.shared.thumbnail(for: file.url, targetSize: 2560)
+                }
+            }
+            openWindow(id: "zoom-window-arw")
         }
     }
 

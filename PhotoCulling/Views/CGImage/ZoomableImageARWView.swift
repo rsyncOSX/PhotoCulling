@@ -73,8 +73,17 @@ struct ZoomableImageViewARW: View {
                         }
                 }
             } else {
-                Text("No Image Available")
-                    .foregroundStyle(.white)
+                HStack {
+                    ProgressView()
+
+                    Text("Extracting image, please wait...")
+                        .font(.title)
+                }
+                .padding()
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                )
             }
 
             // ... (Rest of your UI Overlay code remains the same)

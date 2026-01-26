@@ -4,16 +4,14 @@ import OSLog
 import UniformTypeIdentifiers
 
 actor ExtractEmbeddedPreview {
-    
     // Cannot use @concurrent nonisolated here, the func getWidth
     // will not work then.
     // The func extractEmbeddedPreview and func getWidth must be on the same isolation
     func extractEmbeddedPreview(from arwURL: URL, fullSize: Bool = false) async -> CGImage? {
-        
         // Target size for culling previews (width or height)
         // The system will resize the image to fit within this box during extraction
         // Above 8640 extracs full size
-        let maxThumbnailSize: CGFloat = fullSize ? 8700: 8000
+        let maxThumbnailSize: CGFloat = fullSize ? 8700 : 8000
 
         guard let imageSource = CGImageSourceCreateWithURL(arwURL as CFURL, nil) else {
             Logger.process.warning("Failed to create image source")
