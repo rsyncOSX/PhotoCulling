@@ -16,7 +16,7 @@ extension SidebarPhotoCullingView {
             ConditionalGlassButton(
                 systemImage: "square.3.layers.3d.down.forward",
                 text: "",
-                helpText: "Create JPGs"
+                helpText: "Extract JPG images from ARW files..."
             ) {
                 guard selectedSource != nil else { return }
                 showingAlert = true
@@ -32,7 +32,7 @@ extension SidebarPhotoCullingView {
             ConditionalGlassButton(
                 systemImage: "plus.magnifyingglass",
                 text: "",
-                helpText: "Zoom"
+                helpText: "Extract JPG from selected ARW file..."
             ) {
                 guard let selectedID = selectedFileID,
                       let file = files.first(where: { $0.id == selectedID }) else { return }
@@ -75,7 +75,7 @@ extension SidebarPhotoCullingView {
                 ConditionalGlassButton(
                     systemImage: "trash.fill",
                     text: "",
-                    helpText: "Clear preseselect files"
+                    helpText: "Clear toggled files"
                 ) {
                     cullingmanager.selectedFiles.removeAll()
                     cullingmanager.numberofPreselectedFiles.removeAll()
@@ -87,9 +87,9 @@ extension SidebarPhotoCullingView {
 
         ToolbarItem {
             ConditionalGlassButton(
-                systemImage: "document.on.trash",
+                systemImage: "arrow.up.trash",
                 text: "",
-                helpText: "Clear memory and disk cache"
+                helpText: "Reset memory and disk cache"
             ) {
                 Task {
                     await ThumbnailProvider.shared.clearCaches()
