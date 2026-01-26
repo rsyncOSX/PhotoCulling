@@ -15,7 +15,7 @@
             "scale" : 1.5,
             "translation-in-points" : [
               -0.75,
-              -162.6328125
+              -0.75
             ]
           }
         }
@@ -33,6 +33,7 @@
     {
       "layers" : [
         {
+          "hidden" : true,
           "image-name" : "cloud 3.png",
           "name" : "cloud 3"
         }
@@ -50,6 +51,7 @@
       "layers" : [
         {
           "blend-mode" : "normal",
+          "hidden" : true,
           "image-name" : "icon_512x512@2x_1_numbers.png",
           "name" : "icon_512x512@2x_1_numbers"
         }
