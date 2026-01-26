@@ -113,7 +113,7 @@ extension SidebarPhotoCullingView {
                         // defer { files[index].url.stopAccessingSecurityScopedResource() }
 
                         // 1. Extract the preview
-                        if let mycgImage = await extractor.extractEmbeddedPreview(from: files[index].url) {
+                        if let mycgImage = await extractor.extractEmbeddedPreview(from: files[index].url, fullSize: true) {
                             cgImage = mycgImage
                             // 2. Save it to disk
                             // await extractor.save(image: mycgImage, originalURL: files[index].url)
