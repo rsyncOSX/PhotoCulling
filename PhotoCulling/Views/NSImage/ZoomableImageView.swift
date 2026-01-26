@@ -76,11 +76,11 @@ struct ZoomableImageView: View {
             VStack {
                 HStack {
                     Spacer()
-                    Button(action: { dismiss() }) {
+                    Button(action: { dismiss() }, label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 24))
                             .foregroundStyle(.white.opacity(0.7))
-                    }
+                    })
                     .buttonStyle(.plain)
                     .padding()
                 }

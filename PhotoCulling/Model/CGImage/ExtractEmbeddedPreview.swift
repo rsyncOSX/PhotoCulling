@@ -54,7 +54,9 @@ actor ExtractEmbeddedPreview {
             return nil
         }
 
-        Logger.process.info("ExtractEmbeddedPreview: Selected JPEG at index \(targetIndex) (\(targetWidth)px). Target: \(maxThumbnailSize)")
+        Logger.process.info(
+            "ExtractEmbeddedPreview: Selected JPEG at index \(targetIndex) (\(targetWidth)px). Target: \(maxThumbnailSize)"
+        )
 
         // 2. Decide: Downsample or Decode Directly?
         // We only downsample if the source image is LARGER than our desired maxThumbnailSize.
@@ -85,13 +87,13 @@ actor ExtractEmbeddedPreview {
 
     func getWidth(from properties: [CFString: Any]) -> Int? {
         // Try Root
-        if let w = properties[kCGImagePropertyPixelWidth] as? Int { return w }
-        if let w = properties[kCGImagePropertyPixelWidth] as? Double { return Int(w) }
+        if let width = properties[kCGImagePropertyPixelWidth] as? Int { return width }
+        if let width = properties[kCGImagePropertyPixelWidth] as? Double { return Int(width) }
 
         // Try EXIF Dictionary
         if let exif = properties[kCGImagePropertyExifDictionary] as? [CFString: Any] {
-            if let w = exif[kCGImagePropertyExifPixelXDimension] as? Int { return w }
-            if let w = exif[kCGImagePropertyExifPixelXDimension] as? Double { return Int(w) }
+            if let width = exif[kCGImagePropertyExifPixelXDimension] as? Int { return width }
+            if let width = exif[kCGImagePropertyExifPixelXDimension] as? Double { return Int(width) }
         }
 
         return nil
