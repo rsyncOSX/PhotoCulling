@@ -210,7 +210,7 @@ extension SidebarPhotoCullingView {
                 maxfilesHandler: maxfilesHandler
             )
 
-            let extract = ExtractAndSaveAlljpgs()
+            let extract = ExtractAndSaveJPGs()
             await extract.setFileHandlers(handlers)
             guard let url = selectedSource?.url else { return }
             await extract.extractAndSaveAlljpgs(from: url, fullSize: false)

@@ -8,7 +8,7 @@
 import Foundation
 import OSLog
 
-actor ExtractAndSaveAlljpgs {
+actor ExtractAndSaveJPGs {
     // Track the current preload task so we can cancel it
 
     private var extractJPEGSTask: Task<Int, Never>?

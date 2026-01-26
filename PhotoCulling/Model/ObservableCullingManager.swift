@@ -42,7 +42,7 @@ final class ObservableCullingManager {
             Logger.process.debugMessageOnly("ObservableCullingManager: inserting \(filename)")
             selectedFiles.insert(filename)
         }
-
+/*
         // Update numberofPreselectedFiles with catalog count
         if let catalog = catalog {
             let folderURL = catalog.deletingLastPathComponent()
@@ -57,7 +57,7 @@ final class ObservableCullingManager {
                 numberofPreselectedFiles.insert(StringIntPair(string: catalogPath, int: count))
             }
         }
-
+*/
         saveToJSON()
     }
 
@@ -68,6 +68,16 @@ final class ObservableCullingManager {
                 count += 1
             }
         }
+    }
+    
+    func countSelectedFilesLabel(in catalog: URL) -> String {
+        let count = selectedFiles.reduce(into: 0) { count, filename in
+            let fileURL = catalog.appendingPathComponent(filename)
+            if FileManager.default.fileExists(atPath: fileURL.path) {
+                count += 1
+            }
+        }
+        return "\(count)"
     }
 
     func saveToJSON() {
