@@ -293,7 +293,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 0.4.0;
-				PRODUCT_BUNDLE_IDENTIFIER = no.blogpost.PhotoCulling;
+				PRODUCT_BUNDLE_IDENTIFIER = no.blogspot.PhotoCulling;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
@@ -349,7 +349,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 0.4.0;
-				PRODUCT_BUNDLE_IDENTIFIER = no.blogpost.PhotoCulling;
+				PRODUCT_BUNDLE_IDENTIFIER = no.blogspot.PhotoCulling;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
