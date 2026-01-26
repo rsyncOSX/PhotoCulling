@@ -10,7 +10,8 @@ import OSLog
 
 actor ExtractAndSaveAlljpgs {
     // Track the current preload task so we can cancel it
-    private var preloadTask: Task<Int, Never>?
+
+    private var extractJPEGSTask: Task<Int, Never>?
     private var successCount = 0
 
     private var fileHandlers: FileHandlers?
@@ -21,7 +22,7 @@ actor ExtractAndSaveAlljpgs {
 
     @discardableResult
     func extractAndSaveAlljpgs(from catalogURL: URL, fullSize: Bool = false) async -> Int {
-        cancelPreload()
+        cancelExtractJPGSTask()
 
         let task = Task {
             successCount = 0
@@ -64,13 +65,13 @@ actor ExtractAndSaveAlljpgs {
             }
         }
 
-        preloadTask = task
+        extractJPEGSTask = task
         return await task.value
     }
 
-    private func cancelPreload() {
-        preloadTask?.cancel()
-        preloadTask = nil
+    private func cancelExtractJPGSTask() {
+        extractJPEGSTask?.cancel()
+        extractJPEGSTask = nil
         Logger.process.debugMessageOnly("ExtractAndSaveAlljpgs: Preload Cancelled")
     }
 

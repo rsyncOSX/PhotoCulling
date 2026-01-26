@@ -34,6 +34,8 @@ struct SidebarPhotoCullingView: View {
 
     @State var scanning: Bool = true
 
+    @State var showingAlert: Bool = false
+
     var body: some View {
         NavigationSplitView {
             // --- SIDEBAR ---
@@ -99,6 +101,17 @@ struct SidebarPhotoCullingView: View {
             .navigationTitle(selectedSource?.name ?? "Files")
             .searchable(text: $searchText, placement: .toolbar, prompt: "Search in \(selectedSource?.name ?? "catalog")...")
             .toolbar { toolbarContent }
+            .alert(isPresented: $showingAlert) {
+                Alert(
+                    title: Text("Extract JPGs all files?"),
+                    primaryButton: .default(Text("Extract")) {
+                        guard selectedSource != nil else { return }
+
+                        extractAllJPGS()
+                    },
+                    secondaryButton: .cancel {}
+                )
+            }
         } detail: {
             if let file = selectedFile {
                 VStack(spacing: 20) {

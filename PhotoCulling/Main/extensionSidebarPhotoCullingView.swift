@@ -13,6 +13,18 @@ extension SidebarPhotoCullingView {
     @ToolbarContentBuilder
     var toolbarContent: some ToolbarContent {
         ToolbarItem {
+            ConditionalGlassButton(systemImage: "square.3.layers.3d.down.forward",
+                                   text: "",
+                                   helpText: "Create JPGs") {
+                showingAlert = true
+            }
+        }
+
+        ToolbarItem {
+            Spacer()
+        }
+
+        ToolbarItem {
             ConditionalGlassButton(
                 systemImage: "plus.magnifyingglass",
                 text: "",
@@ -36,6 +48,10 @@ extension SidebarPhotoCullingView {
 
                 openWindow(id: "zoom-window-arw")
             }
+        }
+
+        ToolbarItem {
+            Spacer()
         }
 
         // Only show toolbar items when this tab is active
@@ -174,6 +190,24 @@ extension SidebarPhotoCullingView {
             selectedFile = nil
             selectedFileID = nil
             isInspectorPresented = false
+        }
+    }
+
+    func extractAllJPGS() {
+        Task {
+            creatingthumbnails = true
+
+            let handlers = CreateFileHandlers().createFileHandlers(
+                fileHandler: fileHandler,
+                maxfilesHandler: maxfilesHandler
+            )
+
+            let extract = ExtractAndSaveAlljpgs()
+            await extract.setFileHandlers(handlers)
+            guard let url = selectedSource?.url else { return }
+            await extract.extractAndSaveAlljpgs(from: url, fullSize: false)
+
+            creatingthumbnails = false
         }
     }
 }
