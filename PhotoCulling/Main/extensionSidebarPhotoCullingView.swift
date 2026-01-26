@@ -13,11 +13,15 @@ extension SidebarPhotoCullingView {
     @ToolbarContentBuilder
     var toolbarContent: some ToolbarContent {
         ToolbarItem {
-            ConditionalGlassButton(systemImage: "square.3.layers.3d.down.forward",
-                                   text: "",
-                                   helpText: "Create JPGs") {
+            ConditionalGlassButton(
+                systemImage: "square.3.layers.3d.down.forward",
+                text: "",
+                helpText: "Create JPGs"
+            ) {
+                guard selectedSource != nil else { return }
                 showingAlert = true
             }
+            .disabled(creatingthumbnails)
         }
 
         ToolbarItem {
@@ -48,7 +52,9 @@ extension SidebarPhotoCullingView {
 
                 openWindow(id: "zoom-window-arw")
             }
+            .disabled(creatingthumbnails)
         }
+        
 
         ToolbarItem {
             Spacer()
@@ -211,3 +217,4 @@ extension SidebarPhotoCullingView {
         }
     }
 }
+

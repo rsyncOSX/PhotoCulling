@@ -76,7 +76,7 @@ struct SidebarPhotoCullingView: View {
                 } else if creatingthumbnails {
                     ProgressCount(max: Double(max),
                                   progress: min(Swift.max(progress, 0), Double(max)),
-                                  statusText: "Creating Thumbnails")
+                                  statusText: "Creating Thumbnails or extracting JPGs")
                 } else {
                     ZStack {
                         filetableview
