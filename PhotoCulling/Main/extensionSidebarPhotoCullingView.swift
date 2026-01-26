@@ -107,7 +107,7 @@ extension SidebarPhotoCullingView {
                 isInspectorPresented = true
 
                 Task {
-                    let extractor = ExtractEmbeddedPreviewDownsampling()
+                    let extractor = ExtractEmbeddedPreview()
                     if files[index].url.pathExtension.lowercased() == "arw" {
                         // guard files[index].url.startAccessingSecurityScopedResource() else { return }
                         // defer { files[index].url.stopAccessingSecurityScopedResource() }

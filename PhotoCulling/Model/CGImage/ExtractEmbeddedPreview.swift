@@ -3,16 +3,18 @@ import ImageIO
 import OSLog
 import UniformTypeIdentifiers
 
-actor ExtractEmbeddedPreviewDownsampling {
-    // Target size for culling previews (width or height)
-    // The system will resize the image to fit within this box during extraction
-    // Above 8640 extracs full size
-    let maxThumbnailSize: CGFloat = 8000
-
+actor ExtractEmbeddedPreview {
+    
     // Cannot use @concurrent nonisolated here, the func getWidth
     // will not work then.
     // The func extractEmbeddedPreview and func getWidth must be on the same isolation
-    func extractEmbeddedPreview(from arwURL: URL) async -> CGImage? {
+    func extractEmbeddedPreview(from arwURL: URL, fullSize: Bool = false) async -> CGImage? {
+        
+        // Target size for culling previews (width or height)
+        // The system will resize the image to fit within this box during extraction
+        // Above 8640 extracs full size
+        let maxThumbnailSize: CGFloat = fullSize ? 8700: 8000
+
         guard let imageSource = CGImageSourceCreateWithURL(arwURL as CFURL, nil) else {
             Logger.process.warning("Failed to create image source")
             return nil
@@ -54,7 +56,7 @@ actor ExtractEmbeddedPreviewDownsampling {
             return nil
         }
 
-        Logger.process.info("ExtractEmbeddedPreview: Selected JPEG at index \(targetIndex) (\(targetWidth)px). Target: \(self.maxThumbnailSize)")
+        Logger.process.info("ExtractEmbeddedPreview: Selected JPEG at index \(targetIndex) (\(targetWidth)px). Target: \(maxThumbnailSize)")
 
         // 2. Decide: Downsample or Decode Directly?
         // We only downsample if the source image is LARGER than our desired maxThumbnailSize.
@@ -63,7 +65,7 @@ actor ExtractEmbeddedPreviewDownsampling {
         let requiresDownsampling = CGFloat(targetWidth) > maxThumbnailSize
 
         if requiresDownsampling {
-            Logger.process.info("ExtractEmbeddedPreview: Downsampling to \(self.maxThumbnailSize)px")
+            Logger.process.info("ExtractEmbeddedPreview: Downsampling to \(maxThumbnailSize)px")
 
             let options: [CFString: Any] = [
                 kCGImageSourceCreateThumbnailFromImageIfAbsent: true,
