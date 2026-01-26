@@ -31,6 +31,8 @@ struct SidebarPhotoCullingView: View {
     @State var progress: Double = 0
     @State var max: Double = 0
     @State var creatingthumbnails: Bool = false
+    
+    @State var scanning: Bool = true
 
     var body: some View {
         NavigationSplitView {
@@ -61,7 +63,13 @@ struct SidebarPhotoCullingView: View {
                     } actions: {
                         Button("Add Catalog") { isShowingPicker = true }
                     }
-                } else if files.isEmpty {
+                } else if files.isEmpty && !scanning {
+                    ContentUnavailableView {
+                        Label("No Files Found", systemImage: "folder.badge.plus")
+                    } description: {
+                        Text("This catalog does not contain ARW images, or the images are empty. Please try scanning another catalog.")
+                    }
+                } else if files.isEmpty && scanning {
                     ProgressView("Scanning directory...")
                 } else if creatingthumbnails {
                     ProgressCount(max: Double(max),
@@ -140,6 +148,14 @@ struct SidebarPhotoCullingView: View {
                         by: sortOrder,
                         searchText: searchText
                     )
+                    
+                    guard files.count > 0 else {
+                        scanning = false
+                        return
+                    }
+                    
+                    scanning = false
+                    
                     cullingmanager.loadFromJSON(in: url)
                     syncSavedSelections()
 
