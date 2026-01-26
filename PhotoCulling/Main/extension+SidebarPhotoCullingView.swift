@@ -1,5 +1,5 @@
 //
-//  extensionSidebarPhotoCullingView.swift
+//  extension+SidebarPhotoCullingView.swift
 //  PhotoCulling
 //
 //  Created by Thomas Evensen on 21/01/2026.
@@ -54,7 +54,6 @@ extension SidebarPhotoCullingView {
             }
             .disabled(creatingthumbnails)
         }
-        
 
         ToolbarItem {
             Spacer()
@@ -218,4 +217,3 @@ extension SidebarPhotoCullingView {
         }
     }
 }
-

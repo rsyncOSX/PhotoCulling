@@ -23,7 +23,7 @@ struct SidebarPhotoCullingView: View {
     @State var isInspectorPresented = false
 
     @State var selectedFile: FileItem?
-    @State var cullingmanager = ObservableCullingManager(catalog: nil)
+    @State var cullingmanager = ObservableCullingManager()
 
     @State var issorting: Bool = false
     @State private var processedURLs: Set<URL> = []
@@ -42,7 +42,7 @@ struct SidebarPhotoCullingView: View {
             List(sources, selection: $selectedSource) { source in
                 NavigationLink(value: source) {
                     Label(source.name, systemImage: "folder.badge.plus")
-                        .badge("(" + cullingmanager.countSelectedFilesLabel(in: source.url) + ")")
+                        .badge("(" + String(cullingmanager.countSelectedFiles(in: source.url)) + ")")
                 }
             }
             .navigationTitle("Catalogs")

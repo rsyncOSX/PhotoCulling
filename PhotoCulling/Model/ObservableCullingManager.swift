@@ -2,11 +2,6 @@ import Foundation
 import Observation
 import OSLog
 
-struct StringIntPair: Hashable {
-    let string: String
-    let int: Int
-}
-
 @Observable
 final class ObservableCullingManager {
     // Standard property - Observation handles this automatically
@@ -20,13 +15,7 @@ final class ObservableCullingManager {
             .appendingPathComponent(fileName)
     }
 
-    init(catalog: URL?) {
-        if let catalog {
-            loadFromJSON(in: catalog)
-        }
-    }
-
-    func toggleSelection(in catalog: URL?, filename: String) {
+    func toggleSelection(in _: URL?, filename: String) {
         if selectedFiles.contains(filename) {
             Logger.process.debugMessageOnly("ObservableCullingManager: removing \(filename)")
             selectedFiles.remove(filename)
@@ -46,16 +35,6 @@ final class ObservableCullingManager {
             }
         }
     }
-    
-    func countSelectedFilesLabel(in catalog: URL) -> String {
-        let count = selectedFiles.reduce(into: 0) { count, filename in
-            let fileURL = catalog.appendingPathComponent(filename)
-            if FileManager.default.fileExists(atPath: fileURL.path) {
-                count += 1
-            }
-        }
-        return "\(count)"
-    }
 
     func saveToJSON() {
         do {
@@ -66,7 +45,7 @@ final class ObservableCullingManager {
         }
     }
 
-    func loadFromJSON(in catalog: URL) {
+    func loadFromJSON(in _: URL) {
         guard FileManager.default.fileExists(atPath: savePath.path) else { return }
         do {
             let data = try Data(contentsOf: savePath)

@@ -1,5 +1,5 @@
 //
-//  ExtractAndSaveAlljpgs.swift
+//  ExtractAndSaveJPGs.swift
 //  PhotoCulling
 //
 //  Created by Thomas Evensen on 26/01/2026.
