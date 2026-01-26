@@ -11,12 +11,12 @@ import OSLog
 actor ScanFiles {
     @concurrent
     nonisolated func scanFiles(url: URL) async -> [FileItem] {
+        // Essential for Sandbox apps
+        guard url.startAccessingSecurityScopedResource() else { return [] }
         defer { url.stopAccessingSecurityScopedResource() }
 
         Logger.process.debugThreadOnly("func scanFiles()")
-        // Essential for Sandbox apps
-        guard url.startAccessingSecurityScopedResource() else { return [] }
-
+        
         let keys: [URLResourceKey] = [
             .nameKey,
             .fileSizeKey,
@@ -50,9 +50,6 @@ actor ScanFiles {
         } catch {
             Logger.process.warning("Scan Error: \(error)")
         }
-
-        // Note: In a real app, you'd manage the scope lifecycle more carefully
-        url.stopAccessingSecurityScopedResource()
 
         return []
     }

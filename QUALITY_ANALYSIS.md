@@ -222,7 +222,7 @@ final class CatalogViewModel {
 - `ScanFiles.swift` has a premature call to `stopAccessingSecurityScopedResource()` at line 57 that's unreachable
 - Security-scoped resource lifecycle should be managed more carefully
 
-**Current issue in ScanFiles.swift:**
+~~Current issue in ScanFiles.swift:~~ **Fixed**
 ```swift
 func scanFiles(url: URL) async -> [FileItem] {
     defer { url.stopAccessingSecurityScopedResource() }
@@ -238,7 +238,7 @@ func scanFiles(url: URL) async -> [FileItem] {
 }
 ```
 
-**Fix:**
+**Fixed:**
 ```swift
 func scanFiles(url: URL) async -> [FileItem] {
     guard url.startAccessingSecurityScopedResource() else { return [] }
@@ -391,7 +391,7 @@ func scanFilesIncremental(url: URL) -> AsyncStream<FileItem> {
 
 ### 🔴 Critical (Do Immediately):
 1. **Add unit tests** - Start with core business logic (ObservableCullingManager, ExtractEmbeddedPreview)
-2. **Fix unreachable code** in ScanFiles.swift (security-scoped resource management)
+2. ~~Fix unreachable code~~ in ScanFiles.swift (security-scoped resource management) **Fixed**
 3. **Improve error handling** - Show user-facing alerts for failed operations
 
 ### 🟡 High Priority (Within 1-2 Weeks):
