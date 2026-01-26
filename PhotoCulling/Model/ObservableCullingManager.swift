@@ -11,8 +11,6 @@ struct StringIntPair: Hashable {
 final class ObservableCullingManager {
     // Standard property - Observation handles this automatically
     var selectedFiles: Set<String> = []
-    var numberofPreselectedFiles: Set<StringIntPair> = []
-
     private let fileName = "selections.json"
 
     // We don't want the UI to "track" the file path, so we ignore it
@@ -28,12 +26,6 @@ final class ObservableCullingManager {
         }
     }
 
-    private func removeCatalogEntry(forPath catalogPath: String) {
-        for item in numberofPreselectedFiles where item.string == catalogPath {
-            numberofPreselectedFiles.remove(item)
-        }
-    }
-
     func toggleSelection(in catalog: URL?, filename: String) {
         if selectedFiles.contains(filename) {
             Logger.process.debugMessageOnly("ObservableCullingManager: removing \(filename)")
@@ -42,22 +34,7 @@ final class ObservableCullingManager {
             Logger.process.debugMessageOnly("ObservableCullingManager: inserting \(filename)")
             selectedFiles.insert(filename)
         }
-/*
-        // Update numberofPreselectedFiles with catalog count
-        if let catalog = catalog {
-            let folderURL = catalog.deletingLastPathComponent()
-            let catalogPath = folderURL.absoluteString
-            let count = countSelectedFiles(in: folderURL)
 
-            // Remove old entry for this catalog if it exists
-            removeCatalogEntry(forPath: catalogPath)
-
-            // Add new entry with updated count
-            if count > 0 {
-                numberofPreselectedFiles.insert(StringIntPair(string: catalogPath, int: count))
-            }
-        }
-*/
         saveToJSON()
     }
 
@@ -94,12 +71,6 @@ final class ObservableCullingManager {
         do {
             let data = try Data(contentsOf: savePath)
             selectedFiles = try JSONDecoder().decode(Set<String>.self, from: data)
-            let count = countSelectedFiles(in: catalog)
-
-            if count > 0 {
-                Logger.process.debugMessageOnly("ObservableCullingManager: loaded \(count) filenames from JSON")
-                numberofPreselectedFiles.insert(StringIntPair(string: catalog.absoluteString, int: count))
-            }
         } catch {
             Logger.process.warning("Load failed: \(error)")
         }

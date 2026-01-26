@@ -78,7 +78,6 @@ extension SidebarPhotoCullingView {
                     helpText: "Clear toggled files"
                 ) {
                     cullingmanager.selectedFiles.removeAll()
-                    cullingmanager.numberofPreselectedFiles.removeAll()
                     cullingmanager.saveToJSON()
                 }
                 .disabled(creatingthumbnails)
