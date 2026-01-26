@@ -42,7 +42,7 @@ struct SidebarPhotoCullingView: View {
             List(sources, selection: $selectedSource) { source in
                 NavigationLink(value: source) {
                     Label(source.name, systemImage: "folder.badge.plus")
-                        .badge(cullingmanager.countSelectedFilesLabel(in: source.url))
+                        .badge("(" + cullingmanager.countSelectedFilesLabel(in: source.url) + ")")
                 }
             }
             .navigationTitle("Catalogs")
