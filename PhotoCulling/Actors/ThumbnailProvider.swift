@@ -25,7 +25,7 @@ actor ThumbnailProvider {
     // Track the current preload task so we can cancel it
     private var preloadTask: Task<Int, Never>?
 
-    var fileHandlers: FileHandlers?
+    private var fileHandlers: FileHandlers?
     // let supported: Set<String> = ["arw", "tiff", "tif", "jpeg", "jpg", "png", "heic", "heif"]
     let supported: Set<String> = ["arw"]
 
@@ -39,31 +39,10 @@ actor ThumbnailProvider {
         self.fileHandlers = fileHandlers
     }
 
-    func cancelPreload() {
+    private func cancelPreload() {
         preloadTask?.cancel()
         preloadTask = nil
         Logger.process.debugMessageOnly("ThumbnailProvider: Preload Cancelled")
-    }
-
-    private func discoverFiles(at catalogURL: URL, recursive: Bool) async -> [URL] {
-        await Task.detached(priority: .utility) {
-            let fileManager = FileManager.default
-
-            var urls: [URL] = []
-
-            guard let enumerator = fileManager.enumerator(
-                at: catalogURL,
-                includingPropertiesForKeys: [.isRegularFileKey],
-                options: recursive ? [] : [.skipsSubdirectoryDescendants]
-            ) else { return urls }
-
-            while let fileURL = enumerator.nextObject() as? URL {
-                if self.supported.contains(fileURL.pathExtension.lowercased()) {
-                    urls.append(fileURL)
-                }
-            }
-            return urls
-        }.value
     }
 
     @discardableResult
@@ -72,7 +51,7 @@ actor ThumbnailProvider {
 
         let task = Task {
             successCount = 0
-            let urls = await discoverFiles(at: catalogURL, recursive: false)
+            let urls = await DiscoverFiles().discoverFiles(at: catalogURL, recursive: false)
 
             await fileHandlers?.maxfilesHandler(urls.count)
 

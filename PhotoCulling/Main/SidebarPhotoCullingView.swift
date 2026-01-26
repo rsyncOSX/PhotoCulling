@@ -31,7 +31,7 @@ struct SidebarPhotoCullingView: View {
     @State var progress: Double = 0
     @State var max: Double = 0
     @State var creatingthumbnails: Bool = false
-    
+
     @State var scanning: Bool = true
 
     var body: some View {
@@ -148,14 +148,14 @@ struct SidebarPhotoCullingView: View {
                         by: sortOrder,
                         searchText: searchText
                     )
-                    
-                    guard files.count > 0 else {
+
+                    guard !files.isEmpty else {
                         scanning = false
                         return
                     }
-                    
+
                     scanning = false
-                    
+
                     cullingmanager.loadFromJSON(in: url)
                     syncSavedSelections()
 
