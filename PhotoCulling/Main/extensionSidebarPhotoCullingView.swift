@@ -81,6 +81,7 @@ extension SidebarPhotoCullingView {
                     cullingmanager.numberofPreselectedFiles.removeAll()
                     cullingmanager.saveToJSON()
                 }
+                .disabled(creatingthumbnails)
             }
         }
 
@@ -99,6 +100,7 @@ extension SidebarPhotoCullingView {
                     selectedFile = nil
                 }
             }
+            .disabled(creatingthumbnails)
         }
 
         ToolbarItem {
