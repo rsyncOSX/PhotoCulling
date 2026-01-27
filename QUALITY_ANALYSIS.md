@@ -1,8 +1,8 @@
 # PhotoCulling - Quality Analysis Report
 
 **Project:** PhotoCulling  
-**Analysis Date:** January 26, 2026  
-**Version:** 0.4.0  
+**Analysis Date:** January 27, 2026  
+**Version:** 0.4.1  
 **Language:** Swift (SwiftUI)  
 **Platform:** macOS
 
@@ -10,9 +10,9 @@
 
 ## Executive Summary
 
-PhotoCulling is a macOS application for managing and culling Sony ARW (RAW) photo files. The project demonstrates strong technical competency in modern Swift development with excellent use of Swift Concurrency (async/await, actors) and SwiftUI. The codebase is well-structured with clear separation of concerns, though it's still in early development (v0.4.0).
+PhotoCulling is a macOS application for managing and culling Sony ARW (RAW) photo files. The project demonstrates strong technical competency in modern Swift development with excellent use of Swift Concurrency (async/await, actors) and SwiftUI. Recent updates have addressed critical security issues and improved type safety. The codebase is well-structured with clear separation of concerns and continues to maintain high development standards.
 
-**Overall Quality Rating: 8.0/10**
+**Overall Quality Rating: 8.5/10** (↑ 0.5 from v0.4.0)
 
 ---
 
@@ -212,41 +212,36 @@ final class CatalogViewModel {
 }
 ```
 
-### 5. Security & Sandbox Compliance ⭐⭐⭐⭐
+### 5. Security & Sandbox Compliance ⭐⭐⭐⭐⭐
 
-**Good practices:**
+**Excellent practices:**
 - Proper use of `startAccessingSecurityScopedResource()` and `stopAccessingSecurityScopedResource()`
 - Cache directory properly scoped to app bundle ID
+- **Fixed:** Security-scoped resource lifecycle now correctly ordered in `ScanFiles.swift`
+  - Proper guard statement before accessing the resource
+  - Defer statement properly manages cleanup in all code paths
+  - No unreachable code in resource management
 
-**Concerns:**
-- `ScanFiles.swift` has a premature call to `stopAccessingSecurityScopedResource()` at line 57 that's unreachable
-- Security-scoped resource lifecycle should be managed more carefully
-
-~~Current issue in ScanFiles.swift:~~ **Fixed**
+**Current correct implementation in ScanFiles.swift:**
 ```swift
-func scanFiles(url: URL) async -> [FileItem] {
-    defer { url.stopAccessingSecurityScopedResource() }
-    
-    guard url.startAccessingSecurityScopedResource() else { return [] }
-    
-    // ... scanning logic ...
-    
-    // Note: This is unreachable because defer already handles it
-    url.stopAccessingSecurityScopedResource()
-    
-    return []
-}
-```
-
-**Fixed:**
-```swift
-func scanFiles(url: URL) async -> [FileItem] {
+@concurrent
+nonisolated func scanFiles(url: URL) async -> [FileItem] {
+    // Essential for Sandbox apps
     guard url.startAccessingSecurityScopedResource() else { return [] }
     defer { url.stopAccessingSecurityScopedResource() }
     
     // ... scanning logic ...
+    
+    return items  // Cleanup automatically handled by defer
 }
 ```
+
+**Previous issue (RESOLVED):** ~~Unreachable code~~ - ScanFiles.swift had improper defer placement that led to unreachable cleanup code. This has been fixed.
+
+**Recommendations for future improvements:**
+- Consider bookmark persistence for user-selected folders to provide seamless access across app launches
+- Implement file size validation (reject files >500MB?) as a safety measure
+- Consider EXIF metadata stripping if privacy-sensitive image extraction is needed
 
 ### 6. Code Duplication ⭐⭐⭐
 
@@ -278,17 +273,34 @@ final class ImageExtractionService {
 }
 ```
 
-### 7. Type Safety & API Design ⭐⭐⭐⭐
+### 7. Type Safety & API Design ⭐⭐⭐⭐⭐
 
-**Good:**
-- Strong typing throughout
-- Identifiable/Hashable conformance on data models
-- Proper use of enums for errors
+**Improvements:**
+- **Closure type safety enhanced:** `FileHandlers.swift` now properly annotates handlers with `@MainActor @Sendable` attributes
+- Strong typing throughout with proper Identifiable/Hashable conformance
+- Proper error handling with custom error types
 
-**Could improve:**
-- FileHandlers uses optional closures that could be better typed
-- Magic strings for window IDs ("zoom-window-arw", "main-window")
-- Hard-coded file extensions and sizes
+**Updated FileHandlers structure:**
+```swift
+struct FileHandlers {
+    let fileHandler: @MainActor @Sendable (Int) -> Void
+    let maxfilesHandler: @MainActor @Sendable (Int) -> Void
+}
+```
+
+This improvement ensures:
+- Compile-time verification that callbacks run on the main thread
+- Safe closure conformance for sendability across actor boundaries
+- Clear intent that these operations affect UI state
+
+**Additional type safety items:**
+- Proper isolation annotations on actor methods (`@concurrent`, `nonisolated`)
+- Clear MainActor isolation in button styles (`GlassButtonStyle`)
+
+**Future recommendations:**
+- Consider adding enums for window IDs ("zoom-window-arw", "main-window") to prevent stringly-typed code
+- Create constants for hard-coded file extensions and sizes
+- Type-safe file type enumeration (`.arw`, `.tiff`, `.jpeg`)
 
 **Recommendations:**
 ```swift
@@ -391,7 +403,7 @@ func scanFilesIncremental(url: URL) -> AsyncStream<FileItem> {
 
 ### 🔴 Critical (Do Immediately):
 1. **Add unit tests** - Start with core business logic (ObservableCullingManager, ExtractEmbeddedPreview)
-2. ~~Fix unreachable code~~ in ScanFiles.swift (security-scoped resource management) **Fixed**
+2. ✅ **Fix unreachable code** in ScanFiles.swift (security-scoped resource management) **FIXED in v0.4.1**
 3. **Improve error handling** - Show user-facing alerts for failed operations
 
 ### 🟡 High Priority (Within 1-2 Weeks):
@@ -411,6 +423,27 @@ func scanFilesIncremental(url: URL) -> AsyncStream<FileItem> {
 13. **Performance profiling** - Test with very large catalogs (10,000+ files)
 14. **Localization** - Support multiple languages
 15. **Accessibility** - VoiceOver support, keyboard navigation
+
+---
+
+## Recent Updates (v0.4.1)
+
+### ✅ Completed Improvements:
+
+1. **Security Fix - ScanFiles.swift**
+   - Fixed resource access pattern: guard statement now precedes defer
+   - Eliminated unreachable cleanup code
+   - Proper ordering ensures cleanup happens in all execution paths
+   
+2. **Type Safety Enhancement - FileHandlers.swift**
+   - Added `@MainActor` isolation to closure parameters
+   - Added `@Sendable` conformance for safe actor boundary crossing
+   - Improved compiler safety and intent clarity
+   
+3. **Actor Isolation Improvements**
+   - Proper `@concurrent` annotations on actor methods
+   - Correct `nonisolated` usage in ScanFiles for parallel processing
+   - Safe MainActor dispatch in ThumbnailProvider
 
 ---
 
@@ -520,25 +553,30 @@ Clean separation of debug and release workflows is excellent practice.
 
 ## Conclusion
 
-PhotoCulling demonstrates strong technical competency with modern Swift development practices. The architecture is solid with excellent use of Swift Concurrency, proper actor isolation, and smart performance optimizations. The main gaps are:
+PhotoCulling demonstrates strong technical competency with modern Swift development practices. The architecture is solid with excellent use of Swift Concurrency, proper actor isolation, and smart performance optimizations. 
 
-1. **Lack of automated tests** (most critical)
-2. **Minimal documentation** 
-3. **Complex view state management**
+### v0.4.1 Progress:
+The recent update addressed critical security concerns and improved type safety in closure handling. Proper resource management and MainActor isolation are now correctly implemented throughout the codebase.
 
-With focused effort on these three areas, this project could easily reach a 9.5/10 quality rating. The foundation is excellent and shows the developer understands advanced Swift concepts well.
+### Remaining gaps:
 
-### Final Score: 8.0/10
+1. **Lack of automated tests** (most critical) - ⚠️ Still needed
+2. **Minimal documentation** - Room for improvement
+3. **Complex view state management** - Can be refactored
+
+With focused effort on these three areas, this project could easily reach a 9.5/10 quality rating. The foundation is excellent and shows strong understanding of advanced Swift concurrency patterns.
+
+### Final Score: 8.5/10 (↑ 0.5 from v0.4.0)
 
 **Breakdown:**
 - Architecture: 9/10
 - Performance: 9/10
-- Code Quality: 8/10
-- Testing: 2/10 ⚠️
-- Documentation: 4/10 ⚠️
-- Security: 8/10
-- Maintainability: 7/10
+- Code Quality: 9/10 ↑ (improved from 8/10)
+- Testing: 2/10 ⚠️ (critical gap)
+- Documentation: 4/10 (needs work)
+- Security: 9/10 ↑ (improved from 8/10)
+- Maintainability: 8/10 ↑ (improved from 7/10)
 
 ---
 
-*Analysis conducted by GitHub Copilot - January 26, 2026*
+*Analysis conducted by GitHub Copilot - January 27, 2026*
