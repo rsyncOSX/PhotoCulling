@@ -5,21 +5,49 @@ import OSLog
 @Observable
 final class ObservableCullingManager {
     // New saved filenames.
-    
+
     var savedFiles = [SavedFiles]()
-    
+
     func loadSavedFiles() {
         if let readjson = ReadSavedFilesJSON().readjsonfilesavedfiles() {
             savedFiles = readjson
         }
     }
-    
-    func toggleSelectionSavedFiles(in catalog: URL, filename: String) {
-        
+
+    func toggleSelectionSavedFiles(in fileurl: URL, taggedfilename: String) {
+        let newrecord = FileRecord(
+            fileName: taggedfilename,
+            dateTagged: Date().en_string_from_date(),
+            dateCopied: nil
+        )
+
+        let arwcatalog = fileurl.deletingLastPathComponent()
+
+        if savedFiles.isEmpty {
+            let savedfiles = SavedFiles(
+                catalog: arwcatalog,
+                dateStart: Date().en_string_from_date(),
+                filerecord: newrecord
+            )
+            savedFiles.append(savedfiles)
+        } else {
+            // Check if arw catalog exists in data structure
+            if let index = savedFiles.firstIndex(where: { $0.catalog == arwcatalog }) {
+                savedFiles[index].filerecords?.append(newrecord)
+            } else {
+                // If not append a new one
+                let savedfiles = SavedFiles(
+                    catalog: arwcatalog,
+                    dateStart: Date().en_string_from_date(),
+                    filerecord: newrecord
+                )
+                savedFiles.append(savedfiles)
+            }
+        }
+
+        WriteSavedFilesJSON(savedFiles)
     }
-    
-    
-    
+
     // Standard property - Observation handles this automatically
     var selectedFiles: Set<String> = []
     private let fileName = "selections.json"
@@ -31,7 +59,7 @@ final class ObservableCullingManager {
             .appendingPathComponent(fileName)
     }
 
-    func toggleSelection(in _: URL?, filename: String) {
+    func toggleSelection(in catalog: URL?, filename: String) {
         if selectedFiles.contains(filename) {
             Logger.process.debugMessageOnly("ObservableCullingManager: removing \(filename)")
             selectedFiles.remove(filename)
@@ -41,6 +69,10 @@ final class ObservableCullingManager {
         }
 
         saveToJSON()
+
+        if let catalog {
+            toggleSelectionSavedFiles(in: catalog, taggedfilename: filename)
+        }
     }
 
     func countSelectedFiles(in catalog: URL) -> Int {
@@ -69,5 +101,7 @@ final class ObservableCullingManager {
         } catch {
             Logger.process.warning("Load failed: \(error)")
         }
+
+        loadSavedFiles()
     }
 }

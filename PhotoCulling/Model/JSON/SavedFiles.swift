@@ -20,8 +20,8 @@ struct SavedFiles: Identifiable, Codable {
 
     /// Used when reading JSON data from store
     init(_ data: DecodeSavedFiles) {
-        dateStart = data.dateStart ?? ""
         catalog = data.catalog
+        dateStart = data.dateStart ?? ""
         filerecords = data.filerecords?.map { record in
             FileRecord(
                 fileName: record.fileName,
@@ -31,9 +31,11 @@ struct SavedFiles: Identifiable, Codable {
         }
     }
 
-    /// Create an empty record with no values
-    init() {
-        dateStart = nil
+    /// Create a new record
+    init(catalog: URL, dateStart: String?, filerecord: FileRecord) {
+        self.catalog = catalog
+        self.dateStart = dateStart
+        self.filerecords = [filerecord]
     }
 }
 
