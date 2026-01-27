@@ -45,7 +45,7 @@ struct PhotoItemView: View {
                         }
                     }
                 }
-                .background( setbackground() ? Color.blue.opacity(0.2) : Color.clear )
+                .background(setbackground() ? Color.blue.opacity(0.2) : Color.clear)
                 .onTapGesture {
                     cullingmanager.toggleSelection(
                         in: photoURL,
@@ -73,7 +73,7 @@ struct PhotoItemView: View {
             isLoading = false
         }
     }
-    
+
     func setbackground() -> Bool {
         guard let photoURL else { return false }
         // Find the saved file entry matching this photoURL

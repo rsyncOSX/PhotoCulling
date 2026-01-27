@@ -75,7 +75,6 @@ extension SidebarPhotoCullingView {
                 text: "",
                 helpText: "Clear toggled files"
             ) {
-
                 if let url = selectedSource?.url {
                     cullingmanager.resetSavedFiles(in: url)
                 }
@@ -115,7 +114,7 @@ extension SidebarPhotoCullingView {
                     Button(action: {
                         handleToggleSelection(for: file)
                     }, label: {
-                        Image(systemName: marktoggle() ? "checkmark.square.fill" : "square")
+                        Image(systemName: marktoggle(for: file) ? "checkmark.square.fill" : "square")
                             .foregroundStyle(.blue)
                     })
                     .buttonStyle(.plain)
@@ -138,7 +137,6 @@ extension SidebarPhotoCullingView {
                     photoURL: selectedSource?.url
                 )
             }
-
         }
         .onChange(of: selectedFileID) {
             if let index = files.firstIndex(where: { $0.id == selectedFileID }) {
@@ -192,12 +190,11 @@ extension SidebarPhotoCullingView {
     }
 
     // MARK: - Helper Functions
-    
-    func marktoggle() -> Bool {
-        if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource?.url }) {
-            if let filerecords = cullingmanager.savedFiles[index].filerecords {
-                return filerecords.count > 0
-            }
+
+    func marktoggle(for file: FileItem) -> Bool {
+        if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource?.url }),
+           let filerecords = cullingmanager.savedFiles[index].filerecords {
+            return filerecords.contains { $0.fileName == file.name }
         }
         return false
     }
@@ -222,14 +219,14 @@ extension SidebarPhotoCullingView {
 
     func syncSavedSelections() {
         /*
-        // Sync the selected file with cullingmanager state
-        // If current selectedFile is no longer in cullingmanager, clear it
-        if let currentFile = selectedFile, !cullingmanager.selectedFiles.contains(currentFile.name) {
-            selectedFile = nil
-            selectedFileID = nil
-            isInspectorPresented = false
-        }
-         */
+         // Sync the selected file with cullingmanager state
+         // If current selectedFile is no longer in cullingmanager, clear it
+         if let currentFile = selectedFile, !cullingmanager.selectedFiles.contains(currentFile.name) {
+             selectedFile = nil
+             selectedFileID = nil
+             isInspectorPresented = false
+         }
+          */
     }
 
     func extractAllJPGS() {

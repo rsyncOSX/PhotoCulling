@@ -92,11 +92,9 @@ struct SidebarPhotoCullingView: View {
         .fileImporter(isPresented: $isShowingPicker, allowedContentTypes: [.folder]) { result in
             handlePickerResult(result)
         }
-        /*
-         FIX
-        .onChange(of: selectedSource) { _, newSource in
+        .onChange(of: selectedSource) {
             Task(priority: .background) {
-                if let url = newSource?.url {
+                if let url = selectedSource?.url {
                     files = await ScanFiles().scanFiles(url: url)
                     filteredFiles = await ScanFiles().sortFiles(
                         files,
@@ -111,7 +109,7 @@ struct SidebarPhotoCullingView: View {
 
                     scanning = false
 
-                    cullingmanager.loadFromJSON(in: url)
+                    cullingmanager.loadFromJSON()
                     syncSavedSelections()
 
                     if processedURLs.contains(url) == false {
@@ -129,7 +127,6 @@ struct SidebarPhotoCullingView: View {
                 }
             }
         }
-         */
         .onChange(of: sortOrder) {
             Task(priority: .background) {
                 issorting = true

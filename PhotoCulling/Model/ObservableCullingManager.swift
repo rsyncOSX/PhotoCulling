@@ -4,7 +4,6 @@ import OSLog
 
 @Observable
 final class ObservableCullingManager {
-    
     var savedFiles = [SavedFiles]()
 
     func loadSavedFiles() {
@@ -12,7 +11,7 @@ final class ObservableCullingManager {
             savedFiles = readjson
         }
     }
-    
+
     func resetSavedFiles(in catalog: URL) {
         if let index = savedFiles.firstIndex(where: { $0.catalog == catalog }) {
             savedFiles[index].filerecords = nil
@@ -21,9 +20,9 @@ final class ObservableCullingManager {
         }
     }
 
-    func toggleSelectionSavedFiles(in fileurl: URL, taggedfilename: String) {
+    func toggleSelectionSavedFiles(in fileurl: URL, toggledfilename: String) {
         let newrecord = FileRecord(
-            fileName: taggedfilename,
+            fileName: toggledfilename,
             dateTagged: Date().en_string_from_date(),
             dateCopied: nil
         )
@@ -40,7 +39,11 @@ final class ObservableCullingManager {
         } else {
             // Check if arw catalog exists in data structure
             if let index = savedFiles.firstIndex(where: { $0.catalog == arwcatalog }) {
-                savedFiles[index].filerecords?.append(newrecord)
+                if savedFiles[index].filerecords == nil {
+                    savedFiles[index].filerecords = [newrecord]
+                } else {
+                    savedFiles[index].filerecords?.append(newrecord)
+                }
             } else {
                 // If not append a new one
                 let savedfiles = SavedFiles(
@@ -57,7 +60,7 @@ final class ObservableCullingManager {
 
     func toggleSelection(in catalog: URL?, filename: String) {
         if let catalog {
-            toggleSelectionSavedFiles(in: catalog, taggedfilename: filename)
+            toggleSelectionSavedFiles(in: catalog, toggledfilename: filename)
         }
     }
 
