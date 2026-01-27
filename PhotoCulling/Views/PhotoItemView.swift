@@ -45,7 +45,7 @@ struct PhotoItemView: View {
                         }
                     }
                 }
-                .background(cullingmanager.selectedFiles.contains(photo) ? Color.blue.opacity(0.2) : Color.clear)
+                .background( setbackground() ? Color.blue.opacity(0.2) : Color.clear )
                 .onTapGesture {
                     cullingmanager.toggleSelection(
                         in: photoURL,
@@ -58,7 +58,7 @@ struct PhotoItemView: View {
                     .lineLimit(2)
             }
 
-            if cullingmanager.selectedFiles.contains(photo) {
+            if setbackground() {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.blue)
                     .padding(5)
@@ -72,5 +72,21 @@ struct PhotoItemView: View {
             thumbnailImage = await ThumbnailProvider.shared.thumbnail(for: url, targetSize: 100)
             isLoading = false
         }
+    }
+    
+    func setbackground() -> Bool {
+        guard let photoURL else { return false }
+
+        // Find the saved file entry matching this photoURL
+        guard let entry = cullingmanager.savedFiles.first(where: { $0.catalog == photoURL }) else {
+            return false
+        }
+
+        // Check if any filerecord has a matching fileName
+        if let records = entry.filerecords {
+            return records.contains { $0.fileName == photo }
+        }
+
+        return false
     }
 }

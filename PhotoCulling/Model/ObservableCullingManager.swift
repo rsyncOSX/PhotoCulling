@@ -13,6 +13,14 @@ final class ObservableCullingManager {
             savedFiles = readjson
         }
     }
+    
+    func resetSavedFiles(in catalog: URL) {
+        if let index = savedFiles.firstIndex(where: { $0.catalog == catalog }) {
+            savedFiles[index].filerecords = nil
+            // Save updated
+            WriteSavedFilesJSON(savedFiles)
+        }
+    }
 
     func toggleSelectionSavedFiles(in fileurl: URL, taggedfilename: String) {
         let newrecord = FileRecord(
@@ -48,60 +56,24 @@ final class ObservableCullingManager {
         WriteSavedFilesJSON(savedFiles)
     }
 
-    // Standard property - Observation handles this automatically
-    var selectedFiles: Set<String> = []
-    private let fileName = "selections.json"
-
-    /// We don't want the UI to "track" the file path, so we ignore it
-    @ObservationIgnored
-    private var savePath: URL {
-        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent(fileName)
-    }
-
     func toggleSelection(in catalog: URL?, filename: String) {
-        if selectedFiles.contains(filename) {
-            Logger.process.debugMessageOnly("ObservableCullingManager: removing \(filename)")
-            selectedFiles.remove(filename)
-        } else {
-            Logger.process.debugMessageOnly("ObservableCullingManager: inserting \(filename)")
-            selectedFiles.insert(filename)
-        }
-
-        saveToJSON()
-
         if let catalog {
             toggleSelectionSavedFiles(in: catalog, taggedfilename: filename)
         }
     }
 
     func countSelectedFiles(in catalog: URL) -> Int {
-        selectedFiles.reduce(into: 0) { count, filename in
-            let fileURL = catalog.appendingPathComponent(filename)
-            if FileManager.default.fileExists(atPath: fileURL.path) {
-                count += 1
+        if let index = savedFiles.firstIndex(where: { $0.catalog == catalog }) {
+            if let filerecords = savedFiles[index].filerecords {
+                return filerecords.count
             }
         }
+        return 0
     }
 
-    func saveToJSON() {
-        do {
-            let data = try JSONEncoder().encode(selectedFiles)
-            try data.write(to: savePath, options: [.atomic])
-        } catch {
-            Logger.process.warning("Save failed: \(error)")
-        }
-    }
+    
 
-    func loadFromJSON(in _: URL) {
-        guard FileManager.default.fileExists(atPath: savePath.path) else { return }
-        do {
-            let data = try Data(contentsOf: savePath)
-            selectedFiles = try JSONDecoder().decode(Set<String>.self, from: data)
-        } catch {
-            Logger.process.warning("Load failed: \(error)")
-        }
-
+    func loadFromJSON() {
         loadSavedFiles()
     }
 }

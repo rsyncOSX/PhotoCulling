@@ -62,25 +62,25 @@ extension SidebarPhotoCullingView {
         // Only show toolbar items when this tab is active
         if !files.isEmpty {
             ToolbarItem {
-                Text("\(filteredFiles.count) items")
+                Text("\(filteredFiles.count) ARW files")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .padding()
             }
         }
 
-        if cullingmanager.selectedFiles.isEmpty == false {
-            ToolbarItem {
-                ConditionalGlassButton(
-                    systemImage: "trash.fill",
-                    text: "",
-                    helpText: "Clear toggled files"
-                ) {
-                    cullingmanager.selectedFiles.removeAll()
-                    cullingmanager.saveToJSON()
+        ToolbarItem {
+            ConditionalGlassButton(
+                systemImage: "trash.fill",
+                text: "",
+                helpText: "Clear toggled files"
+            ) {
+
+                if let url = selectedSource?.url {
+                    cullingmanager.resetSavedFiles(in: url)
                 }
-                .disabled(creatingthumbnails)
             }
+            .disabled(creatingthumbnails)
         }
 
         ToolbarItem {
@@ -115,7 +115,7 @@ extension SidebarPhotoCullingView {
                     Button(action: {
                         handleToggleSelection(for: file)
                     }, label: {
-                        Image(systemName: cullingmanager.selectedFiles.contains(file.name) ? "checkmark.square.fill" : "square")
+                        Image(systemName: test() ? "checkmark.square.fill" : "square")
                             .foregroundStyle(.blue)
                     })
                     .buttonStyle(.plain)
@@ -130,13 +130,15 @@ extension SidebarPhotoCullingView {
                     Text(file.dateModified, style: .date)
                 }
             }
-
+/*
             if cullingmanager.selectedFiles.isEmpty == false {
                 PhotoGridView(
                     cullingmanager: cullingmanager,
-                    files: filteredFiles
+                    files: filteredFiles,
+                    photoURL: selectedSource?.url
                 )
             }
+ */
         }
         .onChange(of: selectedFileID) {
             if let index = files.firstIndex(where: { $0.id == selectedFileID }) {
@@ -190,6 +192,15 @@ extension SidebarPhotoCullingView {
     }
 
     // MARK: - Helper Functions
+    
+    func test() -> Bool {
+        if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource?.url }) {
+            if let filerecords = cullingmanager.savedFiles[index].filerecords {
+                
+            }
+        }
+        return false
+    }
 
     func handleToggleSelection(for file: FileItem) {
         cullingmanager.toggleSelection(
@@ -210,6 +221,7 @@ extension SidebarPhotoCullingView {
     }
 
     func syncSavedSelections() {
+        /*
         // Sync the selected file with cullingmanager state
         // If current selectedFile is no longer in cullingmanager, clear it
         if let currentFile = selectedFile, !cullingmanager.selectedFiles.contains(currentFile.name) {
@@ -217,6 +229,7 @@ extension SidebarPhotoCullingView {
             selectedFileID = nil
             isInspectorPresented = false
         }
+         */
     }
 
     func extractAllJPGS() {
