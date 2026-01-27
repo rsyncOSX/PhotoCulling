@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		E97E976C2F210EAB001A4239 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E97E975C2F210EAB001A4239 /* Assets.xcassets */; };
 		E97E976D2F210EAB001A4239 /* PhotoCullingicon.icon in Resources */ = {isa = PBXBuildFile; fileRef = E97E975D2F210EAB001A4239 /* PhotoCullingicon.icon */; };
+		E9B609852F28FA3600704081 /* DecodeEncodeGeneric in Frameworks */ = {isa = PBXBuildFile; productRef = E9B609842F28FA3600704081 /* DecodeEncodeGeneric */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +31,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E9B609852F28FA3600704081 /* DecodeEncodeGeneric in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -74,6 +76,7 @@
 			);
 			name = PhotoCulling;
 			packageProductDependencies = (
+				E9B609842F28FA3600704081 /* DecodeEncodeGeneric */,
 			);
 			productName = PhotoCulling;
 			productReference = E90B07A22F1E58EA00A95D4A /* PhotoCulling.app */;
@@ -103,6 +106,9 @@
 			);
 			mainGroup = E90B07992F1E58EA00A95D4A;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				E9B609832F28FA3600704081 /* XCRemoteSwiftPackageReference "DecodeEncodeGeneric" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E90B07A32F1E58EA00A95D4A /* Products */;
 			projectDirPath = "";
@@ -390,6 +396,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E9B609832F28FA3600704081 /* XCRemoteSwiftPackageReference "DecodeEncodeGeneric" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/rsyncOSX/DecodeEncodeGeneric.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E9B609842F28FA3600704081 /* DecodeEncodeGeneric */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E9B609832F28FA3600704081 /* XCRemoteSwiftPackageReference "DecodeEncodeGeneric" */;
+			productName = DecodeEncodeGeneric;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E90B079A2F1E58EA00A95D4A /* Project object */;
 }
