@@ -2,12 +2,12 @@ import SwiftUI
 
 struct FileDetailView: View {
     let file: FileItem?
-    
+
     var body: some View {
         if let file = file {
             VStack(spacing: 20) {
                 CachedThumbnailView(url: file.url)
-                
+
                 VStack {
                     Text(file.name)
                         .font(.headline)

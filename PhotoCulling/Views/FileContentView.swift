@@ -8,11 +8,11 @@ struct FileContentView: View {
     let issorting: Bool
     let progress: Double
     let max: Double
-    
+
     @Binding var isShowingPicker: Bool
-    
+
     let filetableview: AnyView
-    
+
     var body: some View {
         Group {
             if selectedSource == nil {
@@ -39,11 +39,11 @@ struct FileContentView: View {
             } else {
                 ZStack {
                     filetableview
-                    
+
                     if issorting {
                         HStack {
                             ProgressView()
-                            
+
                             Text("Sorting files, please wait...")
                                 .font(.title)
                                 .foregroundColor(Color.green)

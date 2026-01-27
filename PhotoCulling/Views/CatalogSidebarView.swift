@@ -4,9 +4,9 @@ struct CatalogSidebarView: View {
     @Binding var sources: [FolderSource]
     @Binding var selectedSource: FolderSource?
     @Binding var isShowingPicker: Bool
-    
+
     let cullingManager: ObservableCullingManager
-    
+
     var body: some View {
         List(sources, selection: $selectedSource) { source in
             NavigationLink(value: source) {
