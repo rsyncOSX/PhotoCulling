@@ -4,8 +4,7 @@ import OSLog
 
 @Observable
 final class ObservableCullingManager {
-    // New saved filenames.
-
+    
     var savedFiles = [SavedFiles]()
 
     func loadSavedFiles() {
@@ -70,8 +69,6 @@ final class ObservableCullingManager {
         }
         return 0
     }
-
-    
 
     func loadFromJSON() {
         loadSavedFiles()

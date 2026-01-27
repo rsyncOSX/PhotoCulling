@@ -115,7 +115,7 @@ extension SidebarPhotoCullingView {
                     Button(action: {
                         handleToggleSelection(for: file)
                     }, label: {
-                        Image(systemName: test() ? "checkmark.square.fill" : "square")
+                        Image(systemName: marktoggle() ? "checkmark.square.fill" : "square")
                             .foregroundStyle(.blue)
                     })
                     .buttonStyle(.plain)
@@ -130,15 +130,15 @@ extension SidebarPhotoCullingView {
                     Text(file.dateModified, style: .date)
                 }
             }
-/*
-            if cullingmanager.selectedFiles.isEmpty == false {
+
+            if cullingmanager.savedFiles.isEmpty == false {
                 PhotoGridView(
                     cullingmanager: cullingmanager,
                     files: filteredFiles,
                     photoURL: selectedSource?.url
                 )
             }
- */
+
         }
         .onChange(of: selectedFileID) {
             if let index = files.firstIndex(where: { $0.id == selectedFileID }) {
@@ -193,10 +193,10 @@ extension SidebarPhotoCullingView {
 
     // MARK: - Helper Functions
     
-    func test() -> Bool {
+    func marktoggle() -> Bool {
         if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource?.url }) {
             if let filerecords = cullingmanager.savedFiles[index].filerecords {
-                
+                return filerecords.count > 0
             }
         }
         return false

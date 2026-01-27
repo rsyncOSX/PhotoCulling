@@ -76,17 +76,14 @@ struct PhotoItemView: View {
     
     func setbackground() -> Bool {
         guard let photoURL else { return false }
-
         // Find the saved file entry matching this photoURL
         guard let entry = cullingmanager.savedFiles.first(where: { $0.catalog == photoURL }) else {
             return false
         }
-
         // Check if any filerecord has a matching fileName
         if let records = entry.filerecords {
             return records.contains { $0.fileName == photo }
         }
-
         return false
     }
 }
