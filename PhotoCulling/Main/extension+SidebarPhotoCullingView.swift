@@ -130,7 +130,7 @@ extension SidebarPhotoCullingView {
                 }
             }
 
-            if cullingmanager.savedFiles.isEmpty == false {
+            if showPhotoGridView() {
                 PhotoGridView(
                     cullingmanager: cullingmanager,
                     files: filteredFiles,
@@ -195,6 +195,13 @@ extension SidebarPhotoCullingView {
         if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource?.url }),
            let filerecords = cullingmanager.savedFiles[index].filerecords {
             return filerecords.contains { $0.fileName == file.name }
+        }
+        return false
+    }
+
+    func showPhotoGridView() -> Bool {
+        if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource?.url }) {
+            return cullingmanager.savedFiles[index].filerecords != nil
         }
         return false
     }
