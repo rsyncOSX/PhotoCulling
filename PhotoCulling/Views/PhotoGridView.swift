@@ -7,9 +7,6 @@ struct PhotoGridView: View {
     let photoURL: URL?
 
     var body: some View {
-        Text("Hello, World!")
-        /*
-         FIX
         ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))]) {
                 if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == photoURL }) {
@@ -28,6 +25,5 @@ struct PhotoGridView: View {
             }
             .padding()
         }
-         */
     }
 }
