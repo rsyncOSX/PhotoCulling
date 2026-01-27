@@ -18,7 +18,7 @@ import OSLog
 
 @MainActor
 final class ReadSavedFilesJSON {
-    func readjsonfilelogrecords() -> [SavedFiles]? {
+    func readjsonfilesavedfiles() -> [SavedFiles]? {
         let fileName = "savedfiles.json"
         var savePath: URL {
             FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]

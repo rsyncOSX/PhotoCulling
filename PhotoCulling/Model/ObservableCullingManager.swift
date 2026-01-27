@@ -4,6 +4,22 @@ import OSLog
 
 @Observable
 final class ObservableCullingManager {
+    // New saved filenames.
+    
+    var savedFiles = [SavedFiles]()
+    
+    func loadSavedFiles() {
+        if let readjson = ReadSavedFilesJSON().readjsonfilesavedfiles() {
+            savedFiles = readjson
+        }
+    }
+    
+    func toggleSelectionSavedFiles(in catalog: URL, filename: String) {
+        
+    }
+    
+    
+    
     // Standard property - Observation handles this automatically
     var selectedFiles: Set<String> = []
     private let fileName = "selections.json"
