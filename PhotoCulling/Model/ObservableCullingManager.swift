@@ -8,7 +8,7 @@ final class ObservableCullingManager {
     var selectedFiles: Set<String> = []
     private let fileName = "selections.json"
 
-    // We don't want the UI to "track" the file path, so we ignore it
+    /// We don't want the UI to "track" the file path, so we ignore it
     @ObservationIgnored
     private var savePath: URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]

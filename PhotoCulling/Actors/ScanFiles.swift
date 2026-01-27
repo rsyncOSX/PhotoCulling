@@ -32,7 +32,7 @@ actor ScanFiles {
                 options: [.skipsHiddenFiles]
             )
 
-            let scannedFiles = contents.compactMap { fileURL -> FileItem? in
+            return contents.compactMap { fileURL -> FileItem? in
                 // Check for .arw extension (case-insensitive)
                 guard fileURL.pathExtension.lowercased() == "arw" else { return nil }
 
@@ -45,8 +45,6 @@ actor ScanFiles {
                     dateModified: res?.contentModificationDate ?? Date()
                 )
             }
-
-            return scannedFiles
         } catch {
             Logger.process.warning("Scan Error: \(error)")
         }

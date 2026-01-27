@@ -22,14 +22,14 @@ actor ThumbnailProvider {
     private var successCount = 0
     private let diskCache = DiskCacheManager()
 
-    // Track the current preload task so we can cancel it
+    /// Track the current preload task so we can cancel it
     private var preloadTask: Task<Int, Never>?
 
     private var fileHandlers: FileHandlers?
-    // let supported: Set<String> = ["arw", "tiff", "tif", "jpeg", "jpg", "png", "heic", "heif"]
+    /// let supported: Set<String> = ["arw", "tiff", "tif", "jpeg", "jpg", "png", "heic", "heif"]
     let supported: Set<String> = ["arw"]
 
-    // 2. Performance Limits
+    /// 2. Performance Limits
     init() {
         memoryCache.totalCostLimit = 200 * 2560 * 2560 // 1.25 GB
         memoryCache.countLimit = 500
@@ -137,9 +137,9 @@ actor ThumbnailProvider {
         }
     }
 
-    // Renamed to reflect that it uses generic ImageIO, not Sony-specific SDKs
+    /// Renamed to reflect that it uses generic ImageIO, not Sony-specific SDKs
     private nonisolated func extractSonyThumbnail(from url: URL, maxDimension: CGFloat) async throws -> CGImage {
-        let cgImage = try await Task.detached(priority: .userInitiated) {
+        try await Task.detached(priority: .userInitiated) {
             let options = [kCGImageSourceShouldCache: false] as CFDictionary
 
             guard let source = CGImageSourceCreateWithURL(url as CFURL, options) else {
@@ -158,8 +158,6 @@ actor ThumbnailProvider {
 
             return image
         }.value
-
-        return cgImage
     }
 
     private func storeInMemory(_ image: NSImage, for url: URL) {

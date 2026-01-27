@@ -50,7 +50,7 @@ actor DiskCacheManager {
         }.value
     }
 
-    // Helper isolated to the detached task context
+    /// Helper isolated to the detached task context
     private nonisolated static func writeImageToDisk(_ cgImage: CGImage, to fileURL: URL) throws {
         guard let destination = CGImageDestinationCreateWithURL(
             fileURL as CFURL,

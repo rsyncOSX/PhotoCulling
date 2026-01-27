@@ -10,7 +10,7 @@ struct ZoomableImageView: View {
 
     @Environment(\.dismiss) var dismiss
 
-    // Define the zoom level you want to toggle to
+    /// Define the zoom level you want to toggle to
     private let zoomLevel: CGFloat = 3.0
 
     var body: some View {

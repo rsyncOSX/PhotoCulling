@@ -4,9 +4,9 @@ import OSLog
 import UniformTypeIdentifiers
 
 actor ExtractEmbeddedPreview {
-    // Cannot use @concurrent nonisolated here, the func getWidth
-    // will not work then.
-    // The func extractEmbeddedPreview and func getWidth must be on the same isolation
+    /// Cannot use @concurrent nonisolated here, the func getWidth
+    /// will not work then.
+    /// The func extractEmbeddedPreview and func getWidth must be on the same isolation
     func extractEmbeddedPreview(from arwURL: URL, fullSize: Bool = false) async -> CGImage? {
         // Target size for culling previews (width or height)
         // The system will resize the image to fit within this box during extraction
