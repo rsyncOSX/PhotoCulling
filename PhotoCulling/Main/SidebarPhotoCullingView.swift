@@ -39,66 +39,25 @@ struct SidebarPhotoCullingView: View {
     var body: some View {
         NavigationSplitView {
             // --- SIDEBAR ---
-            List(sources, selection: $selectedSource) { source in
-                NavigationLink(value: source) {
-                    Label(source.name, systemImage: "folder.badge.plus")
-                        .badge("(" + String(cullingmanager.countSelectedFiles(in: source.url)) + ")")
-                }
-            }
-            .navigationTitle("Catalogs")
-            .safeAreaInset(edge: .bottom) {
-                Button(action: { isShowingPicker = true }, label: {
-                    Label("Add Catalog", systemImage: "plus")
-                })
-                .buttonStyle(.bordered)
-                .padding()
-                .frame(maxWidth: .infinity)
-            }
+            CatalogSidebarView(
+                sources: $sources,
+                selectedSource: $selectedSource,
+                isShowingPicker: $isShowingPicker,
+                cullingManager: cullingmanager
+            )
         } content: {
             // --- MIDDLE COLUMN (TABLE) ---
-            Group {
-                if selectedSource == nil {
-                    // Empty State when no catalog is selected
-                    ContentUnavailableView {
-                        Label("No Catalog Selected", systemImage: "folder.badge.plus")
-                    } description: {
-                        Text("Select a folder from the sidebar or add a new one to start scanning.")
-                    } actions: {
-                        Button("Add Catalog") { isShowingPicker = true }
-                    }
-                } else if files.isEmpty && !scanning {
-                    ContentUnavailableView {
-                        Label("No Files Found", systemImage: "folder.badge.plus")
-                    } description: {
-                        Text("This catalog does not contain ARW images, or the images are empty. Please try scanning another catalog.")
-                    }
-                } else if files.isEmpty && scanning {
-                    ProgressView("Scanning directory...")
-                } else if creatingthumbnails {
-                    ProgressCount(max: Double(max),
-                                  progress: min(Swift.max(progress, 0), Double(max)),
-                                  statusText: "Creating Thumbnails or extracting JPGs")
-                } else {
-                    ZStack {
-                        filetableview
-
-                        if issorting {
-                            HStack {
-                                ProgressView()
-
-                                Text("Sorting files, please wait...")
-                                    .font(.title)
-                                    .foregroundColor(Color.green)
-                            }
-                            .padding()
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                            )
-                        }
-                    }
-                }
-            }
+            FileContentView(
+                selectedSource: selectedSource,
+                files: files,
+                scanning: scanning,
+                creatingThumbnails: creatingthumbnails,
+                issorting: issorting,
+                progress: progress,
+                max: max,
+                isShowingPicker: $isShowingPicker,
+                filetableview: AnyView(filetableview)
+            )
             .navigationTitle(selectedSource?.name ?? "Files")
             .searchable(text: $searchText, placement: .toolbar, prompt: "Search in \(selectedSource?.name ?? "catalog")...")
             .toolbar { toolbarContent }
@@ -114,28 +73,8 @@ struct SidebarPhotoCullingView: View {
                 )
             }
         } detail: {
-            if let file = selectedFile {
-                VStack(spacing: 20) {
-                    CachedThumbnailView(url: file.url)
-
-                    VStack {
-                        Text(file.name)
-                            .font(.headline)
-                        Text(file.url.absoluteString)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding()
-                }
-                .padding()
-                .frame(minWidth: 300, minHeight: 300)
-            } else {
-                ContentUnavailableView(
-                    "No Selection",
-                    systemImage: "doc.text",
-                    description: Text("Select a file to view its properties.")
-                )
-            }
+            // --- DETAIL VIEW ---
+            FileDetailView(file: selectedFile)
         }
         .task {
             let handlers = CreateFileHandlers().createFileHandlers(
