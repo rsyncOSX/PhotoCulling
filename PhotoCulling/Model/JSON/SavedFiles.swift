@@ -26,7 +26,8 @@ struct SavedFiles: Identifiable, Codable {
             FileRecord(
                 fileName: record.fileName,
                 dateTagged: record.dateTagged,
-                dateCopied: record.dateCopied
+                dateCopied: record.dateCopied,
+                rating: record.rating
             )
         }
     }
@@ -56,6 +57,7 @@ struct FileRecord: Identifiable, Codable {
     var fileName: String?
     var dateTagged: String?
     var dateCopied: String?
+    var rating: Int?
     var date: Date {
         dateTagged?.en_date_from_string() ?? Date()
     }
@@ -65,12 +67,14 @@ extension FileRecord: Hashable, Equatable {
     static func == (lhs: FileRecord, rhs: FileRecord) -> Bool {
         lhs.fileName == rhs.fileName &&
             lhs.dateTagged == rhs.dateTagged &&
-            lhs.dateCopied == rhs.dateCopied
+            lhs.dateCopied == rhs.dateCopied &&
+            lhs.rating == rhs.rating
     }
 
     func hash(into hasher: inout Hasher) {
         hasher.combine(fileName)
         hasher.combine(dateTagged)
         hasher.combine(dateCopied)
+        hasher.combine(rating)
     }
 }

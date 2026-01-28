@@ -30,11 +30,13 @@ struct DecodeFileRecord: Codable, Hashable {
     var fileName: String?
     var dateTagged: String?
     var dateCopied: String?
+    var rating: Int?
 
     enum CodingKeys: String, CodingKey {
         case fileName
         case dateTagged
         case dateCopied
+        case rating
     }
 
     init(from decoder: Decoder) throws {
@@ -42,6 +44,7 @@ struct DecodeFileRecord: Codable, Hashable {
         fileName = try values.decodeIfPresent(String.self, forKey: .fileName)
         dateTagged = try values.decodeIfPresent(String.self, forKey: .dateTagged)
         dateCopied = try values.decodeIfPresent(String.self, forKey: .dateCopied)
+        rating = try values.decodeIfPresent(Int.self, forKey: .rating)
     }
 
     /// This init is used in WriteConfigurationJSON
@@ -49,5 +52,6 @@ struct DecodeFileRecord: Codable, Hashable {
         fileName = nil
         dateTagged = nil
         dateCopied = nil
+        rating = nil
     }
 }

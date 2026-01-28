@@ -50,7 +50,8 @@ final class ObservableCullingManager {
                 let newrecord = FileRecord(
                     fileName: toggledfilename,
                     dateTagged: Date().en_string_from_date(),
-                    dateCopied: nil
+                    dateCopied: nil,
+                    rating: 3
                 )
 
                 if savedFiles.isEmpty {

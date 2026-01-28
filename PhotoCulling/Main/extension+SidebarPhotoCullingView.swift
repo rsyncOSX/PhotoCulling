@@ -120,6 +120,12 @@ extension SidebarPhotoCullingView {
                     .buttonStyle(.plain)
                 }
                 .width(30)
+                TableColumn("Rating") { file in
+                    RatingView(rating: getRating(for: file), onChange: { newRating in
+                        updateRating(for: file, rating: newRating)
+                    })
+                }
+                .width(100)
                 TableColumn("Name", value: \.name)
                 TableColumn("Size", value: \.size) { file in
                     Text(file.formattedSize).monospacedDigit()
@@ -211,6 +217,24 @@ extension SidebarPhotoCullingView {
             in: file.url,
             toggledfilename: file.name
         )
+    }
+
+    func getRating(for file: FileItem) -> Int {
+        if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource?.url }),
+           let filerecords = cullingmanager.savedFiles[index].filerecords,
+           let record = filerecords.first(where: { $0.fileName == file.name }) {
+            return record.rating ?? 0
+        }
+        return 0
+    }
+
+    func updateRating(for file: FileItem, rating: Int) {
+        guard let selectedSource = selectedSource else { return }
+        if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource.url }),
+           let recordIndex = cullingmanager.savedFiles[index].filerecords?.firstIndex(where: { $0.fileName == file.name }) {
+            cullingmanager.savedFiles[index].filerecords?[recordIndex].rating = rating
+            WriteSavedFilesJSON(cullingmanager.savedFiles)
+        }
     }
 
     func handlePickerResult(_ result: Result<URL, Error>) {
