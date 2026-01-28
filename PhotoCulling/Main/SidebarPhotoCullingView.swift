@@ -122,6 +122,7 @@ struct SidebarPhotoCullingView: View {
                         )
 
                         creatingthumbnails = false
+                        max = 0
                     }
                 }
             }
