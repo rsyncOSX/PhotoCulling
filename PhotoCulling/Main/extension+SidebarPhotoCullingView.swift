@@ -213,8 +213,14 @@ extension SidebarPhotoCullingView {
     }
 
     func showPhotoGridView() -> Bool {
-        if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource?.url }) {
-            return cullingmanager.savedFiles[index].filerecords != nil
+        guard let catalogURL = selectedSource?.url,
+              let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == catalogURL })
+        else {
+            return false
+        }
+        // Show the grid when there are filerecords and the collection is not empty
+        if let records = cullingmanager.savedFiles[index].filerecords {
+            return !records.isEmpty
         }
         return false
     }
