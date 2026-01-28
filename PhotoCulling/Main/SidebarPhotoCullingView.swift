@@ -36,6 +36,10 @@ struct SidebarPhotoCullingView: View {
 
     @State var showingAlert: Bool = false
 
+    // Focus buttons from the menu
+    @State private var focustogglerow: Bool = false
+    @State private var focusaborttask: Bool = false
+
     var body: some View {
         NavigationSplitView {
             // --- SIDEBAR ---
@@ -61,6 +65,7 @@ struct SidebarPhotoCullingView: View {
             .navigationTitle(selectedSource?.name ?? "Files")
             .searchable(text: $searchText, placement: .toolbar, prompt: "Search in \(selectedSource?.name ?? "catalog")...")
             .toolbar { toolbarContent }
+            .focusedSceneValue(\.togglerow, $focustogglerow)
             .alert(isPresented: $showingAlert) {
                 Alert(
                     title: Text("Extract JPGs all files?"),
@@ -148,7 +153,31 @@ struct SidebarPhotoCullingView: View {
                 issorting = false
             }
         }
+
+        if focustogglerow == true { labeltogglerow }
+        if focusaborttask { labelaborttask }
     }
+
+    var labeltogglerow: some View {
+        Label("", systemImage: "play.fill")
+            .onAppear {
+                focustogglerow = false
+                if let index = files.firstIndex(where: { $0.id == selectedFileID }) {
+                    let fileitem = files[index]
+                    handleToggleSelection(for: fileitem)
+                }
+            }
+    }
+
+    var labelaborttask: some View {
+        Label("", systemImage: "play.fill")
+            .onAppear {
+                focusaborttask = false
+                abort()
+            }
+    }
+
+    func abort() {}
 
     func fileHandler(_ update: Int) {
         progress = Double(update)

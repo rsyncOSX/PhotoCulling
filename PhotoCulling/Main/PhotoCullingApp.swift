@@ -31,6 +31,11 @@ struct PhotoCullingApp: App {
                     NSApplication.shared.terminate(nil)
                 }
         }
+        .commands {
+            SidebarCommands()
+
+            ToggleCommands()
+        }
 
         Window("Zoom", id: "zoom-window-arw") {
             ZoomableImageViewARW(cgImage: cgImage)
