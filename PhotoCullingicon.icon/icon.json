@@ -12,7 +12,7 @@
           "image-name" : "photography.png",
           "name" : "photography",
           "position" : {
-            "scale" : 1.5,
+            "scale" : 2,
             "translation-in-points" : [
               -0.75,
               -0.75
@@ -21,41 +21,6 @@
         }
       ],
       "name" : "Group",
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.5
-      },
-      "translucency" : {
-        "enabled" : true,
-        "value" : 0.5
-      }
-    },
-    {
-      "layers" : [
-        {
-          "hidden" : true,
-          "image-name" : "cloud 3.png",
-          "name" : "cloud 3"
-        }
-      ],
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.5
-      },
-      "translucency" : {
-        "enabled" : true,
-        "value" : 0.5
-      }
-    },
-    {
-      "layers" : [
-        {
-          "blend-mode" : "normal",
-          "hidden" : true,
-          "image-name" : "icon_512x512@2x_1_numbers.png",
-          "name" : "icon_512x512@2x_1_numbers"
-        }
-      ],
       "shadow" : {
         "kind" : "neutral",
         "opacity" : 0.5
