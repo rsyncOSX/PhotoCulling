@@ -11,7 +11,7 @@ struct PhotoGridView: View {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))]) {
                 if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == photoURL }) {
                     if let filerecords = cullingmanager.savedFiles[index].filerecords {
-                        let localfiles = filerecords.compactMap { record in record.fileName as? String }
+                        let localfiles = filerecords.compactMap { record in record.fileName }
                         ForEach(localfiles.sorted(), id: \.self) { photo in
                             let photoURL = files.first(where: { $0.name == photo })?.url
                             PhotoItemView(

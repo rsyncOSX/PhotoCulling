@@ -207,9 +207,9 @@ extension SidebarPhotoCullingView {
     }
 
     func handleToggleSelection(for file: FileItem) {
-        cullingmanager.toggleSelection(
+        cullingmanager.toggleSelectionSavedFiles(
             in: file.url,
-            filename: file.name
+            toggledfilename: file.name
         )
     }
 

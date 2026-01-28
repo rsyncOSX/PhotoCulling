@@ -47,9 +47,9 @@ struct PhotoItemView: View {
                 }
                 .background(setbackground() ? Color.blue.opacity(0.2) : Color.clear)
                 .onTapGesture {
-                    cullingmanager.toggleSelection(
+                    cullingmanager.toggleSelectionSavedFiles(
                         in: photoURL,
-                        filename: photo
+                        toggledfilename: photo
                     )
                 }
 
