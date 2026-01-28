@@ -10,10 +10,10 @@ import SwiftUI
 struct RatingView: View {
     let rating: Int
     let onChange: (Int) -> Void
-    
+
     var body: some View {
         HStack(spacing: 2) {
-            ForEach(1...5, id: \.self) { star in
+            ForEach(1 ... 5, id: \.self) { star in
                 Button(action: {
                     onChange(star)
                 }) {
