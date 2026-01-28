@@ -121,9 +121,12 @@ extension SidebarPhotoCullingView {
                 }
                 .width(30)
                 TableColumn("Rating") { file in
-                    RatingView(rating: getRating(for: file), onChange: { newRating in
-                        updateRating(for: file, rating: newRating)
-                    })
+                    RatingView(
+                        rating: getRating(for: file),
+                        onChange: { newRating in
+                            updateRating(for: file, rating: newRating)
+                        }
+                    )
                 }
                 .width(100)
                 TableColumn("Name", value: \.name)
