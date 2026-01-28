@@ -72,8 +72,4 @@ final class ObservableCullingManager {
         }
         return 0
     }
-
-    func loadFromJSON() {
-        loadSavedFiles()
-    }
 }

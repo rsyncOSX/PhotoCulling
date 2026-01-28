@@ -12,7 +12,6 @@ struct CachedThumbnailView: View {
                 Image(nsImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    // .frame(maxWidth: 600, maxHeight: 600)
                     .shadow(radius: 4)
                     .background(Color(nsColor: .textBackgroundColor))
                     .cornerRadius(8)

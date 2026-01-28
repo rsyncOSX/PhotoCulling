@@ -109,8 +109,7 @@ struct SidebarPhotoCullingView: View {
 
                     scanning = false
 
-                    cullingmanager.loadFromJSON()
-                    syncSavedSelections()
+                    cullingmanager.loadSavedFiles()
 
                     if processedURLs.contains(url) == false {
                         processedURLs.insert(url)
@@ -148,9 +147,6 @@ struct SidebarPhotoCullingView: View {
                 )
                 issorting = false
             }
-        }
-        .onChange(of: cullingmanager.savedFiles) {
-            syncSavedSelections()
         }
     }
 

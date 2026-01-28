@@ -224,18 +224,6 @@ extension SidebarPhotoCullingView {
         }
     }
 
-    func syncSavedSelections() {
-        /*
-         // Sync the selected file with cullingmanager state
-         // If current selectedFile is no longer in cullingmanager, clear it
-         if let currentFile = selectedFile, !cullingmanager.selectedFiles.contains(currentFile.name) {
-             selectedFile = nil
-             selectedFileID = nil
-             isInspectorPresented = false
-         }
-          */
-    }
-
     func extractAllJPGS() {
         Task {
             creatingthumbnails = true
