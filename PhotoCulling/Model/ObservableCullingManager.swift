@@ -21,9 +21,7 @@ final class ObservableCullingManager {
     }
 
     func toggleSelectionSavedFiles(in fileurl: URL?, toggledfilename: String) {
-        
         if let fileurl {
-            
             let newrecord = FileRecord(
                 fileName: toggledfilename,
                 dateTagged: Date().en_string_from_date(),
@@ -61,7 +59,7 @@ final class ObservableCullingManager {
             WriteSavedFilesJSON(savedFiles)
         }
     }
-    
+
     func countSelectedFiles(in catalog: URL) -> Int {
         if let index = savedFiles.firstIndex(where: { $0.catalog == catalog }) {
             if let filerecords = savedFiles[index].filerecords {
