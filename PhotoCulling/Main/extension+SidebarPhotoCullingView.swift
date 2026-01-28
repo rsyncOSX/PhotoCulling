@@ -124,6 +124,10 @@ extension SidebarPhotoCullingView {
                     RatingView(
                         rating: getRating(for: file),
                         onChange: { newRating in
+                            // If not toggled, toggle it on first
+                            if !marktoggle(for: file) {
+                                handleToggleSelection(for: file)
+                            }
                             updateRating(for: file, rating: newRating)
                         }
                     )
