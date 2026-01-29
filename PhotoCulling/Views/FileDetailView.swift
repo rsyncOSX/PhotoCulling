@@ -41,6 +41,7 @@ struct FileDetailView: View {
                     openWindow(id: WindowIdentifier.zoomnsImage.rawValue)
                 } else {
                     Task {
+                        cgImage = nil
                         let extractor = ExtractEmbeddedPreview()
                         if file.url.pathExtension.lowercased() == SupportedFileType.arw.rawValue {
                             if let mycgImage = await extractor.extractEmbeddedPreview(from: file.url, fullSize: true) {
