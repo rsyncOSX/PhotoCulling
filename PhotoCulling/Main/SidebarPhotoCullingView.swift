@@ -79,7 +79,12 @@ struct SidebarPhotoCullingView: View {
             }
         } detail: {
             // --- DETAIL VIEW ---
-            FileDetailView(file: selectedFile)
+            FileDetailView(
+                cgImage: $cgImage,
+                files: files,
+                file: selectedFile,
+                selectedFileID: selectedFileID
+            )
         }
         .task {
             let handlers = CreateFileHandlers().createFileHandlers(
