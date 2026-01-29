@@ -45,11 +45,7 @@ struct FileDetailView: View {
                         if file.url.pathExtension.lowercased() == SupportedFileType.arw.rawValue {
                             if let mycgImage = await extractor.extractEmbeddedPreview(from: file.url, fullSize: true) {
                                 cgImage = mycgImage
-                            } else {
-                                print("Could not extract preview.")
                             }
-                        } else {
-                            // nsImage = await ThumbnailProvider.shared.thumbnail(for: file.url, targetSize: 2560)
                         }
                     }
 
@@ -65,3 +61,7 @@ struct FileDetailView: View {
         }
     }
 }
+
+/*
+ nsImage = await ThumbnailProvider.shared.thumbnail(for: file.url, targetSize: 2560)
+ */
