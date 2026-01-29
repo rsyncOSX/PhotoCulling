@@ -1,0 +1,153 @@
+//
+//  HistogramView.swift
+//  PhotoCulling
+//
+//  Created by Thomas Evensen on 29/01/2026.
+//
+
+import AppKit
+import SwiftUI
+
+struct HistogramView: View {
+    /// The underlying image data
+    private let cgImage: CGImage
+
+    /// We compute the histogram data (0.0 to 1.0) once upon initialization
+    private let normalizedBins: [CGFloat]
+
+    // --- Initializers ---
+
+    init(cgImage: CGImage) {
+        self.cgImage = cgImage
+        self.normalizedBins = HistogramView.calculateHistogram(from: cgImage)
+    }
+
+    init(nsImage: NSImage) {
+        guard let cgRef = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            fatalError("Could not initialize CGImage from NSImage")
+        }
+        self.init(cgImage: cgRef)
+    }
+
+    // --- View Body ---
+
+    var body: some View {
+        GeometryReader { _ in
+            ZStack {
+                // Background color (optional, for dark mode contrast)
+                Color.black.opacity(0.2)
+                    .cornerRadius(4)
+
+                // The Histogram Path
+                HistogramPath(bins: normalizedBins)
+                    .fill(
+                        LinearGradient(
+                            gradient: Gradient(colors: [.blue, .purple]),
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    // Inset slightly to prevent clipping
+                    .padding(2)
+            }
+        }
+        .frame(height: 150) // Default height
+    }
+
+    // --- Logic ---
+
+    /// Calculates the luminance histogram and normalizes values to 0.0 - 1.0
+    private static func calculateHistogram(from image: CGImage) -> [CGFloat] {
+        let width = image.width
+        let height = image.height
+        let totalPixels = width * height
+
+        // 1. Extract raw pixel data
+        guard let pixelData = image.dataProvider?.data as Data?,
+              let data = CFDataGetBytePtr(pixelData as CFData)
+        else {
+            return Array(repeating: 0, count: 256)
+        }
+
+        var bins = [UInt](repeating: 0, count: 256)
+        let bytesPerPixel = image.bitsPerPixel / 8
+
+        // 2. Iterate over pixels and calculate Luminance
+        // Standard formula: 0.299 R + 0.587 G + 0.114 B
+        for y in 0 ..< height {
+            for x in 0 ..< width {
+                let pixelOffset = (y * image.bytesPerRow) + (x * bytesPerPixel)
+
+                let r = CGFloat(data[pixelOffset])
+                let g = CGFloat(data[pixelOffset + 1])
+                let b = CGFloat(data[pixelOffset + 2])
+
+                // Calculate luminance
+                let luminance = 0.299 * r + 0.587 * g + 0.114 * b
+                let index = Int(luminance)
+
+                if index >= 0, index < 256 {
+                    bins[index] += 1
+                }
+            }
+        }
+
+        // 3. Normalize bins (find the max value and scale everything)
+        let maxCount = bins.max() ?? 1
+        return bins.map { CGFloat($0) / CGFloat(maxCount) }
+    }
+}
+
+// --- Helper Shape for Drawing ---
+
+struct HistogramPath: Shape {
+    let bins: [CGFloat]
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+
+        guard !bins.isEmpty else { return path }
+
+        let stepX = rect.width / CGFloat(bins.count)
+
+        // Start at bottom left
+        path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+
+        for (index, value) in bins.enumerated() {
+            let x = rect.minX + (CGFloat(index) * stepX)
+            // Invert Y because 0 is at the top in UIKit/SwiftUI
+            let height = rect.height * value
+            let y = rect.maxY - height
+
+            path.addLine(to: CGPoint(x: x, y: y))
+        }
+
+        // Line to bottom right
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        path.closeSubpath()
+
+        return path
+    }
+}
+
+/*
+ struct ContentView: View {
+     // Load an image from assets or bundle
+     let image = NSImage(named: "YourImageName")!
+
+     var body: some View {
+         VStack {
+             Image(nsImage: image)
+                 .resizable()
+                 .scaledToFit()
+                 .frame(height: 200)
+
+             Divider()
+
+             // Pass the NSImage directly
+             HistogramView(nsImage: image)
+                 .padding()
+         }
+     }
+ }
+ */
