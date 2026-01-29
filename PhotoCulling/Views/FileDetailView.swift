@@ -31,7 +31,7 @@ struct FileDetailView: View {
 
                 cgImage = nil
 
-                handleJPGorPreview(
+                JPGPreviewHandler.handle(
                     file: file,
                     setNSImage: { nsImage = $0 },
                     setCGImage: { cgImage = $0 },

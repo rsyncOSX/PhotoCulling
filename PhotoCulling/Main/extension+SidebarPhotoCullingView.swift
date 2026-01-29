@@ -9,27 +9,29 @@ import OSLog
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Free function to handle JPG/preview extraction and window opening
-func handleJPGorPreview(
-    file: FileItem,
-    setNSImage: @escaping (NSImage?) -> Void,
-    setCGImage: @escaping (CGImage?) -> Void,
-    openWindow: @escaping (String) -> Void
-) {
-    let filejpg = file.url.deletingPathExtension().appendingPathExtension(SupportedFileType.jpg.rawValue)
-    if let image = NSImage(contentsOf: filejpg) {
-        setNSImage(image)
-        openWindow(WindowIdentifier.zoomnsImage.rawValue)
-    } else {
-        Task {
-            setCGImage(nil)
-            let extractor = ExtractEmbeddedPreview()
-            if file.url.pathExtension.lowercased() == SupportedFileType.arw.rawValue {
-                if let mycgImage = await extractor.extractEmbeddedPreview(from: file.url, fullSize: true) {
-                    setCGImage(mycgImage)
+/// Type to handle JPG/preview extraction and window opening
+enum JPGPreviewHandler {
+    static func handle(
+        file: FileItem,
+        setNSImage: @escaping (NSImage?) -> Void,
+        setCGImage: @escaping (CGImage?) -> Void,
+        openWindow: @escaping (String) -> Void
+    ) {
+        let filejpg = file.url.deletingPathExtension().appendingPathExtension(SupportedFileType.jpg.rawValue)
+        if let image = NSImage(contentsOf: filejpg) {
+            setNSImage(image)
+            openWindow(WindowIdentifier.zoomnsImage.rawValue)
+        } else {
+            Task {
+                setCGImage(nil)
+                let extractor = ExtractEmbeddedPreview()
+                if file.url.pathExtension.lowercased() == SupportedFileType.arw.rawValue {
+                    if let mycgImage = await extractor.extractEmbeddedPreview(from: file.url, fullSize: true) {
+                        setCGImage(mycgImage)
+                    }
                 }
+                openWindow(WindowIdentifier.zoomcgImage.rawValue)
             }
-            openWindow(WindowIdentifier.zoomcgImage.rawValue)
         }
     }
 }
@@ -192,7 +194,7 @@ extension SidebarPhotoCullingView {
 
             cgImage = nil
 
-            handleJPGorPreview(
+            JPGPreviewHandler.handle(
                 file: file,
                 setNSImage: { nsImage = $0 },
                 setCGImage: { cgImage = $0 },
@@ -205,7 +207,7 @@ extension SidebarPhotoCullingView {
 
             cgImage = nil
 
-            handleJPGorPreview(
+            JPGPreviewHandler.handle(
                 file: file,
                 setNSImage: { nsImage = $0 },
                 setCGImage: { cgImage = $0 },
