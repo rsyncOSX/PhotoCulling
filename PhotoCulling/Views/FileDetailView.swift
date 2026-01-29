@@ -26,32 +26,35 @@ struct FileDetailView: View {
             .padding()
             .frame(minWidth: 300, minHeight: 300)
             .onTapGesture(count: 2) {
+                var jpgfileExist = false
+
                 guard let selectedID = selectedFileID,
                       let file = files.first(where: { $0.id == selectedID }) else { return }
 
-                /*
-                 if zoomfilejpg.pathExtension.lowercased() == SupportedFileType.jpg.rawValue {
-                     if let image = NSImage(contentsOf: zoomfilejpg) {
-                         nsImage = image
-                         openWindow(id: WindowIdentifier.zoomnsImage.rawValue)
-                     }
-                 }
-                 */
-
-                Task {
-                    let extractor = ExtractEmbeddedPreview()
-                    if file.url.pathExtension.lowercased() == "arw" {
-                        if let mycgImage = await extractor.extractEmbeddedPreview(from: file.url, fullSize: true) {
-                            cgImage = mycgImage
-                        } else {
-                            print("Could not extract preview.")
-                        }
-                    } else {
-                        // nsImage = await ThumbnailProvider.shared.thumbnail(for: file.url, targetSize: 2560)
-                    }
+                let filejpg = file.url.deletingPathExtension().appendingPathExtension(SupportedFileType.jpg.rawValue)
+                if let image = NSImage(contentsOf: filejpg) {
+                    nsImage = image
+                    jpgfileExist = true
                 }
 
-                openWindow(id: WindowIdentifier.zoomcgImage.rawValue)
+                if jpgfileExist {
+                    openWindow(id: WindowIdentifier.zoomnsImage.rawValue)
+                } else {
+                    Task {
+                        let extractor = ExtractEmbeddedPreview()
+                        if file.url.pathExtension.lowercased() == SupportedFileType.arw.rawValue {
+                            if let mycgImage = await extractor.extractEmbeddedPreview(from: file.url, fullSize: true) {
+                                cgImage = mycgImage
+                            } else {
+                                print("Could not extract preview.")
+                            }
+                        } else {
+                            // nsImage = await ThumbnailProvider.shared.thumbnail(for: file.url, targetSize: 2560)
+                        }
+                    }
+
+                    openWindow(id: WindowIdentifier.zoomcgImage.rawValue)
+                }
             }
         } else {
             ContentUnavailableView(
