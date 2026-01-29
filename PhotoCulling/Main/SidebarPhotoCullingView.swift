@@ -140,9 +140,7 @@ struct SidebarPhotoCullingView: View {
         }
         // --- RIGHT INSPECTOR ---
         .inspector(isPresented: $isInspectorPresented) {
-            if let file = selectedFile {
-                FileInspectorView(file: file)
-            }
+            FileInspectorView(file: $selectedFile)
         }
         .fileImporter(isPresented: $isShowingPicker, allowedContentTypes: [.folder]) { result in
             handlePickerResult(result)
