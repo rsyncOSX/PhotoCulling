@@ -29,8 +29,6 @@ struct FileDetailView: View {
                 guard let selectedID = selectedFileID,
                       let file = files.first(where: { $0.id == selectedID }) else { return }
 
-                cgImage = nil
-
                 JPGPreviewHandler.handle(
                     file: file,
                     setNSImage: { nsImage = $0 },

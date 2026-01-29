@@ -20,17 +20,19 @@ enum JPGPreviewHandler {
         let filejpg = file.url.deletingPathExtension().appendingPathExtension(SupportedFileType.jpg.rawValue)
         if let image = NSImage(contentsOf: filejpg) {
             setNSImage(image)
+            // The jpgs are already created, open view shows the photo immidiate
             openWindow(WindowIdentifier.zoomnsImage.rawValue)
         } else {
             Task {
                 setCGImage(nil)
+                // Open the view here to indicate process of extracting the cgImage
+                openWindow(WindowIdentifier.zoomcgImage.rawValue)
                 let extractor = ExtractEmbeddedPreview()
                 if file.url.pathExtension.lowercased() == SupportedFileType.arw.rawValue {
                     if let mycgImage = await extractor.extractEmbeddedPreview(from: file.url, fullSize: true) {
                         setCGImage(mycgImage)
                     }
                 }
-                openWindow(WindowIdentifier.zoomcgImage.rawValue)
             }
         }
     }
@@ -192,8 +194,6 @@ extension SidebarPhotoCullingView {
             guard let selectedID = selectedFileID,
                   let file = files.first(where: { $0.id == selectedID }) else { return }
 
-            cgImage = nil
-
             JPGPreviewHandler.handle(
                 file: file,
                 setNSImage: { nsImage = $0 },
@@ -204,8 +204,6 @@ extension SidebarPhotoCullingView {
         .onKeyPress(.space) {
             guard let selectedID = selectedFileID,
                   let file = files.first(where: { $0.id == selectedID }) else { return .handled }
-
-            cgImage = nil
 
             JPGPreviewHandler.handle(
                 file: file,
