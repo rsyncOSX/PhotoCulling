@@ -28,6 +28,9 @@ struct FileDetailView: View {
             .onTapGesture(count: 2) {
                 guard let selectedID = selectedFileID,
                       let file = files.first(where: { $0.id == selectedID }) else { return }
+
+                cgImage = nil
+
                 handleJPGorPreview(
                     file: file,
                     setNSImage: { nsImage = $0 },
