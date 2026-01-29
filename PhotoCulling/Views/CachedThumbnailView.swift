@@ -24,7 +24,10 @@ struct CachedThumbnailView: View {
         }
         .task(id: url) {
             isLoading = true
-            image = await ThumbnailProvider.shared.thumbnail(for: url, targetSize: 2560)
+            image = await ThumbnailProvider.shared.thumbnail(
+                for: url,
+                targetSize: ThumbnailSize.preview
+            )
             isLoading = false
         }
     }

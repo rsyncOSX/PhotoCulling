@@ -25,12 +25,15 @@ struct PhotoItemView: View {
                         Image(nsImage: thumbnailImage)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
-                            .frame(width: 100, height: 100)
+                            .frame(
+                                width: CGFloat(ThumbnailSize.grid),
+                                height: CGFloat(ThumbnailSize.grid)
+                            )
                             .clipped()
                     } else if isLoading {
                         Rectangle()
                             .fill(Color.gray.opacity(0.1))
-                            .frame(height: 100)
+                            .frame(height: CGFloat(ThumbnailSize.grid))
                             .overlay {
                                 ProgressView()
                                     .controlSize(.small)
@@ -39,7 +42,7 @@ struct PhotoItemView: View {
                         ZStack {
                             Rectangle()
                                 .fill(Color.gray.opacity(0.1))
-                                .frame(height: 100)
+                                .frame(height: CGFloat(ThumbnailSize.grid))
 
                             Label("No image available", systemImage: "xmark")
                         }
@@ -69,7 +72,10 @@ struct PhotoItemView: View {
             Logger.process.debugMessageOnly("PhotoItemView (in GRID) loading thumbnail for \(url)")
             isLoading = true
             // Most likely a thumbnail is received from the populated NSCache<NSURL, NSImage>().
-            thumbnailImage = await ThumbnailProvider.shared.thumbnail(for: url, targetSize: 100)
+            thumbnailImage = await ThumbnailProvider.shared.thumbnail(
+                for: url,
+                targetSize: ThumbnailSize.grid
+            )
             isLoading = false
         }
     }

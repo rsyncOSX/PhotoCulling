@@ -58,33 +58,6 @@ extension SidebarPhotoCullingView {
         }
 
         ToolbarItem {
-            ConditionalGlassButton(
-                systemImage: "plus.magnifyingglass",
-                text: "",
-                helpText: "Extract JPG from selected ARW file..."
-            ) {
-                guard let selectedID = selectedFileID,
-                      let file = files.first(where: { $0.id == selectedID }) else { return }
-
-                Task {
-                    let extractor = ExtractEmbeddedPreview()
-                    if file.url.pathExtension.lowercased() == "arw" {
-                        if let mycgImage = await extractor.extractEmbeddedPreview(from: file.url, fullSize: true) {
-                            cgImage = mycgImage
-                        } else {
-                            print("Could not extract preview.")
-                        }
-                    } else {
-                        // nsImage = await ThumbnailProvider.shared.thumbnail(for: file.url, targetSize: 2560)
-                    }
-                }
-
-                openWindow(id: WindowIdentifier.zoomcgImage.rawValue)
-            }
-            .disabled(creatingthumbnails)
-        }
-
-        ToolbarItem {
             Spacer()
         }
 
@@ -161,7 +134,7 @@ extension SidebarPhotoCullingView {
                         }
                     )
                 }
-                .width(100)
+                .width(CGFloat(ThumbnailSize.grid))
                 TableColumn("Name", value: \.name)
                 TableColumn("Size", value: \.size) { file in
                     Text(file.formattedSize).monospacedDigit()

@@ -8,7 +8,7 @@ struct PhotoGridView: View {
 
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))]) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: CGFloat(ThumbnailSize.grid)))]) {
                 if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == photoURL }) {
                     if let filerecords = cullingmanager.savedFiles[index].filerecords {
                         let localfiles = filerecords.compactMap { record in record.fileName }
