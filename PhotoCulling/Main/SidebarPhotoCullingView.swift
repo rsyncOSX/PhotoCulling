@@ -71,7 +71,6 @@ struct SidebarPhotoCullingView: View {
                     title: Text("Extract JPGs all files?"),
                     primaryButton: .default(Text("Extract")) {
                         guard selectedSource != nil else { return }
-
                         extractAllJPGS()
                     },
                     secondaryButton: .cancel {}
