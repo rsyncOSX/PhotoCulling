@@ -9,6 +9,31 @@ import OSLog
 import SwiftUI
 import UniformTypeIdentifiers
 
+/// Free function to handle JPG/preview extraction and window opening
+func handleJPGorPreview(
+    file: FileItem,
+    setNSImage: @escaping (NSImage?) -> Void,
+    setCGImage: @escaping (CGImage?) -> Void,
+    openWindow: @escaping (String) -> Void
+) {
+    let filejpg = file.url.deletingPathExtension().appendingPathExtension(SupportedFileType.jpg.rawValue)
+    if let image = NSImage(contentsOf: filejpg) {
+        setNSImage(image)
+        openWindow(WindowIdentifier.zoomnsImage.rawValue)
+    } else {
+        Task {
+            setCGImage(nil)
+            let extractor = ExtractEmbeddedPreview()
+            if file.url.pathExtension.lowercased() == SupportedFileType.arw.rawValue {
+                if let mycgImage = await extractor.extractEmbeddedPreview(from: file.url, fullSize: true) {
+                    setCGImage(mycgImage)
+                }
+            }
+            openWindow(WindowIdentifier.zoomcgImage.rawValue)
+        }
+    }
+}
+
 extension SidebarPhotoCullingView {
     @ToolbarContentBuilder
     var toolbarContent: some ToolbarContent {
@@ -162,60 +187,24 @@ extension SidebarPhotoCullingView {
         }
         .contextMenu(forSelectionType: FileItem.ID.self) { _ in
         } primaryAction: { _ in
-            var jpgfileExist = false
-
             guard let selectedID = selectedFileID,
                   let file = files.first(where: { $0.id == selectedID }) else { return }
-
-            let filejpg = file.url.deletingPathExtension().appendingPathExtension(SupportedFileType.jpg.rawValue)
-            if let image = NSImage(contentsOf: filejpg) {
-                nsImage = image
-                jpgfileExist = true
-            }
-
-            if jpgfileExist {
-                openWindow(id: WindowIdentifier.zoomnsImage.rawValue)
-            } else {
-                Task {
-                    cgImage = nil
-                    let extractor = ExtractEmbeddedPreview()
-                    if file.url.pathExtension.lowercased() == SupportedFileType.arw.rawValue {
-                        if let mycgImage = await extractor.extractEmbeddedPreview(from: file.url, fullSize: true) {
-                            cgImage = mycgImage
-                        }
-                    }
-                }
-
-                openWindow(id: WindowIdentifier.zoomcgImage.rawValue)
-            }
+            handleJPGorPreview(
+                file: file,
+                setNSImage: { nsImage = $0 },
+                setCGImage: { cgImage = $0 },
+                openWindow: { id in openWindow(id: id) }
+            )
         }
         .onKeyPress(.space) {
-            var jpgfileExist = false
-
             guard let selectedID = selectedFileID,
                   let file = files.first(where: { $0.id == selectedID }) else { return .handled }
-
-            let filejpg = file.url.deletingPathExtension().appendingPathExtension(SupportedFileType.jpg.rawValue)
-            if let image = NSImage(contentsOf: filejpg) {
-                nsImage = image
-                jpgfileExist = true
-            }
-
-            if jpgfileExist {
-                openWindow(id: WindowIdentifier.zoomnsImage.rawValue)
-            } else {
-                Task {
-                    cgImage = nil
-                    let extractor = ExtractEmbeddedPreview()
-                    if file.url.pathExtension.lowercased() == SupportedFileType.arw.rawValue {
-                        if let mycgImage = await extractor.extractEmbeddedPreview(from: file.url, fullSize: true) {
-                            cgImage = mycgImage
-                        }
-                    }
-                }
-
-                openWindow(id: WindowIdentifier.zoomcgImage.rawValue)
-            }
+            handleJPGorPreview(
+                file: file,
+                setNSImage: { nsImage = $0 },
+                setCGImage: { cgImage = $0 },
+                openWindow: { id in openWindow(id: id) }
+            )
             return .handled
         }
     }

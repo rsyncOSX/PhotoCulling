@@ -26,32 +26,14 @@ struct FileDetailView: View {
             .padding()
             .frame(minWidth: 300, minHeight: 300)
             .onTapGesture(count: 2) {
-                var jpgfileExist = false
-
                 guard let selectedID = selectedFileID,
                       let file = files.first(where: { $0.id == selectedID }) else { return }
-
-                let filejpg = file.url.deletingPathExtension().appendingPathExtension(SupportedFileType.jpg.rawValue)
-                if let image = NSImage(contentsOf: filejpg) {
-                    nsImage = image
-                    jpgfileExist = true
-                }
-
-                if jpgfileExist {
-                    openWindow(id: WindowIdentifier.zoomnsImage.rawValue)
-                } else {
-                    Task {
-                        cgImage = nil
-                        let extractor = ExtractEmbeddedPreview()
-                        if file.url.pathExtension.lowercased() == SupportedFileType.arw.rawValue {
-                            if let mycgImage = await extractor.extractEmbeddedPreview(from: file.url, fullSize: true) {
-                                cgImage = mycgImage
-                            }
-                        }
-                    }
-
-                    openWindow(id: WindowIdentifier.zoomcgImage.rawValue)
-                }
+                handleJPGorPreview(
+                    file: file,
+                    setNSImage: { nsImage = $0 },
+                    setCGImage: { cgImage = $0 },
+                    openWindow: { id in openWindow(id: id) }
+                )
             }
         } else {
             ContentUnavailableView(
