@@ -48,13 +48,10 @@ extension SidebarPhotoCullingView {
                 helpText: "Extract JPG images from ARW files..."
             ) {
                 guard selectedSource != nil else { return }
+                alertType = .extractJPGs
                 showingAlert = true
             }
             .disabled(creatingthumbnails)
-        }
-
-        ToolbarItem {
-            Spacer()
         }
 
         ToolbarItem {
@@ -69,6 +66,10 @@ extension SidebarPhotoCullingView {
                     .foregroundStyle(.secondary)
                     .padding()
             }
+
+            ToolbarItem {
+                Spacer()
+            }
         }
 
         ToolbarItem {
@@ -77,11 +78,14 @@ extension SidebarPhotoCullingView {
                 text: "",
                 helpText: "Clear toggled files"
             ) {
-                if let url = selectedSource?.url {
-                    cullingmanager.resetSavedFiles(in: url)
-                }
+                alertType = .clearToggledFiles
+                showingAlert = true
             }
             .disabled(creatingthumbnails)
+        }
+
+        ToolbarItem {
+            Spacer()
         }
 
         ToolbarItem {
@@ -90,14 +94,8 @@ extension SidebarPhotoCullingView {
                 text: "",
                 helpText: "Reset memory and disk cache"
             ) {
-                Task {
-                    await ThumbnailProvider.shared.clearCaches()
-                    sources.removeAll()
-                    selectedSource = nil
-                    filteredFiles.removeAll()
-                    files.removeAll()
-                    selectedFile = nil
-                }
+                alertType = .clearMemoryandThumbnails
+                showingAlert = true
             }
             .disabled(creatingthumbnails)
         }

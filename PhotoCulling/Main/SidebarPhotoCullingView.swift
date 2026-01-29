@@ -40,6 +40,16 @@ struct SidebarPhotoCullingView: View {
     @State private var focustogglerow: Bool = false
     @State private var focusaborttask: Bool = false
 
+    /// Alert type enum and state
+    enum ToolbarAlertType {
+        case extractJPGs
+        case clearToggledFiles
+        case clearMemoryandThumbnails
+    }
+
+    /// @State private var showingAlert = false
+    @State var alertType: ToolbarAlertType?
+
     var body: some View {
         NavigationSplitView {
             // --- SIDEBAR ---
@@ -67,14 +77,49 @@ struct SidebarPhotoCullingView: View {
             .toolbar { toolbarContent }
             .focusedSceneValue(\.togglerow, $focustogglerow)
             .alert(isPresented: $showingAlert) {
-                Alert(
-                    title: Text("Extract JPGs all files?"),
-                    primaryButton: .default(Text("Extract")) {
-                        guard selectedSource != nil else { return }
-                        extractAllJPGS()
-                    },
-                    secondaryButton: .cancel {}
-                )
+                switch alertType {
+                case .extractJPGs:
+                    return Alert(
+                        title: Text("Extract JPGs"),
+                        message: Text("Are you sure you want to extract JPG images from ARW files?"),
+                        primaryButton: .destructive(Text("Extract")) {
+                            extractAllJPGS()
+                        },
+                        secondaryButton: .cancel()
+                    )
+
+                case .clearToggledFiles:
+                    return Alert(
+                        title: Text("Clear Toggled Files"),
+                        message: Text("Are you sure you want to clear all toggled files?"),
+                        primaryButton: .destructive(Text("Clear")) {
+                            if let url = selectedSource?.url {
+                                cullingmanager.resetSavedFiles(in: url)
+                            }
+                        },
+                        secondaryButton: .cancel()
+                    )
+
+                case .clearMemoryandThumbnails:
+                    return Alert(
+                        title: Text("Reset Memory and Cached Thumbnails Files"),
+                        message: Text("Are you sure you want to reset?"),
+                        primaryButton: .destructive(Text("Reset")) {
+                            Task {
+                                await ThumbnailProvider.shared.clearCaches()
+                                sources.removeAll()
+                                selectedSource = nil
+                                filteredFiles.removeAll()
+                                files.removeAll()
+                                selectedFile = nil
+                            }
+                        },
+                        secondaryButton: .cancel()
+                    )
+
+                case .none:
+                    return Alert(title: Text("Unknown Action"))
+                }
             }
         } detail: {
             // --- DETAIL VIEW ---
