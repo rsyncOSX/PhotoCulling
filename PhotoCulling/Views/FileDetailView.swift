@@ -28,7 +28,7 @@ struct FileDetailView: View {
             .onTapGesture(count: 2) {
                 guard let selectedID = selectedFileID,
                       let file = files.first(where: { $0.id == selectedID }) else { return }
-                
+
                 /*
                  if zoomfilejpg.pathExtension.lowercased() == SupportedFileType.jpg.rawValue {
                      if let image = NSImage(contentsOf: zoomfilejpg) {
