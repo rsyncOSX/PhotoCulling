@@ -37,8 +37,19 @@ struct PhotoCullingApp: App {
             ToggleCommands()
         }
 
-        Window("Zoom", id: "zoom-window-arw") {
-            ZoomableImageViewARW(cgImage: cgImage)
+        Window("ZoomcgImage", id: "zoom-window-cgImage") {
+            ZoomableCSImageView(cgImage: cgImage)
+        }
+        .defaultPosition(.center)
+        .defaultSize(width: 800, height: 600)
+
+        // If there is a extracted JPG image
+        // Assuming you have jpegData: Data
+        // if let image = NSImage(data: jpegData) {
+        //    ZoomableImageViewARW(nsImage: image)
+        // }
+        Window("ZoomnsImage", id: "zoom-window-nsImage") {
+            ZoomableNSImageView(nsImage: nsImage)
         }
         .defaultPosition(.center)
         .defaultSize(width: 800, height: 600)
@@ -47,4 +58,32 @@ struct PhotoCullingApp: App {
     private func performCleanupTask() {
         Logger.process.debugMessageOnly("PhotoCullingApp: performCleanupTask(), shutting down, doing clean up")
     }
+}
+
+enum WindowIdentifier: String {
+    case main = "main-window"
+    case zoomcgImage = "zoom-window-cgImage"
+    case zoomnsImage = "zoom-window-nsImage"
+}
+
+enum SupportedFileType: String, CaseIterable {
+    case arw
+    case tiff, tif
+    case jpeg, jpg
+
+    var extensions: [String] {
+        switch self {
+        case .arw: return ["arw"]
+        case .tiff: return ["tiff"]
+        case .jpeg: return ["jpeg"]
+        case .tif: return ["tif"]
+        case .jpg: return ["jpg"]
+        }
+    }
+}
+
+enum ThumbnailSize {
+    static let grid = 100
+    static let preview = 2560
+    static let fullSize = 8700
 }

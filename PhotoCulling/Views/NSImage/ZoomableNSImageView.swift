@@ -1,5 +1,5 @@
 //
-//  ZoomableImageARWView.swift
+//  ZoomableNSImageView.swift
 //  PhotoCulling
 //
 //  Created by Thomas Evensen on 24/01/2026.
@@ -7,11 +7,12 @@
 
 import SwiftUI
 
-struct ZoomableImageViewARW: View {
-    let cgImage: CGImage?
+struct ZoomableNSImageView: View {
+    /// Use NSImage for macOS
+    let nsImage: NSImage?
 
     // State variables for zoom and pan
-    @State private var currentScale: CGFloat = 1.0 // Starts zoomed in
+    @State private var currentScale: CGFloat = 1.0
     @State private var lastScale: CGFloat = 1.0
     @State private var offset: CGSize = .zero
     @State private var lastOffset: CGSize = .zero
@@ -24,10 +25,10 @@ struct ZoomableImageViewARW: View {
         ZStack {
             Color.black.ignoresSafeArea()
 
-            if let cgImage {
+            if let nsImage {
                 GeometryReader { geo in
-                    // FIX: Wrapped CGImage in UIImage for proper scaling/orientation
-                    Image(decorative: cgImage, scale: 1.0, orientation: .up)
+                    // Image(nsImage:) is the native macOS initializer
+                    Image(nsImage: nsImage)
                         .resizable()
                         .scaledToFit()
                         .frame(width: geo.size.width, height: geo.size.height)
@@ -76,7 +77,7 @@ struct ZoomableImageViewARW: View {
                 HStack {
                     ProgressView()
 
-                    Text("Extracting image, please wait...")
+                    Text("Loading image...")
                         .font(.title)
                 }
                 .padding()
@@ -86,7 +87,6 @@ struct ZoomableImageViewARW: View {
                 )
             }
 
-            // ... (Rest of your UI Overlay code remains the same)
             VStack {
                 HStack {
                     Spacer()

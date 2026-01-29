@@ -50,7 +50,7 @@ extension SidebarPhotoCullingView {
                     }
                 }
 
-                openWindow(id: "zoom-window-arw")
+                openWindow(id: WindowIdentifier.zoomcgImage.rawValue)
             }
             .disabled(creatingthumbnails)
         }
@@ -178,7 +178,7 @@ extension SidebarPhotoCullingView {
                     // nsImage = await ThumbnailProvider.shared.thumbnail(for: file.url, targetSize: 2560)
                 }
             }
-            openWindow(id: "zoom-window-arw")
+            openWindow(id: WindowIdentifier.zoomcgImage.rawValue)
         }
         .onKeyPress(.space) {
             // Handle spacebar press to open zoom window
@@ -197,7 +197,7 @@ extension SidebarPhotoCullingView {
                     // nsImage = await ThumbnailProvider.shared.thumbnail(for: file.url, targetSize: 2560)
                 }
             }
-            openWindow(id: "zoom-window-arw")
+            openWindow(id: WindowIdentifier.zoomcgImage.rawValue)
             return .handled
         }
     }

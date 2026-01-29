@@ -1,33 +1,40 @@
+//
+//  ZoomableCSImageView.swift
+//  PhotoCulling
+//
+//  Created by Thomas Evensen on 24/01/2026.
+//
+
 import SwiftUI
 
-struct ZoomableImageView: View {
-    let nsImage: NSImage?
+struct ZoomableCSImageView: View {
+    let cgImage: CGImage?
 
-    @State private var currentScale: CGFloat = 3.0 // Start at 3x as requested previously
-    @State private var lastScale: CGFloat = 3.0
+    // State variables for zoom and pan
+    @State private var currentScale: CGFloat = 1.0 // Starts zoomed in
+    @State private var lastScale: CGFloat = 1.0
     @State private var offset: CGSize = .zero
     @State private var lastOffset: CGSize = .zero
 
     @Environment(\.dismiss) var dismiss
 
-    /// Define the zoom level you want to toggle to
-    private let zoomLevel: CGFloat = 3.0
+    private let zoomLevel: CGFloat = 2.0
 
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
 
-            if let nsImage {
+            if let cgImage {
                 GeometryReader { geo in
-                    Image(nsImage: nsImage)
+                    // FIX: Wrapped CGImage in UIImage for proper scaling/orientation
+                    Image(decorative: cgImage, scale: 1.0, orientation: .up)
                         .resizable()
-                        .aspectRatio(contentMode: .fit)
+                        .scaledToFit()
                         .frame(width: geo.size.width, height: geo.size.height)
                         .scaleEffect(currentScale)
                         .offset(offset)
                         .gesture(
                             SimultaneousGesture(
-                                // 1. Zoom
                                 MagnificationGesture()
                                     .onChanged { value in
                                         currentScale = lastScale * value
@@ -35,11 +42,12 @@ struct ZoomableImageView: View {
                                     .onEnded { _ in
                                         lastScale = currentScale
                                         if currentScale < 1.0 {
-                                            resetToFit()
+                                            withAnimation(.spring()) {
+                                                resetToFit()
+                                            }
                                         }
                                     },
 
-                                // 2. Pan
                                 DragGesture()
                                     .onChanged { value in
                                         if currentScale > 1.0 {
@@ -54,25 +62,30 @@ struct ZoomableImageView: View {
                                     }
                             )
                         )
-                        // Toggle Logic
                         .onTapGesture(count: 2) {
                             withAnimation(.spring()) {
                                 if currentScale > 1.0 {
-                                    // Currently Zoomed -> Reset to Fit
                                     resetToFit()
                                 } else {
-                                    // Currently Fit -> Zoom to 3x
                                     zoomToTarget()
                                 }
                             }
                         }
                 }
             } else {
-                Text("No Image Available")
-                    .foregroundStyle(.white)
+                HStack {
+                    ProgressView()
+
+                    Text("Extracting image, please wait...")
+                        .font(.title)
+                }
+                .padding()
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                )
             }
 
-            // UI Overlay
             VStack {
                 HStack {
                     Spacer()
@@ -80,6 +93,8 @@ struct ZoomableImageView: View {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 24))
                             .foregroundStyle(.white.opacity(0.7))
+                            .background(Color.black.opacity(0.5))
+                            .clipShape(Circle())
                     })
                     .buttonStyle(.plain)
                     .padding()
@@ -101,7 +116,6 @@ struct ZoomableImageView: View {
         }
     }
 
-    // Helper: Reset to Fit View
     private func resetToFit() {
         currentScale = 1.0
         lastScale = 1.0
@@ -109,7 +123,6 @@ struct ZoomableImageView: View {
         lastOffset = .zero
     }
 
-    // Helper: Zoom to Target (3x)
     private func zoomToTarget() {
         currentScale = zoomLevel
         lastScale = zoomLevel
