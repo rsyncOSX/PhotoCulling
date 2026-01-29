@@ -3,6 +3,7 @@ import SwiftUI
 struct FileDetailView: View {
     @Environment(\.openWindow) var openWindow
     @Binding var cgImage: CGImage?
+    @Binding var nsImage: NSImage?
 
     let files: [FileItem]
     let file: FileItem?
@@ -27,6 +28,15 @@ struct FileDetailView: View {
             .onTapGesture(count: 2) {
                 guard let selectedID = selectedFileID,
                       let file = files.first(where: { $0.id == selectedID }) else { return }
+                
+                /*
+                 if zoomfilejpg.pathExtension.lowercased() == SupportedFileType.jpg.rawValue {
+                     if let image = NSImage(contentsOf: zoomfilejpg) {
+                         nsImage = image
+                         openWindow(id: WindowIdentifier.zoomnsImage.rawValue)
+                     }
+                 }
+                 */
 
                 Task {
                     let extractor = ExtractEmbeddedPreview()

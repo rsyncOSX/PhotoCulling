@@ -81,6 +81,7 @@ struct SidebarPhotoCullingView: View {
             // --- DETAIL VIEW ---
             FileDetailView(
                 cgImage: $cgImage,
+                nsImage: $nsImage,
                 files: files,
                 file: selectedFile,
                 selectedFileID: selectedFileID

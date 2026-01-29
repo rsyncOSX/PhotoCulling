@@ -44,10 +44,6 @@ struct PhotoCullingApp: App {
         .defaultSize(width: 800, height: 600)
 
         // If there is a extracted JPG image
-        // Assuming you have jpegData: Data
-        // if let image = NSImage(data: jpegData) {
-        //    ZoomableImageViewARW(nsImage: image)
-        // }
         Window("ZoomnsImage", id: "zoom-window-nsImage") {
             ZoomableNSImageView(nsImage: nsImage)
         }
