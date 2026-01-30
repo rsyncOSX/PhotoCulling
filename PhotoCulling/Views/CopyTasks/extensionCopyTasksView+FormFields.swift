@@ -10,6 +10,7 @@ import SwiftUI
 
 extension CopyTasks {
     var sourceanddestination: some View {
+        
         Section("Source and Destination") {
             catalogField(catalog: $newdata.sourcecatalog,
                          placeholder: "Add Source folder - required",
@@ -24,13 +25,20 @@ extension CopyTasks {
     }
 
     func catalogField(catalog: Binding<String>,
-                      placeholder _: String,
+                      placeholder: String,
                       selectedValue: String?,
                       showErrorBorder: Bool = false) -> some View {
         HStack {
-            EditValueScheme(400, nil, catalog)
-                .onAppear { if let value = selectedValue { catalog.wrappedValue = value } }
-                .border(showErrorBorder ? Color.red : Color.clear, width: 2)
+            if newdata.sourcecatalog.isEmpty {
+                EditValueScheme(400, placeholder, catalog)
+                    .onAppear { if let value = selectedValue { catalog.wrappedValue = value } }
+                    .border(showErrorBorder ? Color.red : Color.clear, width: 2)
+            } else {
+                EditValueScheme(400, nil, catalog)
+                    .onAppear { if let value = selectedValue { catalog.wrappedValue = value } }
+                    .border(showErrorBorder ? Color.red : Color.clear, width: 2)
+            }
+            
             OpencatalogView(selecteditem: catalog, catalogs: true)
         }
     }

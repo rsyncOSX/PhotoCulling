@@ -41,6 +41,34 @@ enum JPGPreviewHandler {
 extension SidebarPhotoCullingView {
     @ToolbarContentBuilder
     var toolbarContent: some ToolbarContent {
+        
+        // Only show toolbar items when this tab is active
+        if !files.isEmpty {
+            ToolbarItem {
+                Text("\(filteredFiles.count) ARW files")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding()
+            }
+
+            ToolbarItem {
+                Spacer()
+            }
+        }
+        
+        ToolbarItem {
+            ConditionalGlassButton(
+                systemImage: "document.on.document",
+                text: "",
+                helpText: "Copy tagged images to destination..."
+            ) {
+                
+                showcopytask = true
+            }
+            .disabled(creatingthumbnails)
+        }
+
+        
         ToolbarItem {
             ConditionalGlassButton(
                 systemImage: "square.3.layers.3d.down.forward",
@@ -56,20 +84,6 @@ extension SidebarPhotoCullingView {
 
         ToolbarItem {
             Spacer()
-        }
-
-        // Only show toolbar items when this tab is active
-        if !files.isEmpty {
-            ToolbarItem {
-                Text("\(filteredFiles.count) ARW files")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .padding()
-            }
-
-            ToolbarItem {
-                Spacer()
-            }
         }
 
         ToolbarItem {

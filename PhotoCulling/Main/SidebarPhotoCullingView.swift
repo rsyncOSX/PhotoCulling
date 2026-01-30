@@ -37,8 +37,11 @@ struct SidebarPhotoCullingView: View {
     @State var showingAlert: Bool = false
 
     // Focus buttons from the menu
-    @State private var focustogglerow: Bool = false
-    @State private var focusaborttask: Bool = false
+    @State var focustogglerow: Bool = false
+    @State var focusaborttask: Bool = false
+    
+    // Copy tasks
+    @State var showcopytask: Bool = false
 
     /// Alert type enum and state
     enum ToolbarAlertType {
@@ -76,6 +79,7 @@ struct SidebarPhotoCullingView: View {
             .searchable(text: $searchText, placement: .toolbar, prompt: "Search in \(selectedSource?.name ?? "catalog")...")
             .toolbar { toolbarContent }
             .focusedSceneValue(\.togglerow, $focustogglerow)
+            .sheet(isPresented: $showcopytask) { CopyTasks(selectedSource: $selectedSource) }
             .alert(isPresented: $showingAlert) {
                 switch alertType {
                 case .extractJPGs:
