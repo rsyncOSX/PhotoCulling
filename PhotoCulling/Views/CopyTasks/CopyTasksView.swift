@@ -71,18 +71,19 @@ struct CopyTasksView: View {
                 title: Text("Copy ARW files"),
                 message: Text("Are you sure you want to copy all tagged ARW files?"),
                 primaryButton: .destructive(Text("Copy")) {
+                    
                     var configuration = SynchronizeConfiguration()
                     configuration.localCatalog = sourcecatalog
                     configuration.offsiteCatalog = destinationcatalog
 
                     handleTrailingSlash(newconfig: &configuration)
 
-                    let copytask = ExecuteCopyFiles(
+                    ExecuteCopyFiles(
+                        configuration: configuration,
                         fileHandler: localfileHandler,
                         processTermination: localprocessTermination
                     )
 
-                    copytask.startcopyfiles(config: configuration)
                     dismiss()
                 },
                 secondaryButton: .cancel()

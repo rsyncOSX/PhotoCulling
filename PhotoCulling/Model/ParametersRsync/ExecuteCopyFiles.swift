@@ -16,7 +16,7 @@ final class ExecuteCopyFiles {
     private var streamingHandlers: RsyncProcessStreaming.ProcessHandlers?
     private var activeStreamingProcess: RsyncProcessStreaming.RsyncProcess?
 
-    func startcopyfiles(config: SynchronizeConfiguration) {
+    private func startcopyfiles(config: SynchronizeConfiguration) {
         streamingHandlers = CreateStreamingHandlers().createHandlers(
             fileHandler: localfileHandler,
             processTermination: localprocessTermination
@@ -42,11 +42,14 @@ final class ExecuteCopyFiles {
         }
     }
 
-    init(fileHandler: @escaping (Int) -> Void,
+    @discardableResult
+    init(configuration: SynchronizeConfiguration,
+        fileHandler: @escaping (Int) -> Void,
          processTermination: @escaping ([String]?, Int?) -> Void)
     {
         localfileHandler = fileHandler
         localprocessTermination = processTermination
+        startcopyfiles(config: configuration)
     }
 
     deinit {
