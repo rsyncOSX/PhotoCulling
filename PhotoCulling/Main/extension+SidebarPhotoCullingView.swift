@@ -137,7 +137,9 @@ extension SidebarPhotoCullingView {
                 TableColumn("Size", value: \.size) { file in
                     Text(file.formattedSize).monospacedDigit()
                 }
+                .width(75)
                 TableColumn("Type", value: \.type)
+                    .width(140)
                 TableColumn("Modified", value: \.dateModified) { file in
                     Text(file.dateModified, style: .date)
                 }
