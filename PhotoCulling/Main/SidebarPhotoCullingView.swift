@@ -81,7 +81,11 @@ struct SidebarPhotoCullingView: View {
             .focusedSceneValue(\.togglerow, $focustogglerow)
             .sheet(isPresented: $showcopytask) { CopyTasksView(selectedSource: $selectedSource,
                                                                fileHandler: fileHandler,
-                                                               processTermination: processtermination)
+                                                               processTermination: processtermination,
+                                                               copytask: ExecuteCopyFiles(
+                                                                   fileHandler: fileHandler,
+                                                                   processTermination: processtermination
+                                                               ))
             }
             .alert(isPresented: $showingAlert) {
                 switch alertType {
@@ -243,6 +247,6 @@ struct SidebarPhotoCullingView: View {
     }
 
     func processtermination(output: [String]?, _: Int?) {
-        print(output)
+        print(output ?? [])
     }
 }

@@ -22,7 +22,7 @@ final class ExecuteCopyFiles {
             processTermination: localprocessTermination
         )
 
-        if let arguments = ArgumentsSynchronize(config: config).argumentsSynchronize(dryRun: true,
+        if let arguments = ArgumentsSynchronize(config: config).argumentsSynchronize(dryRun: false,
                                                                                      forDisplay: false) {
             guard let streamingHandlers else { return }
 
@@ -35,9 +35,8 @@ final class ExecuteCopyFiles {
             do {
                 try process.executeProcess()
                 activeStreamingProcess = process
-            } catch let err {
-                let error = err
-                // Logger.process.debugMessageOnly(error)
+            } catch {
+                Logger.process.debugMessageOnly("Rsync executeProcess failed: \(error.localizedDescription)")
             }
         }
     }
@@ -52,3 +51,4 @@ final class ExecuteCopyFiles {
         Logger.process.debugMessageOnly("ExecuteCopyFiles: DEINIT")
     }
 }
+
