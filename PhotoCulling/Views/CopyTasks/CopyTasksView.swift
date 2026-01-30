@@ -19,6 +19,17 @@ struct CopyTasksView: View {
     @State var progress: Double = 0
     @State var max: Double = 0
 
+    let localfileHandler: (Int) -> Void
+    let localprocessTermination: ([String]?, Int?) -> Void
+
+    init(selectedSource: Binding<FolderSource?>,
+         fileHandler: @escaping (Int) -> Void,
+         processTermination: @escaping ([String]?, Int?) -> Void) {
+        _selectedSource = selectedSource
+        localfileHandler = fileHandler
+        localprocessTermination = processTermination
+    }
+
     var body: some View {
         VStack {
             sourceanddestination
@@ -64,27 +75,14 @@ struct CopyTasksView: View {
                     handleTrailingSlash(newconfig: &configuration)
 
                     let copytask = ExecuteCopyFiles(
-                        fileHandler: fileHandler,
-                        processTermination: processtermination
+                        fileHandler: localfileHandler,
+                        processTermination: localprocessTermination
                     )
                     copytask.startcopyfiles(config: configuration)
                 },
                 secondaryButton: .cancel()
             )
         }
-    }
-
-    func fileHandler(_ update: Int) {
-        progress = Double(update)
-        print("\(update)")
-    }
-
-    func processtermination(output: [String]?, _: Int?) {
-        print(output)
-    }
-
-    func maxfilesHandler(_ maxfiles: Int) {
-        max = Double(maxfiles)
     }
 
     private func handleTrailingSlash(newconfig: inout SynchronizeConfiguration) {
@@ -94,3 +92,5 @@ struct CopyTasksView: View {
             newconfig.offsiteCatalog : newconfig.offsiteCatalog + "/"
     }
 }
+
+// rsync -av --include-from=my_list.txt --exclude='*' /path/to/source/ /path/to/destination/

@@ -79,7 +79,10 @@ struct SidebarPhotoCullingView: View {
             .searchable(text: $searchText, placement: .toolbar, prompt: "Search in \(selectedSource?.name ?? "catalog")...")
             .toolbar { toolbarContent }
             .focusedSceneValue(\.togglerow, $focustogglerow)
-            .sheet(isPresented: $showcopytask) { CopyTasksView(selectedSource: $selectedSource) }
+            .sheet(isPresented: $showcopytask) { CopyTasksView(selectedSource: $selectedSource,
+                                                               fileHandler: fileHandler,
+                                                               processTermination: processtermination)
+            }
             .alert(isPresented: $showingAlert) {
                 switch alertType {
                 case .extractJPGs:
@@ -237,5 +240,9 @@ struct SidebarPhotoCullingView: View {
 
     func maxfilesHandler(_ maxfiles: Int) {
         max = Double(maxfiles)
+    }
+
+    func processtermination(output: [String]?, _: Int?) {
+        print(output)
     }
 }
