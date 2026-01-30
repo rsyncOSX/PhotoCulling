@@ -6,28 +6,13 @@
 //
 
 import AppKit
+import OSLog
 import SwiftUI
 
 struct HistogramView: View {
-    /// The underlying image data
-    private let cgImage: CGImage
-
+    @Binding var nsImage: NSImage?
     /// We compute the histogram data (0.0 to 1.0) once upon initialization
-    private let normalizedBins: [CGFloat]
-
-    // --- Initializers ---
-
-    init(cgImage: CGImage) {
-        self.cgImage = cgImage
-        self.normalizedBins = HistogramView.calculateHistogram(from: cgImage)
-    }
-
-    init(nsImage: NSImage) {
-        guard let cgRef = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
-            fatalError("Could not initialize CGImage from NSImage")
-        }
-        self.init(cgImage: cgRef)
-    }
+    @State var normalizedBins: [CGFloat] = []
 
     // --- View Body ---
 
@@ -51,16 +36,69 @@ struct HistogramView: View {
                     .padding(2)
             }
         }
+        .onChange(of: nsImage) {
+            guard let nsImage else { return }
+            guard let cgRef = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+                Logger.process.warning("Could not initialize CGImage from NSImage")
+                return
+            }
+            Task {
+                normalizedBins = await CalculateHistogram().calculateHistogram(from: cgRef)
+            }
+        }
         .frame(height: 150) // Default height
+        .task {
+            guard let nsImage else { return }
+            guard let cgRef = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+                fatalError("Could not initialize CGImage from NSImage")
+            }
+            normalizedBins = await CalculateHistogram().calculateHistogram(from: cgRef)
+        }
     }
+}
 
-    // --- Logic ---
+// --- Helper Shape for Drawing ---
 
+struct HistogramPath: Shape {
+    let bins: [CGFloat]
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+
+        guard !bins.isEmpty else { return path }
+
+        let stepX = rect.width / CGFloat(bins.count)
+
+        // Start at bottom left
+        path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+
+        for (index, value) in bins.enumerated() {
+            let x = rect.minX + (CGFloat(index) * stepX)
+            // Invert Y because 0 is at the top in UIKit/SwiftUI
+            let height = rect.height * value
+            let y = rect.maxY - height
+
+            path.addLine(to: CGPoint(x: x, y: y))
+        }
+
+        // Line to bottom right
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        path.closeSubpath()
+
+        return path
+    }
+}
+
+/// Make sure that the resource demanding calculation is computed on
+/// a background thread
+actor CalculateHistogram {
     /// Calculates the luminance histogram and normalizes values to 0.0 - 1.0
-    private static func calculateHistogram(from image: CGImage) -> [CGFloat] {
+    @concurrent
+    nonisolated func calculateHistogram(from image: CGImage) async -> [CGFloat] {
+        Logger.process.debugThreadOnly("CalculateHistogram: calculateHistogram()")
         let width = image.width
         let height = image.height
-        let totalPixels = width * height
+        // let totalPixels = width * height
 
         // 1. Extract raw pixel data
         guard let pixelData = image.dataProvider?.data as Data?,
@@ -97,57 +135,3 @@ struct HistogramView: View {
         return bins.map { CGFloat($0) / CGFloat(maxCount) }
     }
 }
-
-// --- Helper Shape for Drawing ---
-
-struct HistogramPath: Shape {
-    let bins: [CGFloat]
-
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-
-        guard !bins.isEmpty else { return path }
-
-        let stepX = rect.width / CGFloat(bins.count)
-
-        // Start at bottom left
-        path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
-
-        for (index, value) in bins.enumerated() {
-            let x = rect.minX + (CGFloat(index) * stepX)
-            // Invert Y because 0 is at the top in UIKit/SwiftUI
-            let height = rect.height * value
-            let y = rect.maxY - height
-
-            path.addLine(to: CGPoint(x: x, y: y))
-        }
-
-        // Line to bottom right
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-        path.closeSubpath()
-
-        return path
-    }
-}
-
-/*
- struct ContentView: View {
-     // Load an image from assets or bundle
-     let image = NSImage(named: "YourImageName")!
-
-     var body: some View {
-         VStack {
-             Image(nsImage: image)
-                 .resizable()
-                 .scaledToFit()
-                 .frame(height: 200)
-
-             Divider()
-
-             // Pass the NSImage directly
-             HistogramView(nsImage: image)
-                 .padding()
-         }
-     }
- }
- */
