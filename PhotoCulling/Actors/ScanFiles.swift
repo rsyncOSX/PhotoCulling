@@ -21,7 +21,7 @@ actor ScanFiles {
             .nameKey,
             .fileSizeKey,
             .contentTypeKey,
-            .contentModificationDateKey
+            .contentModificationDateKey,
         ]
         let manager = FileManager.default
 

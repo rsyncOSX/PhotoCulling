@@ -70,7 +70,7 @@ actor ExtractEmbeddedPreview {
             let options: [CFString: Any] = [
                 kCGImageSourceCreateThumbnailFromImageIfAbsent: true,
                 kCGImageSourceCreateThumbnailWithTransform: true, // Fixes rotation if needed
-                kCGImageSourceThumbnailMaxPixelSize: maxThumbnailSize
+                kCGImageSourceThumbnailMaxPixelSize: maxThumbnailSize,
             ]
 
             return CGImageSourceCreateThumbnailAtIndex(imageSource, targetIndex, options as CFDictionary)
@@ -79,7 +79,7 @@ actor ExtractEmbeddedPreview {
             // It's already small enough, just decode normally
             let options: [CFString: Any] = [
                 kCGImageSourceShouldCacheImmediately: true,
-                kCGImageSourceShouldAllowFloat: false
+                kCGImageSourceShouldAllowFloat: false,
             ]
             return CGImageSourceCreateImageAtIndex(imageSource, targetIndex, options as CFDictionary)
         }
@@ -115,7 +115,7 @@ actor ExtractEmbeddedPreview {
         }
 
         let options: [CFString: Any] = [
-            kCGImageDestinationLossyCompressionQuality: 1.0
+            kCGImageDestinationLossyCompressionQuality: 1.0,
         ]
 
         CGImageDestinationAddImage(destination, image, options as CFDictionary)

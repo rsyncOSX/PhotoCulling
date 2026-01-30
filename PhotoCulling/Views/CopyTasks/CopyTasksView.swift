@@ -21,18 +21,15 @@ struct CopyTasksView: View {
 
     let localfileHandler: (Int) -> Void
     let localprocessTermination: ([String]?, Int?) -> Void
-    var localcopytask: ExecuteCopyFiles?
 
     init(
         selectedSource: Binding<FolderSource?>,
         fileHandler: @escaping (Int) -> Void,
-        processTermination: @escaping ([String]?, Int?) -> Void,
-        copytask: ExecuteCopyFiles
+        processTermination: @escaping ([String]?, Int?) -> Void
     ) {
         _selectedSource = selectedSource
         localfileHandler = fileHandler
         localprocessTermination = processTermination
-        localcopytask = copytask
     }
 
     var body: some View {
@@ -77,10 +74,15 @@ struct CopyTasksView: View {
                     var configuration = SynchronizeConfiguration()
                     configuration.localCatalog = sourcecatalog
                     configuration.offsiteCatalog = destinationcatalog
-                    
+
                     handleTrailingSlash(newconfig: &configuration)
 
-                    localcopytask?.startcopyfiles(config: configuration)
+                    let copytask = ExecuteCopyFiles(
+                        fileHandler: localfileHandler,
+                        processTermination: localprocessTermination
+                    )
+
+                    copytask.startcopyfiles(config: configuration)
                     dismiss()
                 },
                 secondaryButton: .cancel()

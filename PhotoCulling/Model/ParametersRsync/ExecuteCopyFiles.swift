@@ -23,7 +23,8 @@ final class ExecuteCopyFiles {
         )
 
         if let arguments = ArgumentsSynchronize(config: config).argumentsSynchronize(dryRun: false,
-                                                                                     forDisplay: false) {
+                                                                                     forDisplay: false)
+        {
             guard let streamingHandlers else { return }
 
             let process = RsyncProcessStreaming.RsyncProcess(
@@ -42,7 +43,8 @@ final class ExecuteCopyFiles {
     }
 
     init(fileHandler: @escaping (Int) -> Void,
-         processTermination: @escaping ([String]?, Int?) -> Void) {
+         processTermination: @escaping ([String]?, Int?) -> Void)
+    {
         localfileHandler = fileHandler
         localprocessTermination = processTermination
     }
@@ -51,4 +53,3 @@ final class ExecuteCopyFiles {
         Logger.process.debugMessageOnly("ExecuteCopyFiles: DEINIT")
     }
 }
-

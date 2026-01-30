@@ -63,7 +63,7 @@ extension SidebarPhotoCullingView {
             ) {
                 showcopytask = true
             }
-            .disabled(creatingthumbnails)
+            .disabled(selectedSource == nil)
         }
 
         ToolbarItem {
@@ -203,7 +203,8 @@ extension SidebarPhotoCullingView {
 
     func marktoggle(for file: FileItem) -> Bool {
         if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource?.url }),
-           let filerecords = cullingmanager.savedFiles[index].filerecords {
+           let filerecords = cullingmanager.savedFiles[index].filerecords
+        {
             return filerecords.contains { $0.fileName == file.name }
         }
         return false
@@ -232,7 +233,8 @@ extension SidebarPhotoCullingView {
     func getRating(for file: FileItem) -> Int {
         if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource?.url }),
            let filerecords = cullingmanager.savedFiles[index].filerecords,
-           let record = filerecords.first(where: { $0.fileName == file.name }) {
+           let record = filerecords.first(where: { $0.fileName == file.name })
+        {
             return record.rating ?? 0
         }
         return 0
@@ -241,7 +243,8 @@ extension SidebarPhotoCullingView {
     func updateRating(for file: FileItem, rating: Int) {
         guard let selectedSource = selectedSource else { return }
         if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource.url }),
-           let recordIndex = cullingmanager.savedFiles[index].filerecords?.firstIndex(where: { $0.fileName == file.name }) {
+           let recordIndex = cullingmanager.savedFiles[index].filerecords?.firstIndex(where: { $0.fileName == file.name })
+        {
             cullingmanager.savedFiles[index].filerecords?[recordIndex].rating = rating
             WriteSavedFilesJSON(cullingmanager.savedFiles)
         }

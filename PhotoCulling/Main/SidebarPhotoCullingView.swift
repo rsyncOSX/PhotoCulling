@@ -81,11 +81,7 @@ struct SidebarPhotoCullingView: View {
             .focusedSceneValue(\.togglerow, $focustogglerow)
             .sheet(isPresented: $showcopytask) { CopyTasksView(selectedSource: $selectedSource,
                                                                fileHandler: fileHandler,
-                                                               processTermination: processtermination,
-                                                               copytask: ExecuteCopyFiles(
-                                                                   fileHandler: fileHandler,
-                                                                   processTermination: processtermination
-                                                               ))
+                                                               processTermination: processtermination)
             }
             .alert(isPresented: $showingAlert) {
                 switch alertType {
