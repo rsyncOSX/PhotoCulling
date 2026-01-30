@@ -10,7 +10,6 @@ import SwiftUI
 
 extension CopyTasks {
     var sourceanddestination: some View {
-        
         Section("Source and Destination") {
             catalogField(catalog: $newdata.sourcecatalog,
                          placeholder: "Add Source folder - required",
@@ -38,7 +37,7 @@ extension CopyTasks {
                     .onAppear { if let value = selectedValue { catalog.wrappedValue = value } }
                     .border(showErrorBorder ? Color.red : Color.clear, width: 2)
             }
-            
+
             OpencatalogView(selecteditem: catalog, catalogs: true)
         }
     }

@@ -28,14 +28,13 @@ enum TypeofTask: String, CaseIterable, Identifiable, CustomStringConvertible {
 struct CopyTasks: View {
     @Environment(\.dismiss) var dismiss
     @Binding var selectedSource: FolderSource?
-    
+
     @State var newdata = ObservableCopyTasks()
 
     var body: some View {
         VStack {
-            
             sourceanddestination
-            
+
             Button("Close", role: .close) {
                 dismiss()
             }
@@ -47,6 +46,5 @@ struct CopyTasks: View {
             guard let selectedSource else { return }
             newdata.sourcecatalog = selectedSource.url.path
         }
-        
     }
 }

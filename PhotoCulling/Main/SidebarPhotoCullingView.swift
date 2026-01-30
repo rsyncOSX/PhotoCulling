@@ -39,8 +39,8 @@ struct SidebarPhotoCullingView: View {
     // Focus buttons from the menu
     @State var focustogglerow: Bool = false
     @State var focusaborttask: Bool = false
-    
-    // Copy tasks
+
+    /// Copy tasks
     @State var showcopytask: Bool = false
 
     /// Alert type enum and state

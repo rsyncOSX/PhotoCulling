@@ -41,7 +41,6 @@ enum JPGPreviewHandler {
 extension SidebarPhotoCullingView {
     @ToolbarContentBuilder
     var toolbarContent: some ToolbarContent {
-        
         // Only show toolbar items when this tab is active
         if !files.isEmpty {
             ToolbarItem {
@@ -55,20 +54,18 @@ extension SidebarPhotoCullingView {
                 Spacer()
             }
         }
-        
+
         ToolbarItem {
             ConditionalGlassButton(
                 systemImage: "document.on.document",
                 text: "",
                 helpText: "Copy tagged images to destination..."
             ) {
-                
                 showcopytask = true
             }
             .disabled(creatingthumbnails)
         }
 
-        
         ToolbarItem {
             ConditionalGlassButton(
                 systemImage: "square.3.layers.3d.down.forward",
