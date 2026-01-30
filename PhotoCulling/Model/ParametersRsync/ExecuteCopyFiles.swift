@@ -1,7 +1,5 @@
 //
-//  Execute.swift
-//  RsyncUI
-//
+//  ExecuteCopyFiles.swift
 //  Created by Thomas Evensen on 10/06/2025.
 //
 
@@ -9,22 +7,11 @@ import Foundation
 import OSLog
 import RsyncProcessStreaming
 
-enum ErrorDatatoSynchronize: LocalizedError {
-    case thereisdatatosynchronize(idwitherror: String)
-
-    var errorDescription: String? {
-        switch self {
-        case let .thereisdatatosynchronize(idwitherror):
-            "There are errors in tagging data\n for synchronize ID \(idwitherror)\n"
-                + "Most likely number of rows\n> 20 lines and no data to synchronize"
-        }
-    }
-}
-
 @MainActor
-final class Execute {
+final class ExecuteCopyFiles {
     /// Report progress to caller
     var localfileHandler: (Int) -> Void
+    var localprocessTermination: ([String]?, Int?) -> Void
     // Streaming strong references
     private var streamingHandlers: RsyncProcessStreaming.ProcessHandlers?
     private var activeStreamingProcess: RsyncProcessStreaming.RsyncProcess?
@@ -32,21 +19,19 @@ final class Execute {
     func startcopyfiles(config: SynchronizeConfiguration) {
         streamingHandlers = CreateStreamingHandlers().createHandlers(
             fileHandler: localfileHandler,
-            processTermination: { output, hiddenID in
-                self.processTermination(stringoutputfromrsync: output, hiddenID)
-            }
+            processTermination: localprocessTermination
         )
 
         if let arguments = ArgumentsSynchronize(config: config).argumentsSynchronize(dryRun: false,
                                                                                      forDisplay: false) {
             guard let streamingHandlers else { return }
+
             let process = RsyncProcessStreaming.RsyncProcess(
                 arguments: arguments,
-                hiddenID: config.hiddenID,
+                hiddenID: 0,
                 handlers: streamingHandlers,
                 useFileHandler: true
             )
-
             do {
                 try process.executeProcess()
                 activeStreamingProcess = process
@@ -57,13 +42,13 @@ final class Execute {
         }
     }
 
-    init(fileHandler: @escaping (Int) -> Void) {
+    init(fileHandler: @escaping (Int) -> Void,
+         processTermination: @escaping ([String]?, Int?) -> Void) {
         localfileHandler = fileHandler
+        localprocessTermination = processTermination
     }
 
     deinit {
-        Logger.process.debugMessageOnly("Execute: DEINIT")
+        Logger.process.debugMessageOnly("ExecuteCopyFiles: DEINIT")
     }
-
-    private func processTermination(stringoutputfromrsync _: [String]?, _: Int?) {}
 }

@@ -8,18 +8,18 @@ import SwiftUI
 
 // MARK: - Form Field Sections
 
-extension CopyTasks {
+extension CopyTasksView {
     var sourceanddestination: some View {
         Section("Source and Destination") {
-            catalogField(catalog: $newdata.sourcecatalog,
+            catalogField(catalog: $sourcecatalog,
                          placeholder: "Add Source folder - required",
-                         selectedValue: newdata.sourcecatalog)
+                         selectedValue: sourcecatalog)
 
-            catalogField(catalog: $newdata.destinationcatalog,
+            catalogField(catalog: $destinationcatalog,
                          placeholder: "Add Destination folder - required",
-                         selectedValue: newdata.destinationcatalog,
-                         showErrorBorder: !newdata.sourcecatalog.isEmpty && newdata.destinationcatalog.isEmpty ||
-                             newdata.sourcecatalog.isEmpty && !newdata.destinationcatalog.isEmpty)
+                         selectedValue: destinationcatalog,
+                         showErrorBorder: !sourcecatalog.isEmpty && destinationcatalog.isEmpty ||
+                             sourcecatalog.isEmpty && !destinationcatalog.isEmpty)
         }
     }
 
@@ -28,7 +28,7 @@ extension CopyTasks {
                       selectedValue: String?,
                       showErrorBorder: Bool = false) -> some View {
         HStack {
-            if newdata.sourcecatalog.isEmpty {
+            if sourcecatalog.isEmpty {
                 EditValueScheme(400, placeholder, catalog)
                     .onAppear { if let value = selectedValue { catalog.wrappedValue = value } }
                     .border(showErrorBorder ? Color.red : Color.clear, width: 2)
@@ -39,26 +39,6 @@ extension CopyTasks {
             }
 
             OpencatalogView(selecteditem: catalog, catalogs: true)
-        }
-    }
-
-    var trailingslash: some View {
-        Picker("Trailing /", selection: $newdata.trailingslashoptions) {
-            ForEach(TrailingSlash.allCases) { Text($0.description).tag($0) }
-        }
-        .pickerStyle(DefaultPickerStyle()).frame(width: 180)
-        .onChange(of: newdata.trailingslashoptions) {
-            UserDefaults.standard.set(newdata.trailingslashoptions.rawValue, forKey: "trailingslashoptions")
-        }
-    }
-
-    var pickerselecttypeoftask: some View {
-        Picker("Action", selection: $newdata.selectedrsynccommand) {
-            ForEach(TypeofTask.allCases) { Text($0.description).tag($0) }
-        }
-        .pickerStyle(DefaultPickerStyle()).frame(width: 180)
-        .onChange(of: newdata.selectedrsynccommand) {
-            UserDefaults.standard.set(newdata.selectedrsynccommand.rawValue, forKey: "selectedrsynccommand")
         }
     }
 }
