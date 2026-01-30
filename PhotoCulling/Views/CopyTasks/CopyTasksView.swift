@@ -79,6 +79,7 @@ struct CopyTasksView: View {
                         processTermination: localprocessTermination
                     )
                     copytask.startcopyfiles(config: configuration)
+                    dismiss()
                 },
                 secondaryButton: .cancel()
             )
