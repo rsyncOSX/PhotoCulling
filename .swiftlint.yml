@@ -11,7 +11,7 @@ opt_in_rules:
   - yoda_condition
   - closure_spacing
   - implicit_return
-  - discouraged_optional_boolean
+#  - discouraged_optional_boolean
   - multiline_arguments
   - multiline_parameters
   - vertical_whitespace_closing_braces

@@ -16,11 +16,11 @@ struct RatingView: View {
             ForEach(1 ... 5, id: \.self) { star in
                 Button(action: {
                     onChange(star)
-                }) {
+                }, label: {
                     Image(systemName: star <= rating ? "star.fill" : "star")
                         .foregroundStyle(star <= rating ? .yellow : .gray)
                         .font(.system(size: 12))
-                }
+                })
                 .buttonStyle(.plain)
             }
         }

@@ -73,12 +73,12 @@ struct HistogramPath: Shape {
         path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
 
         for (index, value) in bins.enumerated() {
-            let x = rect.minX + (CGFloat(index) * stepX)
+            let xval = rect.minX + (CGFloat(index) * stepX)
             // Invert Y because 0 is at the top in UIKit/SwiftUI
             let height = rect.height * value
-            let y = rect.maxY - height
+            let yval = rect.maxY - height
 
-            path.addLine(to: CGPoint(x: x, y: y))
+            path.addLine(to: CGPoint(x: xval, y: yval))
         }
 
         // Line to bottom right
@@ -112,16 +112,16 @@ actor CalculateHistogram {
 
         // 2. Iterate over pixels and calculate Luminance
         // Standard formula: 0.299 R + 0.587 G + 0.114 B
-        for y in 0 ..< height {
-            for x in 0 ..< width {
-                let pixelOffset = (y * image.bytesPerRow) + (x * bytesPerPixel)
+        for yval in 0 ..< height {
+            for xval in 0 ..< width {
+                let pixelOffset = (yval * image.bytesPerRow) + (xval * bytesPerPixel)
 
-                let r = CGFloat(data[pixelOffset])
-                let g = CGFloat(data[pixelOffset + 1])
-                let b = CGFloat(data[pixelOffset + 2])
+                let rval = CGFloat(data[pixelOffset])
+                let gval = CGFloat(data[pixelOffset + 1])
+                let bval = CGFloat(data[pixelOffset + 2])
 
                 // Calculate luminance
-                let luminance = 0.299 * r + 0.587 * g + 0.114 * b
+                let luminance = 0.299 * rval + 0.587 * gval + 0.114 * bval
                 let index = Int(luminance)
 
                 if index >= 0, index < 256 {
