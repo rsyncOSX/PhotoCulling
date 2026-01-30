@@ -22,7 +22,7 @@ final class ExecuteCopyFiles {
             processTermination: localprocessTermination
         )
 
-        if let arguments = ArgumentsSynchronize(config: config).argumentsSynchronize(dryRun: false,
+        if let arguments = ArgumentsSynchronize(config: config).argumentsSynchronize(dryRun: true,
                                                                                      forDisplay: false)
         {
             guard let streamingHandlers else { return }
