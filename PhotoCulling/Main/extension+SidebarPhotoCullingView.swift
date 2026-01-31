@@ -61,6 +61,7 @@ extension SidebarPhotoCullingView {
                 text: "",
                 helpText: "Copy tagged images to destination..."
             ) {
+                sheetType = .copytasksview
                 showcopytask = true
             }
             .disabled(selectedSource == nil)

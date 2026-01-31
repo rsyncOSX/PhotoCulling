@@ -11,6 +11,9 @@ import SwiftUI
 struct CopyTasksView: View {
     @Environment(\.dismiss) var dismiss
     @Binding var selectedSource: FolderSource?
+    @Binding var remotedatanumbers: RemoteDataNumbers?
+    @Binding var sheetType: SheetType?
+    @Binding var showcopytask: Bool
 
     @State var sourcecatalog: String = ""
     @State var destinationcatalog: String = ""
@@ -21,15 +24,10 @@ struct CopyTasksView: View {
 
     @State private var executionManager: ExecuteCopyFiles?
     @State private var showprogressview = false
-    @State private var remotedatanumbers: RemoteDataNumbers?
-
+    
     var body: some View {
         VStack {
             sourceanddestination
-
-            if let remotedatanumbers {
-                DetailsView(remotedatanumbers: remotedatanumbers)
-            }
 
             HStack {
                 ConditionalGlassButton(
@@ -51,10 +49,10 @@ struct CopyTasksView: View {
         }
         .padding()
         .frame(
-            minWidth: 1000,
-            idealWidth: 1000,
-            minHeight: 600,
-            idealHeight: 600,
+            minWidth: 600,
+            idealWidth: 600,
+            minHeight: 400,
+            idealHeight: 400,
             alignment: .init(horizontal: .center, vertical: .center)
         )
         .task(id: selectedSource) {
@@ -134,6 +132,9 @@ struct CopyTasksView: View {
 
         // Clean up
         executionManager = nil
+        
+        sheetType = .detailsview
+        showcopytask = true
     }
 }
 

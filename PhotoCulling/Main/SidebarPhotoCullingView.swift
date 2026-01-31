@@ -4,6 +4,13 @@ import UniformTypeIdentifiers
 
 extension KeyPath<FileItem, String>: @unchecked @retroactive Sendable {}
 
+// Must be global
+enum SheetType  {
+    case copytasksview
+    case detailsview
+    
+}
+
 struct SidebarPhotoCullingView: View {
     @Environment(\.openWindow) var openWindow
 
@@ -49,9 +56,13 @@ struct SidebarPhotoCullingView: View {
         case clearToggledFiles
         case clearMemoryandThumbnails
     }
+    
+    
 
     /// @State private var showingAlert = false
     @State var alertType: ToolbarAlertType?
+    @State var sheetType: SheetType? = .copytasksview
+    @State private var remotedatanumbers: RemoteDataNumbers?
 
     var body: some View {
         NavigationSplitView {
@@ -79,7 +90,24 @@ struct SidebarPhotoCullingView: View {
             .searchable(text: $searchText, placement: .toolbar, prompt: "Search in \(selectedSource?.name ?? "catalog")...")
             .toolbar { toolbarContent }
             .focusedSceneValue(\.togglerow, $focustogglerow)
-            .sheet(isPresented: $showcopytask) { CopyTasksView(selectedSource: $selectedSource) }
+            .sheet(isPresented: $showcopytask) {
+                switch sheetType {
+                case .copytasksview:
+                    CopyTasksView(
+                        selectedSource: $selectedSource,
+                        remotedatanumbers: $remotedatanumbers,
+                        sheetType: $sheetType,
+                        showcopytask: $showcopytask
+                    )
+                case .detailsview:
+                    if let remotedatanumbers {
+                        DetailsView(remotedatanumbers: remotedatanumbers)
+                    }
+                    
+                case nil:
+                    EmptyView()
+                }
+            }
             .alert(isPresented: $showingAlert) {
                 switch alertType {
                 case .extractJPGs:
@@ -229,6 +257,7 @@ struct SidebarPhotoCullingView: View {
             }
     }
 
+    // MUST FIX
     func abort() {}
 
     func fileHandler(_ update: Int) {
@@ -237,9 +266,5 @@ struct SidebarPhotoCullingView: View {
 
     func maxfilesHandler(_ maxfiles: Int) {
         max = Double(maxfiles)
-    }
-
-    func processtermination(output: [String]?, _: Int?) {
-        print(output ?? [])
     }
 }
