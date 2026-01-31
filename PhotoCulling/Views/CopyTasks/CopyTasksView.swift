@@ -9,9 +9,10 @@ import OSLog
 import SwiftUI
 
 struct CopyTasksView: View {
+    @Environment(\.dismiss) var dismiss
+    
     @Binding var selectedSource: FolderSource?
-    @Binding var showcopytasks: Bool
-
+    
     @State var sourcecatalog: String = ""
     @State var destinationcatalog: String = ""
 
@@ -37,7 +38,7 @@ struct CopyTasksView: View {
                 Spacer()
 
                 Button("Close", role: .close) {
-                    showcopytasks = false
+                    dismiss()
                 }
                 .buttonStyle(RefinedGlassButtonStyle())
             }
