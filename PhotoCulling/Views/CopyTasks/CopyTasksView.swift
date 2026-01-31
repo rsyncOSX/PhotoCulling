@@ -27,6 +27,10 @@ struct CopyTasksView: View {
         VStack {
             sourceanddestination
 
+            if let remotedatanumbers {
+                DetailsView(remotedatanumbers: remotedatanumbers)
+            }
+
             HStack {
                 ConditionalGlassButton(
                     systemImage: "arrowshape.right.fill",
@@ -97,7 +101,6 @@ struct CopyTasksView: View {
         executionManager?.onProgressUpdate = { newProgress in
             Task { @MainActor in
                 progress = newProgress
-                print(progress)
             }
         }
 
