@@ -62,7 +62,7 @@ actor DiskCacheManager {
         }
 
         let options: [CFString: Any] = [
-            kCGImageDestinationLossyCompressionQuality: 0.7,
+            kCGImageDestinationLossyCompressionQuality: 0.7
         ]
 
         CGImageDestinationAddImage(destination, cgImage, options as CFDictionary)

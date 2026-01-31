@@ -124,7 +124,6 @@ struct SidebarPhotoCullingView: View {
                     return Alert(title: Text("Unknown Action"))
                 }
             }
-            
         } detail: {
             // --- DETAIL VIEW ---
             FileDetailView(
@@ -134,7 +133,7 @@ struct SidebarPhotoCullingView: View {
                 file: selectedFile,
                 selectedFileID: selectedFileID
             )
-            
+
             if showcopytask {
                 CopyTasksView(
                     selectedSource: $selectedSource,

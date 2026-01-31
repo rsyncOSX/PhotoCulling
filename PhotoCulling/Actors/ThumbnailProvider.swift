@@ -149,7 +149,7 @@ actor ThumbnailProvider {
             let thumbOptions: [CFString: Any] = [
                 kCGImageSourceCreateThumbnailFromImageAlways: true,
                 kCGImageSourceCreateThumbnailWithTransform: true,
-                kCGImageSourceThumbnailMaxPixelSize: maxDimension,
+                kCGImageSourceThumbnailMaxPixelSize: maxDimension
             ]
 
             guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, thumbOptions as CFDictionary) else {

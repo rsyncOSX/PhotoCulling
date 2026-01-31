@@ -31,4 +31,24 @@ struct CreateStreamingHandlers {
             environment: ["": ""]
         )
     }
+
+    func createHandlersWithCleanup(
+        fileHandler: @escaping (Int) -> Void,
+        processTermination: @escaping ([String]?, Int?) -> Void,
+        cleanup: @escaping () -> Void
+    ) -> ProcessHandlers {
+        ProcessHandlers(
+            processTermination: { output, hiddenID in
+                processTermination(output, hiddenID)
+                cleanup()
+            },
+            fileHandler: fileHandler,
+            rsyncPath: "/usr/bin/rsync",
+            checkLineForError: { _ in },
+            updateProcess: { _ in },
+            propagateError: { _ in },
+            checkForErrorInRsyncOutput: false,
+            environment: ["": ""]
+        )
+    }
 }

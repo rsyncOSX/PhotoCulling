@@ -26,8 +26,7 @@ extension CopyTasksView {
     func catalogField(catalog: Binding<String>,
                       placeholder: String,
                       selectedValue: String?,
-                      showErrorBorder: Bool = false) -> some View
-    {
+                      showErrorBorder: Bool = false) -> some View {
         HStack {
             if sourcecatalog.isEmpty {
                 EditValueScheme(300, placeholder, catalog)

@@ -7,52 +7,109 @@ import Foundation
 import OSLog
 import RsyncProcessStreaming
 
-@MainActor
+struct CopyDataResult {
+    let output: [String]?
+    let viewOutput: [RsyncOutputData]? // Changed from [String] to [RsyncOutputData]
+    let linesCount: Int
+}
+
+struct RsyncOutputData: Identifiable, Equatable, Hashable {
+    let id = UUID()
+    var record: String
+}
+
+@Observable @MainActor
 final class ExecuteCopyFiles {
-    /// Report progress to caller
-    var localfileHandler: (Int) -> Void
-    var localprocessTermination: ([String]?, Int?) -> Void
-    // Streaming strong references
+    let config: SynchronizeConfiguration
+    let dryrun: Bool
+    // Streaming references
     private var streamingHandlers: RsyncProcessStreaming.ProcessHandlers?
     private var activeStreamingProcess: RsyncProcessStreaming.RsyncProcess?
+    /// State
+    var progress: Double = 0
+    // var remotedatanumbers: RemoteDataNumbers?
 
-    private func startcopyfiles(config: SynchronizeConfiguration) {
-        streamingHandlers = CreateStreamingHandlers().createHandlers(
-            fileHandler: localfileHandler,
-            processTermination: localprocessTermination
+    // Callbacks
+    var onProgressUpdate: ((Double) -> Void)?
+    var onCompletion: ((CopyDataResult) -> Void)?
+
+    func startcopyfiles() {
+        let arguments = ArgumentsSynchronize(config: config).argumentsSynchronize(
+            dryRun: dryrun,
+            forDisplay: false
         )
 
-        if let arguments = ArgumentsSynchronize(config: config).argumentsSynchronize(dryRun: true,
-                                                                                     forDisplay: false)
-        {
-            guard let streamingHandlers else { return }
+        setupStreamingHandlers()
 
-            let process = RsyncProcessStreaming.RsyncProcess(
-                arguments: arguments,
-                hiddenID: 0,
-                handlers: streamingHandlers,
-                useFileHandler: true
-            )
-            do {
-                try process.executeProcess()
-                activeStreamingProcess = process
-            } catch {
-                Logger.process.debugMessageOnly("Rsync executeProcess failed: \(error.localizedDescription)")
-            }
+        guard let arguments, let streamingHandlers else { return }
+
+        let process = RsyncProcessStreaming.RsyncProcess(
+            arguments: arguments,
+            hiddenID: 0,
+            handlers: streamingHandlers,
+            useFileHandler: true
+        )
+        do {
+            try process.executeProcess()
+            activeStreamingProcess = process
+        } catch {
+            Logger.process.debugMessageOnly("Rsync executeProcess failed: \(error.localizedDescription)")
         }
     }
 
     @discardableResult
-    init(configuration: SynchronizeConfiguration,
-        fileHandler: @escaping (Int) -> Void,
-         processTermination: @escaping ([String]?, Int?) -> Void)
-    {
-        localfileHandler = fileHandler
-        localprocessTermination = processTermination
-        startcopyfiles(config: configuration)
+    init(configuration: SynchronizeConfiguration, dryrun: Bool = true) {
+        self.config = configuration
+        self.dryrun = dryrun
     }
 
     deinit {
         Logger.process.debugMessageOnly("ExecuteCopyFiles: DEINIT")
+    }
+
+    private func setupStreamingHandlers() {
+        streamingHandlers = CreateStreamingHandlers().createHandlersWithCleanup(
+            fileHandler: { [weak self] count in
+                Task { @MainActor in
+                    let progress = Double(count)
+                    self?.progress = progress
+                    self?.onProgressUpdate?(progress)
+                }
+            },
+            processTermination: { [weak self] output, hiddenID in
+                Task { @MainActor in
+                    await self?.handleProcessTermination(
+                        stringoutputfromrsync: output,
+                        hiddenID: hiddenID
+                    )
+                }
+            },
+            cleanup: cleanup
+        )
+    }
+
+    private func handleProcessTermination(stringoutputfromrsync: [String]?, hiddenID _: Int?) async {
+        let linesCount = stringoutputfromrsync?.count ?? 0
+
+        // Create view output asynchronously - this returns [RsyncOutputData]
+        let viewOutput = await ActorCreateOutputforView().createOutputForView(stringoutputfromrsync)
+
+        // Create the result
+        let result = CopyDataResult(
+            output: stringoutputfromrsync,
+            viewOutput: viewOutput, // This is now [RsyncOutputData]
+            linesCount: linesCount
+        )
+
+        // Call completion handler
+        onCompletion?(result)
+
+        // Clean up
+        cleanup()
+    }
+
+    private func cleanup() {
+        activeStreamingProcess = nil
+        streamingHandlers = nil
     }
 }

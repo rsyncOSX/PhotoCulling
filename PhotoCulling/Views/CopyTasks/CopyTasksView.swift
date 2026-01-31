@@ -19,6 +19,7 @@ struct CopyTasksView: View {
     @State var progress: Double = 0
     @State var max: Double = 0
 
+    @State private var executionManager: ExecuteCopyFiles?
 
     var body: some View {
         VStack {
@@ -64,6 +65,11 @@ struct CopyTasksView: View {
                 secondaryButton: .cancel()
             )
         }
+        .onChange(of: executionManager?.progress) { _, newValue in
+            if let newValue {
+                progress = newValue
+            }
+        }
     }
 
     private func handleTrailingSlash(newconfig: inout SynchronizeConfiguration) {
@@ -72,31 +78,67 @@ struct CopyTasksView: View {
         newconfig.offsiteCatalog = newconfig.offsiteCatalog.hasSuffix("/") ?
             newconfig.offsiteCatalog : newconfig.offsiteCatalog + "/"
     }
-    
-    func fileHandler(_ update: Int) {
-        progress = Double(update)
-    }
 
-    func maxfilesHandler(_ maxfiles: Int) {
-        max = Double(maxfiles)
-    }
-
-    func processtermination(output: [String]?, _: Int?) {
-        print(output ?? [])
-    }
-    
     func executeCopyFiles() {
+        let dryrun = true
         var configuration = SynchronizeConfiguration()
         configuration.localCatalog = sourcecatalog
         configuration.offsiteCatalog = destinationcatalog
 
         handleTrailingSlash(newconfig: &configuration)
 
-        ExecuteCopyFiles(
+        executionManager = ExecuteCopyFiles(
             configuration: configuration,
-            fileHandler: fileHandler,
-            processTermination: processtermination
+            dryrun: dryrun
         )
+
+        executionManager?.onProgressUpdate = { newProgress in
+            Task { @MainActor in
+                progress = newProgress
+                print(progress)
+            }
+        }
+
+        executionManager?.onCompletion = { result in
+            Task { @MainActor in
+                handleCompletion(result: result)
+            }
+        }
+
+        executionManager?.startcopyfiles()
+    }
+
+    private func handleCompletion(result _: CopyDataResult) {
+        /*
+         showprogressview = false
+
+         // Update max if it's a dry run
+         if dryrun {
+             max = Double(result.linesCount)
+         }
+
+         // Create remote data numbers based on output
+         if result.linesCount > SharedReference.shared.alerttagginglines,
+            let output = result.output {
+             let suboutput = PrepareOutputFromRsync().prepareOutputFromRsync(output)
+             remotedatanumbers = RemoteDataNumbers(
+                 stringoutputfromrsync: suboutput,
+                 config: selectedconfig
+             )
+         } else {
+             remotedatanumbers = RemoteDataNumbers(
+                 stringoutputfromrsync: result.output,
+                 config: selectedconfig
+             )
+         }
+
+         // Set the output for view if available
+         if let viewOutput = result.viewOutput {
+             remotedatanumbers?.outputfromrsync = viewOutput
+         }
+         */
+        // Clean up
+        executionManager = nil
     }
 }
 
