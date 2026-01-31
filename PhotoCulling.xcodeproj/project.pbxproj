@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		E92712B32F2CF57E00A681D0 /* RsyncArguments in Frameworks */ = {isa = PBXBuildFile; productRef = E92712B22F2CF57E00A681D0 /* RsyncArguments */; };
+		E952AA622F2E37170081987F /* ParseRsyncOutput in Frameworks */ = {isa = PBXBuildFile; productRef = E952AA612F2E37170081987F /* ParseRsyncOutput */; };
 		E97E976C2F210EAB001A4239 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E97E975C2F210EAB001A4239 /* Assets.xcassets */; };
 		E97E976D2F210EAB001A4239 /* PhotoCullingicon.icon in Resources */ = {isa = PBXBuildFile; fileRef = E97E975D2F210EAB001A4239 /* PhotoCullingicon.icon */; };
 		E9B609852F28FA3600704081 /* DecodeEncodeGeneric in Frameworks */ = {isa = PBXBuildFile; productRef = E9B609842F28FA3600704081 /* DecodeEncodeGeneric */; };
@@ -36,6 +37,7 @@
 				E92712B32F2CF57E00A681D0 /* RsyncArguments in Frameworks */,
 				E9B609852F28FA3600704081 /* DecodeEncodeGeneric in Frameworks */,
 				E9C5897D2F2CA0AC00D8B063 /* RsyncProcessStreaming in Frameworks */,
+				E952AA622F2E37170081987F /* ParseRsyncOutput in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -83,6 +85,7 @@
 				E9B609842F28FA3600704081 /* DecodeEncodeGeneric */,
 				E9C5897C2F2CA0AC00D8B063 /* RsyncProcessStreaming */,
 				E92712B22F2CF57E00A681D0 /* RsyncArguments */,
+				E952AA612F2E37170081987F /* ParseRsyncOutput */,
 			);
 			productName = PhotoCulling;
 			productReference = E90B07A22F1E58EA00A95D4A /* PhotoCulling.app */;
@@ -116,6 +119,7 @@
 				E9B609832F28FA3600704081 /* XCRemoteSwiftPackageReference "DecodeEncodeGeneric" */,
 				E9C5897B2F2CA0AC00D8B063 /* XCRemoteSwiftPackageReference "RsyncProcessStreaming" */,
 				E92712B12F2CF57E00A681D0 /* XCRemoteSwiftPackageReference "RsyncArguments" */,
+				E952AA602F2E37170081987F /* XCRemoteSwiftPackageReference "ParseRsyncOutput" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E90B07A32F1E58EA00A95D4A /* Products */;
@@ -414,6 +418,14 @@
 				kind = branch;
 			};
 		};
+		E952AA602F2E37170081987F /* XCRemoteSwiftPackageReference "ParseRsyncOutput" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/rsyncOSX/ParseRsyncOutput";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 		E9B609832F28FA3600704081 /* XCRemoteSwiftPackageReference "DecodeEncodeGeneric" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/rsyncOSX/DecodeEncodeGeneric.git";
@@ -437,6 +449,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E92712B12F2CF57E00A681D0 /* XCRemoteSwiftPackageReference "RsyncArguments" */;
 			productName = RsyncArguments;
+		};
+		E952AA612F2E37170081987F /* ParseRsyncOutput */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E952AA602F2E37170081987F /* XCRemoteSwiftPackageReference "ParseRsyncOutput" */;
+			productName = ParseRsyncOutput;
 		};
 		E9B609842F28FA3600704081 /* DecodeEncodeGeneric */ = {
 			isa = XCSwiftPackageProductDependency;

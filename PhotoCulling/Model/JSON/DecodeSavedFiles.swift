@@ -47,7 +47,6 @@ struct DecodeFileRecord: Codable, Hashable {
         rating = try values.decodeIfPresent(Int.self, forKey: .rating)
     }
 
-    /// This init is used in WriteConfigurationJSON
     init() {
         fileName = nil
         dateTagged = nil

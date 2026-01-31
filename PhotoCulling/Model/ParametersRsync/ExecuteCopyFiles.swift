@@ -9,7 +9,7 @@ import RsyncProcessStreaming
 
 struct CopyDataResult {
     let output: [String]?
-    let viewOutput: [RsyncOutputData]? // Changed from [String] to [RsyncOutputData]
+    let viewOutput: [RsyncOutputData]?
     let linesCount: Int
 }
 
@@ -35,8 +35,7 @@ final class ExecuteCopyFiles {
 
     func startcopyfiles() {
         let arguments = ArgumentsSynchronize(config: config).argumentsSynchronize(
-            dryRun: dryrun,
-            forDisplay: false
+            dryRun: dryrun
         )
 
         setupStreamingHandlers()
@@ -97,7 +96,7 @@ final class ExecuteCopyFiles {
         // Create the result
         let result = CopyDataResult(
             output: stringoutputfromrsync,
-            viewOutput: viewOutput, // This is now [RsyncOutputData]
+            viewOutput: viewOutput,
             linesCount: linesCount
         )
 

@@ -10,9 +10,8 @@ import SwiftUI
 
 struct CopyTasksView: View {
     @Environment(\.dismiss) var dismiss
-    
     @Binding var selectedSource: FolderSource?
-    
+
     @State var sourcecatalog: String = ""
     @State var destinationcatalog: String = ""
 
@@ -21,6 +20,8 @@ struct CopyTasksView: View {
     @State var max: Double = 0
 
     @State private var executionManager: ExecuteCopyFiles?
+    @State private var showprogressview = false
+    @State private var remotedatanumbers: RemoteDataNumbers?
 
     var body: some View {
         VStack {
@@ -109,35 +110,25 @@ struct CopyTasksView: View {
         executionManager?.startcopyfiles()
     }
 
-    private func handleCompletion(result _: CopyDataResult) {
-        /*
-         showprogressview = false
+    private func handleCompletion(result: CopyDataResult) {
+        var configuration = SynchronizeConfiguration()
+        configuration.localCatalog = sourcecatalog
+        configuration.offsiteCatalog = destinationcatalog
 
-         // Update max if it's a dry run
-         if dryrun {
-             max = Double(result.linesCount)
-         }
+        // showprogressview = false
 
-         // Create remote data numbers based on output
-         if result.linesCount > SharedReference.shared.alerttagginglines,
-            let output = result.output {
-             let suboutput = PrepareOutputFromRsync().prepareOutputFromRsync(output)
-             remotedatanumbers = RemoteDataNumbers(
-                 stringoutputfromrsync: suboutput,
-                 config: selectedconfig
-             )
-         } else {
-             remotedatanumbers = RemoteDataNumbers(
-                 stringoutputfromrsync: result.output,
-                 config: selectedconfig
-             )
-         }
+        max = Double(result.linesCount)
 
-         // Set the output for view if available
-         if let viewOutput = result.viewOutput {
-             remotedatanumbers?.outputfromrsync = viewOutput
-         }
-         */
+        remotedatanumbers = RemoteDataNumbers(
+            stringoutputfromrsync: result.output,
+            config: configuration
+        )
+
+        // Set the output for view if available
+        if let viewOutput = result.viewOutput {
+            remotedatanumbers?.outputfromrsync = viewOutput
+        }
+
         // Clean up
         executionManager = nil
     }

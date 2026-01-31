@@ -10,16 +10,13 @@ import RsyncArguments
 final class ArgumentsSynchronize {
     var config: SynchronizeConfiguration?
 
-    func argumentsSynchronize(
-        dryRun: Bool,
-        forDisplay: Bool
-    ) -> [String]? {
+    func argumentsSynchronize(dryRun: Bool) -> [String]? {
         if let config {
             let params = Params().params(config: config)
             let rsyncparameterssynchronize = RsyncParametersSynchronize(parameters: params)
 
             do {
-                try rsyncparameterssynchronize.argumentsForSynchronize(forDisplay: forDisplay,
+                try rsyncparameterssynchronize.argumentsForSynchronize(forDisplay: false,
                                                                        verify: false,
                                                                        dryrun: dryRun)
                 return rsyncparameterssynchronize.computedArguments
