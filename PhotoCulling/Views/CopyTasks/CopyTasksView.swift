@@ -9,8 +9,8 @@ import OSLog
 import SwiftUI
 
 struct CopyTasksView: View {
-    @Environment(\.dismiss) var dismiss
     @Binding var selectedSource: FolderSource?
+    @Binding var showcopytasks: Bool
 
     @State var sourcecatalog: String = ""
     @State var destinationcatalog: String = ""
@@ -19,18 +19,6 @@ struct CopyTasksView: View {
     @State var progress: Double = 0
     @State var max: Double = 0
 
-    let localfileHandler: (Int) -> Void
-    let localprocessTermination: ([String]?, Int?) -> Void
-
-    init(
-        selectedSource: Binding<FolderSource?>,
-        fileHandler: @escaping (Int) -> Void,
-        processTermination: @escaping ([String]?, Int?) -> Void
-    ) {
-        _selectedSource = selectedSource
-        localfileHandler = fileHandler
-        localprocessTermination = processTermination
-    }
 
     var body: some View {
         VStack {
@@ -48,7 +36,7 @@ struct CopyTasksView: View {
                 Spacer()
 
                 Button("Close", role: .close) {
-                    dismiss()
+                    showcopytasks = false
                 }
                 .buttonStyle(RefinedGlassButtonStyle())
             }
@@ -71,20 +59,7 @@ struct CopyTasksView: View {
                 title: Text("Copy ARW files"),
                 message: Text("Are you sure you want to copy all tagged ARW files?"),
                 primaryButton: .destructive(Text("Copy")) {
-                    
-                    var configuration = SynchronizeConfiguration()
-                    configuration.localCatalog = sourcecatalog
-                    configuration.offsiteCatalog = destinationcatalog
-
-                    handleTrailingSlash(newconfig: &configuration)
-
-                    ExecuteCopyFiles(
-                        configuration: configuration,
-                        fileHandler: localfileHandler,
-                        processTermination: localprocessTermination
-                    )
-
-                    dismiss()
+                    executeCopyFiles()
                 },
                 secondaryButton: .cancel()
             )
@@ -96,6 +71,32 @@ struct CopyTasksView: View {
             newconfig.localCatalog : newconfig.localCatalog + "/"
         newconfig.offsiteCatalog = newconfig.offsiteCatalog.hasSuffix("/") ?
             newconfig.offsiteCatalog : newconfig.offsiteCatalog + "/"
+    }
+    
+    func fileHandler(_ update: Int) {
+        progress = Double(update)
+    }
+
+    func maxfilesHandler(_ maxfiles: Int) {
+        max = Double(maxfiles)
+    }
+
+    func processtermination(output: [String]?, _: Int?) {
+        print(output ?? [])
+    }
+    
+    func executeCopyFiles() {
+        var configuration = SynchronizeConfiguration()
+        configuration.localCatalog = sourcecatalog
+        configuration.offsiteCatalog = destinationcatalog
+
+        handleTrailingSlash(newconfig: &configuration)
+
+        ExecuteCopyFiles(
+            configuration: configuration,
+            fileHandler: fileHandler,
+            processTermination: processtermination
+        )
     }
 }
 

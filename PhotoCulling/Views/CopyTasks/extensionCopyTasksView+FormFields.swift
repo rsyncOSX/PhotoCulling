@@ -30,11 +30,11 @@ extension CopyTasksView {
     {
         HStack {
             if sourcecatalog.isEmpty {
-                EditValueScheme(400, placeholder, catalog)
+                EditValueScheme(300, placeholder, catalog)
                     .onAppear { if let value = selectedValue { catalog.wrappedValue = value } }
                     .border(showErrorBorder ? Color.red : Color.clear, width: 2)
             } else {
-                EditValueScheme(400, nil, catalog)
+                EditValueScheme(300, nil, catalog)
                     .onAppear { if let value = selectedValue { catalog.wrappedValue = value } }
                     .border(showErrorBorder ? Color.red : Color.clear, width: 2)
             }
