@@ -49,13 +49,7 @@ struct PhotoItemView: View {
                     }
                 }
                 .background(setbackground() ? Color.blue.opacity(0.2) : Color.clear)
-                .onTapGesture {
-                    cullingmanager.toggleSelectionSavedFiles(
-                        in: photoURL,
-                        toggledfilename: photo
-                    )
-                }
-
+            
                 Text(photo)
                     .font(.caption)
                     .lineLimit(2)
