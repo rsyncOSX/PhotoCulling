@@ -127,7 +127,17 @@ struct CopyTasksView: View {
 
         // Set the output for view if available
         if let viewOutput = result.viewOutput {
-            remotedatanumbers?.outputfromrsync = viewOutput
+            var output = viewOutput
+            let numberOfRowsToRemove = 14
+
+            if output.count >= numberOfRowsToRemove {
+                output.removeLast(numberOfRowsToRemove)
+            } else {
+                // Handle the case where there are fewer than 16 rows
+                // (Optionally clear the array or do nothing)
+                output.removeAll()
+            }
+            remotedatanumbers?.outputfromrsync = output
         }
 
         // Clean up

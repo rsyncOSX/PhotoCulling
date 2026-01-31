@@ -73,12 +73,13 @@ struct DetailsView: View {
             
         }
         .frame(
-            minWidth: 1000,
-            idealWidth: 1000,
-            minHeight: 800,
-            idealHeight: 800,
+            minWidth: 800,
+            idealWidth: 800,
+            minHeight: 500,
+            idealHeight: 500,
             alignment: .init(horizontal: .center, vertical: .center)
         )
+        .padding()
     }
 }
 
