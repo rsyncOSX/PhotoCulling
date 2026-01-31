@@ -51,10 +51,10 @@ struct CopyTasksView: View {
         }
         .padding()
         .frame(
-            minWidth: 600,
-            idealWidth: 600,
-            minHeight: 400,
-            idealHeight: 400,
+            minWidth: 1000,
+            idealWidth: 1000,
+            minHeight: 600,
+            idealHeight: 600,
             alignment: .init(horizontal: .center, vertical: .center)
         )
         .task(id: selectedSource) {
