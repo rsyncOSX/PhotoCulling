@@ -43,6 +43,11 @@ extension SidebarPhotoCullingView {
     var toolbarContent: some ToolbarContent {
         // Only show toolbar items when this tab is active
         if !viewModel.files.isEmpty {
+            
+            ToolbarItem {
+                pickerratingvalue
+            }
+            
             ToolbarItem {
                 Text("\(viewModel.filteredFiles.count) ARW files")
                     .font(.caption)
@@ -284,5 +289,16 @@ extension SidebarPhotoCullingView {
 
             viewModel.creatingthumbnails = false
         }
+    }
+    
+    var pickerratingvalue: some View {
+        Picker("Rating", selection: $viewModel.rating) {
+            // Iterate over the range 0 to 5
+            ForEach(0...5, id: \.self) { number in
+                Text("\(number)").tag(number)
+            }
+        }
+        .pickerStyle(DefaultPickerStyle())
+        .frame(width: 40)
     }
 }
