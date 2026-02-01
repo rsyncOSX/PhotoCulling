@@ -128,12 +128,13 @@ actor ExtractEmbeddedPreview {
             Logger.process.error("ExtractEmbeddedPreview: Failed to finalize image writing")
         }
     }
-    
+
     func extractExifData(from url: URL) -> ExifMetadata? {
         guard let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil),
               let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [CFString: Any],
               let exifDict = properties[kCGImagePropertyExifDictionary] as? [CFString: Any],
-              let tiffDict = properties[kCGImagePropertyTIFFDictionary] as? [CFString: Any] else {
+              let tiffDict = properties[kCGImagePropertyTIFFDictionary] as? [CFString: Any]
+        else {
             return nil
         }
 
