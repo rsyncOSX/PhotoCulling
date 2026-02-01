@@ -11,6 +11,7 @@ import SwiftUI
 struct PhotoItemView: View {
     let photo: String
     let photoURL: URL?
+    var onSelected: () -> Void = {}
 
     @Bindable var cullingmanager: ObservableCullingManager
 
@@ -60,6 +61,9 @@ struct PhotoItemView: View {
                     .foregroundColor(.blue)
                     .padding(5)
             }
+        }
+        .onTapGesture {
+            onSelected()
         }
         .task(id: photoURL) {
             guard let url = photoURL else { return }

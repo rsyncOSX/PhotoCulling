@@ -5,7 +5,7 @@ struct PhotoGridView: View {
     @Bindable var cullingmanager: ObservableCullingManager
     var files: [FileItem]
     let photoURL: URL?
-
+    var onPhotoSelected: (FileItem) -> Void = { _ in }
     var body: some View {
         ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: CGFloat(ThumbnailSize.grid)))]) {
@@ -14,10 +14,15 @@ struct PhotoGridView: View {
                         let localfiles = filerecords.compactMap { record in record.fileName }
                         ForEach(localfiles.sorted(), id: \.self) { photo in
                             let photoURL = files.first(where: { $0.name == photo })?.url
+                            let photoFile = files.first(where: { $0.name == photo })
                             PhotoItemView(
                                 photo: photo,
                                 photoURL: photoURL,
-                                cullingmanager: cullingmanager
+                                onSelected: {
+                                    if let file = photoFile {
+                                        onPhotoSelected(file)
+                                    }
+                                }, cullingmanager: cullingmanager
                             )
                         }
                     }

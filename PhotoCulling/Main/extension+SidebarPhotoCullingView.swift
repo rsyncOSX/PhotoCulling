@@ -161,7 +161,12 @@ extension SidebarPhotoCullingView {
                 PhotoGridView(
                     cullingmanager: viewModel.cullingmanager,
                     files: viewModel.filteredFiles,
-                    photoURL: viewModel.selectedSource?.url
+                    photoURL: viewModel.selectedSource?.url,
+                    onPhotoSelected: { file in
+                        viewModel.selectedFileID = file.id
+                        viewModel.selectedFile = file
+                        viewModel.isInspectorPresented = true
+                    }
                 )
             }
         }
