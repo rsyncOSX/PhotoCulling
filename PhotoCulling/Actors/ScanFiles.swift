@@ -9,6 +9,15 @@ import Foundation
 import ImageIO
 import OSLog
 
+struct ExifMetadata: Hashable {
+    let shutterSpeed: String?
+    let focalLength: String?
+    let aperture: String?
+    let iso: String?
+    let camera: String?
+    let lensModel: String?
+}
+
 actor ScanFiles {
     
     func scanFiles(url: URL) async -> [FileItem] {
@@ -71,7 +80,6 @@ actor ScanFiles {
         }
     }
     
-    
     // MARK: - EXIF Extraction
     
     private func extractExifData(from url: URL) -> ExifMetadata? {
@@ -116,5 +124,4 @@ actor ScanFiles {
         guard let iso = value as? NSNumber else { return nil }
         return String(format: "ISO %.0f", iso.doubleValue)
     }
-    
 }
