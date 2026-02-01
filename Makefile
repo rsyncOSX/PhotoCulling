@@ -1,6 +1,6 @@
 APP = PhotoCulling
 BUNDLE_ID = no.blogspot.$(APP)
-VERSION = 0.4.3
+VERSION = 0.4.6
 BUILD_PATH = $(PWD)/build
 APP_PATH = "$(BUILD_PATH)/$(APP).app"
 ZIP_PATH = "$(BUILD_PATH)/$(APP).$(VERSION).zip"
@@ -13,7 +13,7 @@ debug: clean archive-debug open-debug
 
 # --- MAIN WORKFLOW FUNCTIONS --- #
 archive: clean
-	osascript -e 'display notification "Exporting application archive..." with title "Build the RsyncUI"'
+	osascript -e 'display notification "Exporting application archive..." with title "Build the PhotoCulling"'
 	echo "Exporting application archive (RELEASE)..."
 	xcodebuild \
 		-scheme $(APP) \
@@ -29,7 +29,7 @@ archive: clean
 	echo "Project archived successfully (RELEASE)"
 
 archive-debug: clean
-	osascript -e 'display notification "Building debug version..." with title "Build the RsyncUI"'
+	osascript -e 'display notification "Building debug version..." with title "Build the PhotoCulling"'
 	echo "Building application (DEBUG)..."
 	xcodebuild \
 		-scheme $(APP) \
@@ -44,28 +44,28 @@ archive-debug: clean
 	echo "Debug build completed successfully"
 
 notarize:
-	osascript -e 'display notification "Submitting app for notarization..." with title "Build the RsyncUI"'
+	osascript -e 'display notification "Submitting app for notarization..." with title "Build the PhotoCulling"'
 	echo "Submitting app for notarization..."
 	xcrun notarytool submit --keychain-profile "RsyncUI" --wait $(ZIP_PATH)
-	echo "RsyncUI successfully notarized"
+	echo "PhotoCulling successfully notarized"
 
 sign:
-	osascript -e 'display notification "Stapling the RsyncUI..." with title "Build the RsyncUI"'
+	osascript -e 'display notification "Stapling the PhotoCulling..." with title "Build the PhotoCulling"'
 	echo "Going to staple an application..."
 	xcrun stapler staple $(APP_PATH)
 	spctl -a -t exec -vvv $(APP_PATH)
-	osascript -e 'display notification "RsyncUI successfully stapled" with title "Build the RsyncUI"'
-	echo "RsyncUI successfully stapled"
+	osascript -e 'display notification "PhotoCulling successfully stapled" with title "Build the PhotoCulling"'
+	echo "PhotoCulling successfully stapled"
 
 prepare-dmg:
 	../create-dmg/create-dmg \
-		--volname "RsyncUI ver $(VERSION)" \
+		--volname "PhotoCulling ver $(VERSION)" \
 		--background "./images/background.png" \
 		--window-pos 200 120 \
 		--window-size 500 320 \
 		--icon-size 80 \
-		--icon "RsyncUI.app" 125 175 \
-		--hide-extension "RsyncUI.app" \
+		--icon "PhotoCulling.app" 125 175 \
+		--hide-extension "PhotoCulling.app" \
 		--app-drop-link 375 175 \
 		--no-internet-enable \
 		--codesign 93M47F4H9T\
@@ -78,18 +78,18 @@ clean:
 	if [ -a $(PWD)/$(APP).$(VERSION).dmg ]; then rm $(PWD)/$(APP).$(VERSION).dmg; fi;
 
 check:
-	xcrun notarytool log f62c4146-0758-4942-baac-9575190858b8 --keychain-profile "RsyncUI"
+	xcrun notarytool log f62c4146-0758-4942-baac-9575190858b8 --keychain-profile "PhotoCulling"
 
 history:
-	xcrun notarytool history --keychain-profile "RsyncUI"
+	xcrun notarytool history --keychain-profile "PhotoCulling"
 
 open:
-	osascript -e 'display notification "RsyncUI signed and ready for distribution" with title "Build the RsyncUI"'
+	osascript -e 'display notification "PhotoCulling signed and ready for distribution" with title "Build the PhotoCulling"'
 	echo "Opening working folder..."
 	open $(PWD)
 
 open-debug:
-	osascript -e 'display notification "RsyncUI debug build ready" with title "Build the RsyncUI"'
+	osascript -e 'display notification "PhotoCulling debug build ready" with title "Build the PhotoCulling"'
 	echo "Opening working folder..."
 	open $(PWD)
 	echo "Debug build complete - app is at: $(APP_PATH)"
