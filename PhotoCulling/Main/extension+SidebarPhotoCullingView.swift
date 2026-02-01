@@ -42,9 +42,9 @@ extension SidebarPhotoCullingView {
     @ToolbarContentBuilder
     var toolbarContent: some ToolbarContent {
         // Only show toolbar items when this tab is active
-        if !files.isEmpty {
+        if !viewModel.files.isEmpty {
             ToolbarItem {
-                Text("\(filteredFiles.count) ARW files")
+                Text("\(viewModel.filteredFiles.count) ARW files")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .padding()
@@ -61,10 +61,10 @@ extension SidebarPhotoCullingView {
                 text: "",
                 helpText: "Copy tagged images to destination..."
             ) {
-                sheetType = .copytasksview
-                showcopytask = true
+                viewModel.sheetType = .copytasksview
+                viewModel.showcopytask = true
             }
-            .disabled(selectedSource == nil)
+            .disabled(viewModel.selectedSource == nil)
         }
 
         ToolbarItem {
@@ -73,11 +73,11 @@ extension SidebarPhotoCullingView {
                 text: "",
                 helpText: "Extract JPG images from ARW files..."
             ) {
-                guard selectedSource != nil else { return }
-                alertType = .extractJPGs
-                showingAlert = true
+                guard viewModel.selectedSource != nil else { return }
+                viewModel.alertType = .extractJPGs
+                viewModel.showingAlert = true
             }
-            .disabled(creatingthumbnails)
+            .disabled(viewModel.creatingthumbnails)
         }
 
         ToolbarItem {
@@ -90,10 +90,10 @@ extension SidebarPhotoCullingView {
                 text: "",
                 helpText: "Clear toggled files"
             ) {
-                alertType = .clearToggledFiles
-                showingAlert = true
+                viewModel.alertType = .clearToggledFiles
+                viewModel.showingAlert = true
             }
-            .disabled(creatingthumbnails)
+            .disabled(viewModel.creatingthumbnails)
         }
 
         ToolbarItem {
@@ -106,10 +106,10 @@ extension SidebarPhotoCullingView {
                 text: "",
                 helpText: "Reset memory and disk cache"
             ) {
-                alertType = .clearMemoryandThumbnails
-                showingAlert = true
+                viewModel.alertType = .clearMemoryandThumbnails
+                viewModel.showingAlert = true
             }
-            .disabled(creatingthumbnails)
+            .disabled(viewModel.creatingthumbnails)
         }
 
         ToolbarItem {
@@ -121,7 +121,7 @@ extension SidebarPhotoCullingView {
 
     var filetableview: some View {
         VStack(alignment: .leading) {
-            Table(filteredFiles, selection: $selectedFileID, sortOrder: $sortOrder) {
+            Table(viewModel.filteredFiles, selection: $viewModel.selectedFileID, sortOrder: $viewModel.sortOrder) {
                 TableColumn("", value: \.id) { file in
                     Button(action: {
                         handleToggleSelection(for: file)
@@ -159,25 +159,25 @@ extension SidebarPhotoCullingView {
 
             if showPhotoGridView() {
                 PhotoGridView(
-                    cullingmanager: cullingmanager,
-                    files: filteredFiles,
-                    photoURL: selectedSource?.url
+                    cullingmanager: viewModel.cullingmanager,
+                    files: viewModel.filteredFiles,
+                    photoURL: viewModel.selectedSource?.url
                 )
             }
         }
-        .onChange(of: selectedFileID) {
-            if let index = files.firstIndex(where: { $0.id == selectedFileID }) {
-                selectedFileID = files[index].id
-                selectedFile = files[index]
-                isInspectorPresented = true
+        .onChange(of: viewModel.selectedFileID) {
+            if let index = viewModel.files.firstIndex(where: { $0.id == viewModel.selectedFileID }) {
+                viewModel.selectedFileID = viewModel.files[index].id
+                viewModel.selectedFile = viewModel.files[index]
+                viewModel.isInspectorPresented = true
             } else {
-                isInspectorPresented = false
+                viewModel.isInspectorPresented = false
             }
         }
         .contextMenu(forSelectionType: FileItem.ID.self) { _ in
         } primaryAction: { _ in
-            guard let selectedID = selectedFileID,
-                  let file = files.first(where: { $0.id == selectedID }) else { return }
+            guard let selectedID = viewModel.selectedFileID,
+                  let file = viewModel.files.first(where: { $0.id == selectedID }) else { return }
 
             JPGPreviewHandler.handle(
                 file: file,
@@ -187,8 +187,8 @@ extension SidebarPhotoCullingView {
             )
         }
         .onKeyPress(.space) {
-            guard let selectedID = selectedFileID,
-                  let file = files.first(where: { $0.id == selectedID }) else { return .handled }
+            guard let selectedID = viewModel.selectedFileID,
+                  let file = viewModel.files.first(where: { $0.id == selectedID }) else { return .handled }
 
             JPGPreviewHandler.handle(
                 file: file,
@@ -203,36 +203,36 @@ extension SidebarPhotoCullingView {
     // MARK: - Helper Functions
 
     func marktoggle(for file: FileItem) -> Bool {
-        if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource?.url }),
-           let filerecords = cullingmanager.savedFiles[index].filerecords {
+        if let index = viewModel.cullingmanager.savedFiles.firstIndex(where: { $0.catalog == viewModel.selectedSource?.url }),
+           let filerecords = viewModel.cullingmanager.savedFiles[index].filerecords {
             return filerecords.contains { $0.fileName == file.name }
         }
         return false
     }
 
     func showPhotoGridView() -> Bool {
-        guard let catalogURL = selectedSource?.url,
-              let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == catalogURL })
+        guard let catalogURL = viewModel.selectedSource?.url,
+              let index = viewModel.cullingmanager.savedFiles.firstIndex(where: { $0.catalog == catalogURL })
         else {
             return false
         }
         // Show the grid when there are filerecords and the collection is not empty
-        if let records = cullingmanager.savedFiles[index].filerecords {
+        if let records = viewModel.cullingmanager.savedFiles[index].filerecords {
             return !records.isEmpty
         }
         return false
     }
 
     func handleToggleSelection(for file: FileItem) {
-        cullingmanager.toggleSelectionSavedFiles(
+        viewModel.cullingmanager.toggleSelectionSavedFiles(
             in: file.url,
             toggledfilename: file.name
         )
     }
 
     func getRating(for file: FileItem) -> Int {
-        if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource?.url }),
-           let filerecords = cullingmanager.savedFiles[index].filerecords,
+        if let index = viewModel.cullingmanager.savedFiles.firstIndex(where: { $0.catalog == viewModel.selectedSource?.url }),
+           let filerecords = viewModel.cullingmanager.savedFiles[index].filerecords,
            let record = filerecords.first(where: { $0.fileName == file.name }) {
             return record.rating ?? 0
         }
@@ -240,11 +240,11 @@ extension SidebarPhotoCullingView {
     }
 
     func updateRating(for file: FileItem, rating: Int) {
-        guard let selectedSource = selectedSource else { return }
-        if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource.url }),
-           let recordIndex = cullingmanager.savedFiles[index].filerecords?.firstIndex(where: { $0.fileName == file.name }) {
-            cullingmanager.savedFiles[index].filerecords?[recordIndex].rating = rating
-            WriteSavedFilesJSON(cullingmanager.savedFiles)
+        guard let selectedSource = viewModel.selectedSource else { return }
+        if let index = viewModel.cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource.url }),
+           let recordIndex = viewModel.cullingmanager.savedFiles[index].filerecords?.firstIndex(where: { $0.fileName == file.name }) {
+            viewModel.cullingmanager.savedFiles[index].filerecords?[recordIndex].rating = rating
+            WriteSavedFilesJSON(viewModel.cullingmanager.savedFiles)
         }
     }
 
@@ -253,27 +253,27 @@ extension SidebarPhotoCullingView {
             // Security: Request persistent access
             if url.startAccessingSecurityScopedResource() {
                 let source = FolderSource(name: url.lastPathComponent, url: url)
-                sources.append(source)
-                selectedSource = source
+                viewModel.sources.append(source)
+                viewModel.selectedSource = source
             }
         }
     }
 
     func extractAllJPGS() {
         Task {
-            creatingthumbnails = true
+            viewModel.creatingthumbnails = true
 
             let handlers = CreateFileHandlers().createFileHandlers(
-                fileHandler: fileHandler,
-                maxfilesHandler: maxfilesHandler
+                fileHandler: viewModel.fileHandler,
+                maxfilesHandler: viewModel.maxfilesHandler
             )
 
             let extract = ExtractAndSaveJPGs()
             await extract.setFileHandlers(handlers)
-            guard let url = selectedSource?.url else { return }
+            guard let url = viewModel.selectedSource?.url else { return }
             await extract.extractAndSaveAlljpgs(from: url, fullSize: false)
 
-            creatingthumbnails = false
+            viewModel.creatingthumbnails = false
         }
     }
 }
