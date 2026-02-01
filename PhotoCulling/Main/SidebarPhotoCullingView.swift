@@ -4,11 +4,10 @@ import UniformTypeIdentifiers
 
 extension KeyPath<FileItem, String>: @unchecked @retroactive Sendable {}
 
-// Must be global
-enum SheetType  {
+/// Must be global
+enum SheetType {
     case copytasksview
     case detailsview
-    
 }
 
 struct SidebarPhotoCullingView: View {
@@ -56,8 +55,6 @@ struct SidebarPhotoCullingView: View {
         case clearToggledFiles
         case clearMemoryandThumbnails
     }
-    
-    
 
     /// @State private var showingAlert = false
     @State var alertType: ToolbarAlertType?
@@ -99,11 +96,12 @@ struct SidebarPhotoCullingView: View {
                         sheetType: $sheetType,
                         showcopytask: $showcopytask
                     )
+
                 case .detailsview:
                     if let remotedatanumbers {
                         DetailsView(remotedatanumbers: remotedatanumbers)
                     }
-                    
+
                 case nil:
                     EmptyView()
                 }
@@ -257,7 +255,7 @@ struct SidebarPhotoCullingView: View {
             }
     }
 
-    // MUST FIX
+    /// MUST FIX
     func abort() {}
 
     func fileHandler(_ update: Int) {

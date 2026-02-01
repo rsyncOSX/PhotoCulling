@@ -9,7 +9,7 @@ import SwiftUI
 
 struct DetailsView: View {
     @Environment(\.dismiss) var dismiss
-    
+
     let remotedatanumbers: RemoteDataNumbers
 
     var body: some View {
@@ -60,17 +60,16 @@ struct DetailsView: View {
                 Text("No rsync output available")
                     .foregroundColor(.secondary)
             }
-            
+
             VStack {
                 Spacer()
-                
+
                 Button("Close", role: .close) {
                     dismiss()
                 }
                 .buttonStyle(RefinedGlassButtonStyle())
             }
             .padding()
-            
         }
         .frame(
             minWidth: 800,

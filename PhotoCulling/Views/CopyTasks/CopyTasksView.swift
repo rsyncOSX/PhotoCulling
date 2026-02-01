@@ -24,7 +24,7 @@ struct CopyTasksView: View {
 
     @State private var executionManager: ExecuteCopyFiles?
     @State private var showprogressview = false
-    
+
     var body: some View {
         VStack {
             sourceanddestination
@@ -142,7 +142,7 @@ struct CopyTasksView: View {
 
         // Clean up
         executionManager = nil
-        
+
         sheetType = .detailsview
         showcopytask = true
     }
