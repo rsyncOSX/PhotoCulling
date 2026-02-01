@@ -26,6 +26,7 @@ final class SidebarPhotoCullingViewModel {
     var alertType: SidebarAlertView.AlertType?
     var sheetType: SheetType? = .copytasksview
     var remotedatanumbers: RemoteDataNumbers?
+    var rating: Int = 0
 
     var cullingmanager = ObservableCullingManager()
     private var processedURLs: Set<URL> = []

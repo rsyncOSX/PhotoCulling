@@ -121,7 +121,11 @@ extension SidebarPhotoCullingView {
 
     var filetableview: some View {
         VStack(alignment: .leading) {
-            Table(viewModel.filteredFiles, selection: $viewModel.selectedFileID, sortOrder: $viewModel.sortOrder) {
+            Table(viewModel.filteredFiles.compactMap { file in
+                (getRating(for: file) >= viewModel.rating) ? file : nil
+            },
+            selection: $viewModel.selectedFileID,
+            sortOrder: $viewModel.sortOrder) {
                 TableColumn("", value: \.id) { file in
                     Button(action: {
                         handleToggleSelection(for: file)
