@@ -8,6 +8,7 @@ struct FileItem: Identifiable, Hashable {
     let size: Int64
     let type: String
     let dateModified: Date
+    let exifData: ExifMetadata?
 
     var formattedSize: String {
         ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
