@@ -159,7 +159,11 @@ final class ExecuteCopyFiles {
         do {
             try newdata.write(to: URLpath, options: .atomic)
         } catch {
-            throw NSError(domain: "ExecuteCopyFiles", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to write filelist to URL: \(error)"])
+            throw NSError(
+                domain: "ExecuteCopyFiles",
+                code: 2,
+                userInfo: [NSLocalizedDescriptionKey: "Failed to write filelist to URL: \(error)"]
+            )
         }
     }
 }
