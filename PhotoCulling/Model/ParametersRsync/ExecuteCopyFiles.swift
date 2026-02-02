@@ -63,17 +63,18 @@ final class ExecuteCopyFiles {
         Logger.process.debugMessageOnly("ExecuteCopyFiles: writing copyfilelist at \(savePath.path)")
 
         if copytaggedfiles {
-            let filelist = sidebarPhotoCullingViewModel?.extractTaggedfilenames()
-                .map { URL(string: $0)?.path ?? $0 } ?? []
-            do {
-                try writeincludefilelist(filelist, to: savePath)
-            } catch {}
+            if let filelist = sidebarPhotoCullingViewModel?.extractTaggedfilenames() {
+                do {
+                    try writeincludefilelist(filelist, to: savePath)
+                } catch {}
+            }
+            
         } else {
-            let filelist = sidebarPhotoCullingViewModel?.extractRatedfilenames(rating)
-                .map { URL(string: $0)?.path ?? $0 } ?? []
-            do {
-                try writeincludefilelist(filelist, to: savePath)
-            } catch {}
+            if let filelist = sidebarPhotoCullingViewModel?.extractRatedfilenames(rating) {
+                do {
+                    try writeincludefilelist(filelist, to: savePath)
+                } catch {}
+            }
         }
 
         let process = RsyncProcessStreaming.RsyncProcess(

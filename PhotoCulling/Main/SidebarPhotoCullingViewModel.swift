@@ -105,17 +105,13 @@ final class SidebarPhotoCullingViewModel {
         let result = filteredFiles.compactMap { file in
             (getRating(for: file) >= rating) ? file : nil
         }
-        return result.map(\.url.absoluteString)
+        return result.map { $0.name }
     }
 
     func extractTaggedfilenames() -> [String] {
         if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource?.url }),
            let taggedfilerecords = cullingmanager.savedFiles[index].filerecords {
-            let catalog = cullingmanager.savedFiles[index].catalog
-            return taggedfilerecords.compactMap { record in
-                guard let fileName = record.fileName else { return nil }
-                return catalog?.appendingPathComponent(fileName).absoluteString
-            }
+            return taggedfilerecords.compactMap { $0.fileName }
         }
         return []
     }
