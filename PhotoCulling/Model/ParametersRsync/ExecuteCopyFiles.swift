@@ -157,7 +157,7 @@ final class ExecuteCopyFiles {
             throw NSError(domain: "ExecuteCopyFiles", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to encode log data"])
         }
         do {
-            try newdata.write(to: URLpath)
+            try newdata.write(to: URLpath, options: .atomic)
         } catch {
             throw NSError(domain: "ExecuteCopyFiles", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to write filelist to URL: \(error)"])
         }
