@@ -66,8 +66,8 @@ struct CopyOptionsSection: View {
                                   binding: $dryrun)
 
                 // Rating picker (only shown when not copying tagged files)
-                    RatingPickerSection(rating: $copyratedfiles)
-                        .disabled(copytaggedfiles)
+                RatingPickerSection(rating: $copyratedfiles)
+                    .disabled(copytaggedfiles)
             }
         }
     }

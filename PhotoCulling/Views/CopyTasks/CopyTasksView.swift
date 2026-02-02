@@ -146,4 +146,3 @@ struct CopyTasksView: View {
         showcopytask = true
     }
 }
-
