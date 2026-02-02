@@ -6,6 +6,7 @@ enum SheetType {
 }
 
 struct SidebarSheetContent: View {
+    @Bindable var viewModel: SidebarPhotoCullingViewModel
     @Binding var sheetType: SheetType?
     @Binding var selectedSource: FolderSource?
     @Binding var remotedatanumbers: RemoteDataNumbers?
@@ -15,6 +16,7 @@ struct SidebarSheetContent: View {
         switch sheetType {
         case .copytasksview:
             CopyTasksView(
+                viewModel: viewModel,
                 selectedSource: $selectedSource,
                 remotedatanumbers: $remotedatanumbers,
                 sheetType: $sheetType,

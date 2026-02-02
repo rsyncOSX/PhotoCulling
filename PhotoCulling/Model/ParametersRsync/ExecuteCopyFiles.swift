@@ -20,6 +20,8 @@ struct RsyncOutputData: Identifiable, Equatable, Hashable {
 
 @Observable @MainActor
 final class ExecuteCopyFiles {
+    weak var sidebarPhotoCullingViewModel: SidebarPhotoCullingViewModel?
+
     let config: SynchronizeConfiguration
     let dryrun: Bool
     // Streaming references
@@ -42,6 +44,9 @@ final class ExecuteCopyFiles {
 
         guard let arguments, let streamingHandlers else { return }
 
+        let filelist = sidebarPhotoCullingViewModel?.extractTaggedfilenames()
+        let filelist2 = sidebarPhotoCullingViewModel?.extractRatedfilenames()
+
         let process = RsyncProcessStreaming.RsyncProcess(
             arguments: arguments,
             hiddenID: 0,
@@ -57,9 +62,14 @@ final class ExecuteCopyFiles {
     }
 
     @discardableResult
-    init(configuration: SynchronizeConfiguration, dryrun: Bool = true) {
+    init(
+        configuration: SynchronizeConfiguration,
+        dryrun: Bool = true,
+        sidebarPhotoCullingViewModel: SidebarPhotoCullingViewModel
+    ) {
         self.config = configuration
         self.dryrun = dryrun
+        self.sidebarPhotoCullingViewModel = sidebarPhotoCullingViewModel
     }
 
     deinit {

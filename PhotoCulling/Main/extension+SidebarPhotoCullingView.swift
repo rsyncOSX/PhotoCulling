@@ -162,7 +162,7 @@ extension SidebarPhotoCullingView {
     }
 
     // MARK: - Helper Functions
-    
+
     func marktoggle(for file: FileItem) -> Bool {
         if let index = viewModel.cullingmanager.savedFiles.firstIndex(where: { $0.catalog == viewModel.selectedSource?.url }),
            let filerecords = viewModel.cullingmanager.savedFiles[index].filerecords {

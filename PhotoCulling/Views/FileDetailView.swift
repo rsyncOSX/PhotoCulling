@@ -46,4 +46,3 @@ struct FileDetailView: View {
         }
     }
 }
-

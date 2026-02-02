@@ -45,6 +45,7 @@ struct SidebarPhotoCullingView: View {
             .focusedSceneValue(\.togglerow, $viewModel.focustogglerow)
             .sheet(isPresented: $viewModel.showcopytask) {
                 SidebarSheetContent(
+                    viewModel: viewModel,
                     sheetType: $viewModel.sheetType,
                     selectedSource: $viewModel.selectedSource,
                     remotedatanumbers: $viewModel.remotedatanumbers,

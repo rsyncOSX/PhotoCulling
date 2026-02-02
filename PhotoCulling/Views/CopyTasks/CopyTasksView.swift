@@ -10,6 +10,8 @@ import SwiftUI
 
 struct CopyTasksView: View {
     @Environment(\.dismiss) var dismiss
+    @Bindable var viewModel: SidebarPhotoCullingViewModel
+
     @Binding var selectedSource: FolderSource?
     @Binding var remotedatanumbers: RemoteDataNumbers?
     @Binding var sheetType: SheetType?
@@ -93,7 +95,8 @@ struct CopyTasksView: View {
 
         executionManager = ExecuteCopyFiles(
             configuration: configuration,
-            dryrun: dryrun
+            dryrun: dryrun,
+            sidebarPhotoCullingViewModel: viewModel
         )
 
         executionManager?.onProgressUpdate = { newProgress in

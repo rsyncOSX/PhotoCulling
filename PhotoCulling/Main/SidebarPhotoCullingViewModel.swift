@@ -100,14 +100,23 @@ final class SidebarPhotoCullingViewModel {
     func abort() {
         // Implementation deferred - abort functionality to be added
     }
-    
-    func extractTaggedfilenames() -> [String] {
+
+    func extractRatedfilenames() -> [String] {
         let result = filteredFiles.compactMap { file in
-            (getRating(for: file) >= rating) ? file : nil
+            (getRating(for: file) > 0) ? file : nil
         }
-        return result.map(\.name)
+        return result.map(\.url.absoluteString)
     }
-    
+
+    func extractTaggedfilenames() -> [String] {
+        if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource?.url }),
+           let taggedfilerecords = cullingmanager.savedFiles[index].filerecords {
+            let catalog = cullingmanager.savedFiles[index].catalog
+            return taggedfilerecords.map { $0.fileName ?? "" }
+        }
+        return []
+    }
+
     func getRating(for file: FileItem) -> Int {
         if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource?.url }),
            let filerecords = cullingmanager.savedFiles[index].filerecords,
