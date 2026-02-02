@@ -92,7 +92,6 @@ struct CopyTasksView: View {
     }
 
     private func executeCopyFiles() {
-        let dryrun = true
         var configuration = SynchronizeConfiguration()
         configuration.localCatalog = sourcecatalog
         configuration.offsiteCatalog = destinationcatalog
