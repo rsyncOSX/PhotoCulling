@@ -2,7 +2,7 @@ import SwiftUI
 
 struct FileDetailView: View {
     @Environment(\.openWindow) var openWindow
-   
+
     @Binding var cgImage: CGImage?
     @Binding var nsImage: NSImage?
 
@@ -13,7 +13,6 @@ struct FileDetailView: View {
     var body: some View {
         if let file = file {
             VStack(spacing: 20) {
-                
                 CachedThumbnailView(url: file.url)
 
                 VStack {

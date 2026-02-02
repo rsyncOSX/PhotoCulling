@@ -2,7 +2,7 @@ import SwiftUI
 
 struct FileContentView: View {
     @Bindable var viewModel: SidebarPhotoCullingViewModel
-    
+
     let selectedSource: FolderSource?
     let files: [FileItem]
     let scanning: Bool
@@ -40,11 +40,8 @@ struct FileContentView: View {
                               statusText: "Creating Thumbnails or extracting JPGs")
             } else {
                 ZStack {
-                    
                     VStack(alignment: .leading) {
-                        
                         HStack {
-                            
                             ConditionalGlassButton(
                                 systemImage: "document.on.document",
                                 text: "Copy tagged",
@@ -54,7 +51,7 @@ struct FileContentView: View {
                                 viewModel.showcopytask = true
                             }
                             .disabled(viewModel.selectedSource == nil)
-                            
+
                             ConditionalGlassButton(
                                 systemImage: "trash.fill",
                                 text: "Clear tagged",
@@ -64,7 +61,7 @@ struct FileContentView: View {
                                 viewModel.showingAlert = true
                             }
                             .disabled(viewModel.creatingthumbnails)
-                            
+
                             if !viewModel.files.isEmpty {
                                 Picker("Rating", selection: $viewModel.rating) {
                                     // Iterate over the range 0 to 5
@@ -77,10 +74,10 @@ struct FileContentView: View {
                             }
                         }
                         .padding()
-                        
+
                         filetableview
                     }
-            
+
                     if issorting {
                         HStack {
                             ProgressView()

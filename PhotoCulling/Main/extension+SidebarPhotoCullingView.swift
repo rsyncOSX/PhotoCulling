@@ -41,7 +41,6 @@ enum JPGPreviewHandler {
 extension SidebarPhotoCullingView {
     @ToolbarContentBuilder
     var toolbarContent: some ToolbarContent {
-       
         ToolbarItem {
             ConditionalGlassButton(
                 systemImage: "square.3.layers.3d.down.forward",
@@ -55,7 +54,6 @@ extension SidebarPhotoCullingView {
             .disabled(viewModel.creatingthumbnails)
         }
 
-       
         ToolbarItem {
             ConditionalGlassButton(
                 systemImage: "arrow.up.trash",
