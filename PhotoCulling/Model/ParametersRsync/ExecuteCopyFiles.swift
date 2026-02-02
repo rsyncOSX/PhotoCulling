@@ -45,7 +45,9 @@ final class ExecuteCopyFiles {
         guard let arguments, let streamingHandlers else { return }
 
         let filelist = sidebarPhotoCullingViewModel?.extractTaggedfilenames()
+            .map { URL(string: $0)?.path ?? $0 } ?? []
         let filelist2 = sidebarPhotoCullingViewModel?.extractRatedfilenames()
+            .map { URL(string: $0)?.path ?? $0 } ?? []
 
         let process = RsyncProcessStreaming.RsyncProcess(
             arguments: arguments,
