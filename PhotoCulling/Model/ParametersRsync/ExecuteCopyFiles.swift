@@ -52,9 +52,9 @@ final class ExecuteCopyFiles {
 
         guard var arguments, let streamingHandlers, arguments.count > 2 else { return }
         // Must add the --include-from=my_list.txt ahead of source and destination
-        let countarguments = arguments.count
         let includeparameter = "--include-from=" + savePath.path
-        arguments.insert(includeparameter, at: countarguments - 2)
+        arguments.insert("--exclude='*'", at: arguments.count - 2)
+        arguments.insert(includeparameter, at: arguments.count - 2)
 
         /*
          // rsync -av --include-from=my_list.txt /path/to/source/ /path/to/destination/
