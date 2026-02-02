@@ -112,7 +112,10 @@ final class SidebarPhotoCullingViewModel {
         if let index = cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource?.url }),
            let taggedfilerecords = cullingmanager.savedFiles[index].filerecords {
             let catalog = cullingmanager.savedFiles[index].catalog
-            return taggedfilerecords.map { $0.fileName ?? "" }
+            return taggedfilerecords.compactMap { record in
+                guard let fileName = record.fileName else { return nil }
+                return catalog?.appendingPathComponent(fileName).absoluteString
+            }
         }
         return []
     }
