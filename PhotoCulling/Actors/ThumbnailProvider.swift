@@ -224,3 +224,7 @@ actor ThumbnailProvider {
         return image
     }
 }
+
+/*
+ nsImage = await ThumbnailProvider.shared.thumbnail(for: file.url, targetSize: 2560)
+ */

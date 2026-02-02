@@ -74,7 +74,7 @@ extension SidebarPhotoCullingView {
     var filetableview: some View {
         VStack(alignment: .leading) {
             Table(viewModel.filteredFiles.compactMap { file in
-                (getRating(for: file) >= viewModel.rating) ? file : nil
+                (viewModel.getRating(for: file) >= viewModel.rating) ? file : nil
             },
             selection: $viewModel.selectedFileID,
             sortOrder: $viewModel.sortOrder) {
@@ -90,13 +90,13 @@ extension SidebarPhotoCullingView {
                 .width(30)
                 TableColumn("Rating") { file in
                     RatingView(
-                        rating: getRating(for: file),
+                        rating: viewModel.getRating(for: file),
                         onChange: { newRating in
                             // If not toggled, toggle it on first
                             if !marktoggle(for: file) {
                                 handleToggleSelection(for: file)
                             }
-                            updateRating(for: file, rating: newRating)
+                            viewModel.updateRating(for: file, rating: newRating)
                         }
                     )
                 }
@@ -162,7 +162,7 @@ extension SidebarPhotoCullingView {
     }
 
     // MARK: - Helper Functions
-
+    
     func marktoggle(for file: FileItem) -> Bool {
         if let index = viewModel.cullingmanager.savedFiles.firstIndex(where: { $0.catalog == viewModel.selectedSource?.url }),
            let filerecords = viewModel.cullingmanager.savedFiles[index].filerecords {
@@ -189,24 +189,6 @@ extension SidebarPhotoCullingView {
             in: file.url,
             toggledfilename: file.name
         )
-    }
-
-    func getRating(for file: FileItem) -> Int {
-        if let index = viewModel.cullingmanager.savedFiles.firstIndex(where: { $0.catalog == viewModel.selectedSource?.url }),
-           let filerecords = viewModel.cullingmanager.savedFiles[index].filerecords,
-           let record = filerecords.first(where: { $0.fileName == file.name }) {
-            return record.rating ?? 0
-        }
-        return 0
-    }
-
-    func updateRating(for file: FileItem, rating: Int) {
-        guard let selectedSource = viewModel.selectedSource else { return }
-        if let index = viewModel.cullingmanager.savedFiles.firstIndex(where: { $0.catalog == selectedSource.url }),
-           let recordIndex = viewModel.cullingmanager.savedFiles[index].filerecords?.firstIndex(where: { $0.fileName == file.name }) {
-            viewModel.cullingmanager.savedFiles[index].filerecords?[recordIndex].rating = rating
-            WriteSavedFilesJSON(viewModel.cullingmanager.savedFiles)
-        }
     }
 
     func handlePickerResult(_ result: Result<URL, Error>) {
