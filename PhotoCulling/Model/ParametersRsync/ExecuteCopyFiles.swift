@@ -53,12 +53,8 @@ final class ExecuteCopyFiles {
         guard var arguments, let streamingHandlers, arguments.count > 2 else { return }
         // Must add the --include-from=my_list.txt ahead of source and destination
         let includeparameter = "--include-from=" + savePath.path
-        arguments.insert("--exclude='*'", at: arguments.count - 2)
         arguments.insert(includeparameter, at: arguments.count - 2)
-
-        /*
-         // rsync -av --include-from=my_list.txt /path/to/source/ /path/to/destination/
-         */
+        arguments.insert("--exclude=*", at: arguments.count - 2)
 
         Logger.process.debugMessageOnly("ExecuteCopyFiles: writing copyfilelist at \(savePath.path)")
 
@@ -68,7 +64,6 @@ final class ExecuteCopyFiles {
                     try writeincludefilelist(filelist, to: savePath)
                 } catch {}
             }
-            
         } else {
             if let filelist = sidebarPhotoCullingViewModel?.extractRatedfilenames(rating) {
                 do {

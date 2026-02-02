@@ -28,7 +28,7 @@ struct CopyTasksView: View {
     @State private var showprogressview = false
 
     @State var dryrun: Bool = true
-    @State var copytaggedfiles: Bool = false
+    @State var copytaggedfiles: Bool = true
     @State var copyratedfiles: Int = 0
 
     var body: some View {
@@ -155,17 +155,7 @@ struct CopyTasksView: View {
 
         // Set the output for view if available
         if let viewOutput = result.viewOutput {
-            var output = viewOutput
-            let numberOfRowsToRemove = 14
-
-            if output.count >= numberOfRowsToRemove {
-                output.removeLast(numberOfRowsToRemove)
-            } else {
-                // Handle the case where there are fewer than 16 rows
-                // (Optionally clear the array or do nothing)
-                output.removeAll()
-            }
-            remotedatanumbers?.outputfromrsync = output
+            remotedatanumbers?.outputfromrsync = viewOutput
         }
 
         // Clean up
