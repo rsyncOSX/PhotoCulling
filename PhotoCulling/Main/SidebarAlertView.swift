@@ -31,8 +31,8 @@ enum SidebarAlertView {
 
         case .clearToggledFiles:
             return Alert(
-                title: Text("Clear Toggled Files"),
-                message: Text("Are you sure you want to clear all toggled files?"),
+                title: Text("Clear Tagged Files"),
+                message: Text("Are you sure you want to clear all tagged files?"),
                 primaryButton: .destructive(Text("Clear")) {
                     if let url = selectedSource?.url {
                         cullingManager.resetSavedFiles(in: url)
