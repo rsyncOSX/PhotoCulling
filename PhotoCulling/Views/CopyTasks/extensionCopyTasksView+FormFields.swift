@@ -11,15 +11,31 @@ import SwiftUI
 extension CopyTasksView {
     var sourceanddestination: some View {
         Section("Source and Destination") {
-            catalogField(catalog: $sourcecatalog,
-                         placeholder: "Add Source folder - required",
-                         selectedValue: sourcecatalog)
+            VStack {
+                OpencatalogView(
+                    selecteditem: $sourcecatalog,
+                    catalogs: true,
+                    bookmarkKey: "sourceBookmark"
+                )
 
-            catalogField(catalog: $destinationcatalog,
-                         placeholder: "Add Destination folder - required",
-                         selectedValue: destinationcatalog,
-                         showErrorBorder: !sourcecatalog.isEmpty && destinationcatalog.isEmpty ||
-                             sourcecatalog.isEmpty && !destinationcatalog.isEmpty)
+                OpencatalogView(
+                    selecteditem: $destinationcatalog,
+                    catalogs: true,
+                    bookmarkKey: "destBookmark"
+                )
+            }
+
+            /*
+             catalogField(catalog: $sourcecatalog,
+                          placeholder: "Add Source folder - required",
+                          selectedValue: sourcecatalog)
+
+             catalogField(catalog: $destinationcatalog,
+                          placeholder: "Add Destination folder - required",
+                          selectedValue: destinationcatalog,
+                          showErrorBorder: !sourcecatalog.isEmpty && destinationcatalog.isEmpty ||
+                              sourcecatalog.isEmpty && !destinationcatalog.isEmpty)
+              */
         }
     }
 
@@ -38,7 +54,8 @@ extension CopyTasksView {
                     .border(showErrorBorder ? Color.red : Color.clear, width: 2)
             }
 
-            OpencatalogView(selecteditem: catalog, catalogs: true)
+            OpencatalogView(selecteditem: catalog, catalogs: true, bookmarkKey: "destBookmark")
+            // OpencatalogView(selecteditem: catalog, catalogs: true, bookmarkKey: "destBookmark")
         }
     }
 }

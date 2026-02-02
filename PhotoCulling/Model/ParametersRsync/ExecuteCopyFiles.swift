@@ -32,12 +32,17 @@ final class ExecuteCopyFiles {
     var dryrun: Bool
     var rating: Int
     var copytaggedfiles: Bool
+
     // Streaming references
     private var streamingHandlers: RsyncProcessStreaming.ProcessHandlers?
     private var activeStreamingProcess: RsyncProcessStreaming.RsyncProcess?
+
+    // Security-scoped URL references
+    private var sourceAccessedURL: URL?
+    private var destAccessedURL: URL?
+
     /// State
     var progress: Double = 0
-    // var remotedatanumbers: RemoteDataNumbers?
 
     // Callbacks
     var onProgressUpdate: ((Double) -> Void)?
@@ -51,24 +56,62 @@ final class ExecuteCopyFiles {
         setupStreamingHandlers()
 
         guard var arguments, let streamingHandlers, arguments.count > 2 else { return }
-        // Must add the --include-from=my_list.txt ahead of source and destination
-        let includeparameter = "--include-from=" + savePath.path
-        arguments.insert(includeparameter, at: arguments.count - 2)
-        arguments.insert("--exclude=*", at: arguments.count - 2)
 
+        let count = arguments.count
+        let source = arguments[count - 2]
+        let dest = arguments[count - 1]
+
+        // Remove source and dest from arguments
+        arguments.removeLast()
+        arguments.removeLast()
+
+        // DON'T add duplicate flags - they're already in arguments!
+        // Just add the ones that aren't there
+        arguments.append("--no-extended-attributes")
+
+        // Add filter file if needed
+        let includeparameter = "--include-from=" + savePath.path
+        arguments.append(includeparameter)
+
+        if dryrun == false {
+            arguments.append("--include=*/")
+        }
+        arguments.append("--exclude=*")
+
+        guard let sourceURL = getAccessedURL(fromBookmarkKey: "sourceBookmark", fallbackPath: source),
+              let destURL = getAccessedURL(fromBookmarkKey: "destBookmark", fallbackPath: dest)
+        else {
+            print("Failed to access folders")
+            return
+        }
+
+        self.sourceAccessedURL = sourceURL
+        self.destAccessedURL = destURL
+
+        arguments.append(sourceURL.path + "/")
+        arguments.append(destURL.path + "/")
+
+        print("DEBUG: Final arguments: \(arguments)")
+        print("DEBUG: Number of arguments: \(arguments.count)")
+
+        // Write filter file
         Logger.process.debugMessageOnly("ExecuteCopyFiles: writing copyfilelist at \(savePath.path)")
 
         if copytaggedfiles {
             if let filelist = sidebarPhotoCullingViewModel?.extractTaggedfilenames() {
                 do {
                     try writeincludefilelist(filelist, to: savePath)
-                } catch {}
+                } catch {
+                    print("ERROR: Failed to write filter file: \(error)")
+                }
             }
         } else {
             if let filelist = sidebarPhotoCullingViewModel?.extractRatedfilenames(rating) {
                 do {
                     try writeincludefilelist(filelist, to: savePath)
-                } catch {}
+                } catch {
+                    print("ERROR: Failed to write filter file: \(error)")
+                }
             }
         }
 
@@ -78,11 +121,15 @@ final class ExecuteCopyFiles {
             handlers: streamingHandlers,
             useFileHandler: true
         )
+
         do {
             try process.executeProcess()
             activeStreamingProcess = process
         } catch {
-            Logger.process.debugMessageOnly("ExecuteCopyFiles: rsync executeProcess failed: \(error.localizedDescription)")
+            print("ERROR: executeProcess failed: \(error)")
+            Task { @MainActor in
+                self.cleanup()
+            }
         }
     }
 
@@ -103,11 +150,14 @@ final class ExecuteCopyFiles {
 
     deinit {
         Logger.process.debugMessageOnly("ExecuteCopyFiles: DEINIT")
+        // Note: Can't call async cleanup in deinit, but the URLs will be released
+        // when the properties are deallocated
     }
 
     private func setupStreamingHandlers() {
         streamingHandlers = CreateStreamingHandlers().createHandlersWithCleanup(
             fileHandler: { [weak self] count in
+                print("DEBUG fileHandler: count=\(count)")
                 Task { @MainActor in
                     let progress = Double(count)
                     self?.progress = progress
@@ -115,6 +165,7 @@ final class ExecuteCopyFiles {
                 }
             },
             processTermination: { [weak self] output, hiddenID in
+                print("DEBUG processTermination: output lines=\(output?.count ?? 0), hiddenID=\(hiddenID ?? -1)")
                 Task { @MainActor in
                     await self?.handleProcessTermination(
                         stringoutputfromrsync: output,
@@ -122,14 +173,19 @@ final class ExecuteCopyFiles {
                     )
                 }
             },
-            cleanup: cleanup
+            cleanup: { [weak self] in
+                print("DEBUG cleanup called")
+                Task { @MainActor in
+                    self?.cleanup()
+                }
+            }
         )
     }
 
     private func handleProcessTermination(stringoutputfromrsync: [String]?, hiddenID _: Int?) async {
         let linesCount = stringoutputfromrsync?.count ?? 0
 
-        // Create view output asynchronously - this returns [RsyncOutputData]
+        // Create view output asynchronously
         let viewOutput = await ActorCreateOutputforView().createOutputForView(stringoutputfromrsync)
 
         // Create the result
@@ -147,6 +203,13 @@ final class ExecuteCopyFiles {
     }
 
     private func cleanup() {
+        // Stop accessing security-scoped resources
+        sourceAccessedURL?.stopAccessingSecurityScopedResource()
+        destAccessedURL?.stopAccessingSecurityScopedResource()
+
+        sourceAccessedURL = nil
+        destAccessedURL = nil
+
         activeStreamingProcess = nil
         streamingHandlers = nil
     }
@@ -165,5 +228,29 @@ final class ExecuteCopyFiles {
                 userInfo: [NSLocalizedDescriptionKey: "Failed to write filelist to URL: \(error)"]
             )
         }
+    }
+
+    func getAccessedURL(fromBookmarkKey key: String, fallbackPath _: String) -> URL? {
+        // Try bookmark ONLY - don't fall back to direct path
+        if let bookmarkData = UserDefaults.standard.data(forKey: key) {
+            do {
+                var isStale = false
+                let url = try URL(
+                    resolvingBookmarkData: bookmarkData,
+                    options: .withSecurityScope,
+                    relativeTo: nil,
+                    bookmarkDataIsStale: &isStale
+                )
+                _ = url.startAccessingSecurityScopedResource()
+                print("DEBUG: Successfully resolved bookmark for \(key)")
+                return url
+            } catch {
+                print("ERROR: Bookmark resolution failed for \(key): \(error)")
+                return nil
+            }
+        }
+
+        print("ERROR: No bookmark found for \(key)")
+        return nil
     }
 }
