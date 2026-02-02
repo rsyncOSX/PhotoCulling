@@ -101,9 +101,9 @@ final class SidebarPhotoCullingViewModel {
         // Implementation deferred - abort functionality to be added
     }
 
-    func extractRatedfilenames() -> [String] {
+    func extractRatedfilenames(_ rating: Int) -> [String] {
         let result = filteredFiles.compactMap { file in
-            (getRating(for: file) > 0) ? file : nil
+            (getRating(for: file) >= rating) ? file : nil
         }
         return result.map(\.url.absoluteString)
     }

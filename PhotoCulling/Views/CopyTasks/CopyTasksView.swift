@@ -27,8 +27,31 @@ struct CopyTasksView: View {
     @State private var executionManager: ExecuteCopyFiles?
     @State private var showprogressview = false
 
+    @State var dryrun: Bool = true
+    @State var copytaggedfiles: Bool = false
+    @State var copyratedfiles: Int = 0
+
     var body: some View {
         VStack {
+            HStack {
+                if copytaggedfiles == false {
+                    Picker("Rating", selection: $copyratedfiles) {
+                        // Iterate over the range 0 to 5
+                        ForEach(0 ... 5, id: \.self) { number in
+                            Text("\(number)").tag(number)
+                        }
+                    }
+                    .pickerStyle(DefaultPickerStyle())
+                    .frame(width: 100)
+                }
+
+                ToggleViewDefault(text: "Dry run?",
+                                  binding: $dryrun)
+
+                ToggleViewDefault(text: "Copy tagged files?",
+                                  binding: $copytaggedfiles)
+            }
+
             sourceanddestination
 
             HStack {
@@ -96,6 +119,8 @@ struct CopyTasksView: View {
         executionManager = ExecuteCopyFiles(
             configuration: configuration,
             dryrun: dryrun,
+            rating: copyratedfiles,
+            copytaggedfiles: copytaggedfiles,
             sidebarPhotoCullingViewModel: viewModel
         )
 
@@ -150,5 +175,3 @@ struct CopyTasksView: View {
         showcopytask = true
     }
 }
-
-// rsync -av --include-from=my_list.txt --exclude='*' /path/to/source/ /path/to/destination/

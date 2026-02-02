@@ -22,8 +22,16 @@ struct RsyncOutputData: Identifiable, Equatable, Hashable {
 final class ExecuteCopyFiles {
     weak var sidebarPhotoCullingViewModel: SidebarPhotoCullingViewModel?
 
+    private let fileName = "copyfilelist.txt"
+    private var savePath: URL {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent(fileName)
+    }
+
     let config: SynchronizeConfiguration
-    let dryrun: Bool
+    var dryrun: Bool
+    var rating: Int
+    var copytaggedfiles: Bool
     // Streaming references
     private var streamingHandlers: RsyncProcessStreaming.ProcessHandlers?
     private var activeStreamingProcess: RsyncProcessStreaming.RsyncProcess?
@@ -42,12 +50,31 @@ final class ExecuteCopyFiles {
 
         setupStreamingHandlers()
 
-        guard let arguments, let streamingHandlers else { return }
+        guard var arguments, let streamingHandlers, arguments.count > 2 else { return }
+        // Must add the --include-from=my_list.txt ahead of source and destination
+        let countarguments = arguments.count
+        let includeparameter = "--include-from=" + savePath.path
+        arguments.insert(includeparameter, at: countarguments - 2)
 
-        let filelist = sidebarPhotoCullingViewModel?.extractTaggedfilenames()
-            .map { URL(string: $0)?.path ?? $0 } ?? []
-        let filelist2 = sidebarPhotoCullingViewModel?.extractRatedfilenames()
-            .map { URL(string: $0)?.path ?? $0 } ?? []
+        /*
+         // rsync -av --include-from=my_list.txt /path/to/source/ /path/to/destination/
+         */
+
+        Logger.process.debugMessageOnly("ExecuteCopyFiles: writing copyfilelist at \(savePath.path)")
+
+        if copytaggedfiles {
+            let filelist = sidebarPhotoCullingViewModel?.extractTaggedfilenames()
+                .map { URL(string: $0)?.path ?? $0 } ?? []
+            do {
+                try writeincludefilelist(filelist, to: savePath)
+            } catch {}
+        } else {
+            let filelist = sidebarPhotoCullingViewModel?.extractRatedfilenames(rating)
+                .map { URL(string: $0)?.path ?? $0 } ?? []
+            do {
+                try writeincludefilelist(filelist, to: savePath)
+            } catch {}
+        }
 
         let process = RsyncProcessStreaming.RsyncProcess(
             arguments: arguments,
@@ -59,7 +86,7 @@ final class ExecuteCopyFiles {
             try process.executeProcess()
             activeStreamingProcess = process
         } catch {
-            Logger.process.debugMessageOnly("Rsync executeProcess failed: \(error.localizedDescription)")
+            Logger.process.debugMessageOnly("ExecuteCopyFiles: rsync executeProcess failed: \(error.localizedDescription)")
         }
     }
 
@@ -67,11 +94,15 @@ final class ExecuteCopyFiles {
     init(
         configuration: SynchronizeConfiguration,
         dryrun: Bool = true,
+        rating: Int = 0,
+        copytaggedfiles: Bool = true,
         sidebarPhotoCullingViewModel: SidebarPhotoCullingViewModel
     ) {
         self.config = configuration
         self.dryrun = dryrun
+        self.rating = rating
         self.sidebarPhotoCullingViewModel = sidebarPhotoCullingViewModel
+        self.copytaggedfiles = copytaggedfiles
     }
 
     deinit {
@@ -122,5 +153,17 @@ final class ExecuteCopyFiles {
     private func cleanup() {
         activeStreamingProcess = nil
         streamingHandlers = nil
+    }
+
+    private func writeincludefilelist(_ filelist: [String], to URLpath: URL) throws {
+        let newlogadata = filelist.joined(separator: "\n") + "\n"
+        guard let newdata = newlogadata.data(using: .utf8) else {
+            throw NSError(domain: "ExecuteCopyFiles", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to encode log data"])
+        }
+        do {
+            try newdata.write(to: URLpath)
+        } catch {
+            throw NSError(domain: "ExecuteCopyFiles", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to write filelist to URL: \(error)"])
+        }
     }
 }
