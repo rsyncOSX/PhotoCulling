@@ -34,7 +34,7 @@ struct SidebarPhotoCullingView: View {
                 isShowingPicker: $viewModel.isShowingPicker,
                 filetableview: AnyView(filetableview)
             )
-            .navigationTitle(viewModel.selectedSource?.name ?? "Files")
+            .navigationTitle( (viewModel.selectedSource?.name ?? "Files") + " (\(viewModel.filteredFiles.count) ARW files)")
             .searchable(
                 text: $viewModel.searchText,
                 placement: .toolbar,
@@ -68,6 +68,7 @@ struct SidebarPhotoCullingView: View {
         } detail: {
             // --- DETAIL VIEW ---
             FileDetailView(
+                viewModel: viewModel,
                 cgImage: $cgImage,
                 nsImage: $nsImage,
                 files: viewModel.files,

@@ -48,27 +48,8 @@ extension SidebarPhotoCullingView {
             }
 
             ToolbarItem {
-                Text("\(viewModel.filteredFiles.count) ARW files")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .padding()
-            }
-
-            ToolbarItem {
                 Spacer()
             }
-        }
-
-        ToolbarItem {
-            ConditionalGlassButton(
-                systemImage: "document.on.document",
-                text: "",
-                helpText: "Copy tagged images to destination..."
-            ) {
-                viewModel.sheetType = .copytasksview
-                viewModel.showcopytask = true
-            }
-            .disabled(viewModel.selectedSource == nil)
         }
 
         ToolbarItem {
@@ -79,22 +60,6 @@ extension SidebarPhotoCullingView {
             ) {
                 guard viewModel.selectedSource != nil else { return }
                 viewModel.alertType = .extractJPGs
-                viewModel.showingAlert = true
-            }
-            .disabled(viewModel.creatingthumbnails)
-        }
-
-        ToolbarItem {
-            Spacer()
-        }
-
-        ToolbarItem {
-            ConditionalGlassButton(
-                systemImage: "trash.fill",
-                text: "",
-                helpText: "Clear toggled files"
-            ) {
-                viewModel.alertType = .clearToggledFiles
                 viewModel.showingAlert = true
             }
             .disabled(viewModel.creatingthumbnails)
