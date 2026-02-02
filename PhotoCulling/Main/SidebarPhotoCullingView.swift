@@ -24,6 +24,7 @@ struct SidebarPhotoCullingView: View {
         } content: {
             // --- MIDDLE COLUMN (TABLE) ---
             FileContentView(
+                viewModel: viewModel,
                 selectedSource: viewModel.selectedSource,
                 files: viewModel.files,
                 scanning: viewModel.scanning,
@@ -68,7 +69,6 @@ struct SidebarPhotoCullingView: View {
         } detail: {
             // --- DETAIL VIEW ---
             FileDetailView(
-                viewModel: viewModel,
                 cgImage: $cgImage,
                 nsImage: $nsImage,
                 files: viewModel.files,

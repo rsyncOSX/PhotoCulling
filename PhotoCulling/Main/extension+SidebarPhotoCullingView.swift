@@ -41,17 +41,7 @@ enum JPGPreviewHandler {
 extension SidebarPhotoCullingView {
     @ToolbarContentBuilder
     var toolbarContent: some ToolbarContent {
-        // Only show toolbar items when this tab is active
-        if !viewModel.files.isEmpty {
-            ToolbarItem {
-                pickerratingvalue
-            }
-
-            ToolbarItem {
-                Spacer()
-            }
-        }
-
+       
         ToolbarItem {
             ConditionalGlassButton(
                 systemImage: "square.3.layers.3d.down.forward",
@@ -65,10 +55,7 @@ extension SidebarPhotoCullingView {
             .disabled(viewModel.creatingthumbnails)
         }
 
-        ToolbarItem {
-            Spacer()
-        }
-
+       
         ToolbarItem {
             ConditionalGlassButton(
                 systemImage: "arrow.up.trash",
@@ -81,9 +68,7 @@ extension SidebarPhotoCullingView {
             .disabled(viewModel.creatingthumbnails)
         }
 
-        ToolbarItem {
-            Spacer()
-        }
+        ToolbarItem { Spacer() }
     }
 
     // File table
@@ -253,16 +238,5 @@ extension SidebarPhotoCullingView {
 
             viewModel.creatingthumbnails = false
         }
-    }
-
-    var pickerratingvalue: some View {
-        Picker("Rating", selection: $viewModel.rating) {
-            // Iterate over the range 0 to 5
-            ForEach(0 ... 5, id: \.self) { number in
-                Text("\(number)").tag(number)
-            }
-        }
-        .pickerStyle(DefaultPickerStyle())
-        .frame(width: 40)
     }
 }

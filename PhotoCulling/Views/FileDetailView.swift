@@ -2,9 +2,7 @@ import SwiftUI
 
 struct FileDetailView: View {
     @Environment(\.openWindow) var openWindow
-    @Bindable var viewModel: SidebarPhotoCullingViewModel
-    
-    
+   
     @Binding var cgImage: CGImage?
     @Binding var nsImage: NSImage?
 
@@ -24,29 +22,6 @@ struct FileDetailView: View {
                     Text(file.url.absoluteString)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    
-                    HStack {
-                        
-                        ConditionalGlassButton(
-                            systemImage: "document.on.document",
-                            text: "Copy tagged",
-                            helpText: "Copy tagged images to destination..."
-                        ) {
-                            viewModel.sheetType = .copytasksview
-                            viewModel.showcopytask = true
-                        }
-                        .disabled(viewModel.selectedSource == nil)
-                        
-                        ConditionalGlassButton(
-                            systemImage: "trash.fill",
-                            text: "Clear tagged",
-                            helpText: "Clear tagged files"
-                        ) {
-                            viewModel.alertType = .clearToggledFiles
-                            viewModel.showingAlert = true
-                        }
-                        .disabled(viewModel.creatingthumbnails)
-                    }
                 }
                 .padding()
             }

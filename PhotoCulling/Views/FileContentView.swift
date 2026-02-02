@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct FileContentView: View {
+    @Bindable var viewModel: SidebarPhotoCullingViewModel
+    
     let selectedSource: FolderSource?
     let files: [FileItem]
     let scanning: Bool
@@ -38,8 +40,47 @@ struct FileContentView: View {
                               statusText: "Creating Thumbnails or extracting JPGs")
             } else {
                 ZStack {
-                    filetableview
-
+                    
+                    VStack(alignment: .leading) {
+                        
+                        HStack {
+                            
+                            ConditionalGlassButton(
+                                systemImage: "document.on.document",
+                                text: "Copy tagged",
+                                helpText: "Copy tagged images to destination..."
+                            ) {
+                                viewModel.sheetType = .copytasksview
+                                viewModel.showcopytask = true
+                            }
+                            .disabled(viewModel.selectedSource == nil)
+                            
+                            ConditionalGlassButton(
+                                systemImage: "trash.fill",
+                                text: "Clear tagged",
+                                helpText: "Clear tagged files"
+                            ) {
+                                viewModel.alertType = .clearToggledFiles
+                                viewModel.showingAlert = true
+                            }
+                            .disabled(viewModel.creatingthumbnails)
+                            
+                            if !viewModel.files.isEmpty {
+                                Picker("Rating", selection: $viewModel.rating) {
+                                    // Iterate over the range 0 to 5
+                                    ForEach(0 ... 5, id: \.self) { number in
+                                        Text("\(number)").tag(number)
+                                    }
+                                }
+                                .pickerStyle(DefaultPickerStyle())
+                                .frame(width: 100)
+                            }
+                        }
+                        .padding()
+                        
+                        filetableview
+                    }
+            
                     if issorting {
                         HStack {
                             ProgressView()
