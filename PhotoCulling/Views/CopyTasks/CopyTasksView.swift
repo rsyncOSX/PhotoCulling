@@ -32,45 +32,26 @@ struct CopyTasksView: View {
     @State var copyratedfiles: Int = 0
 
     var body: some View {
-        VStack {
-            HStack {
-                if copytaggedfiles == false {
-                    Picker("Rating", selection: $copyratedfiles) {
-                        // Iterate over the range 0 to 5
-                        ForEach(0 ... 5, id: \.self) { number in
-                            Text("\(number)").tag(number)
-                        }
-                    }
-                    .pickerStyle(DefaultPickerStyle())
-                    .frame(width: 100)
-                }
+        VStack(spacing: 16) {
+            // Header with options
+            CopyOptionsSection(
+                copytaggedfiles: $copytaggedfiles,
+                copyratedfiles: $copyratedfiles,
+                dryrun: $dryrun
+            )
 
-                ToggleViewDefault(text: "Dry run?",
-                                  binding: $dryrun)
+            Divider()
 
-                ToggleViewDefault(text: "Copy tagged files?",
-                                  binding: $copytaggedfiles)
-            }
-
+            // Source and destination catalogs
             sourceanddestination
 
-            HStack {
-                ConditionalGlassButton(
-                    systemImage: "arrowshape.right.fill",
-                    text: "",
-                    helpText: "Start copying files"
-                ) {
-                    showingAlert = true
-                }
+            Spacer()
 
-                Spacer()
-
-                Button("Close", role: .close) {
-                    dismiss()
-                }
-                .buttonStyle(RefinedGlassButtonStyle())
-            }
-            .padding()
+            // Action buttons
+            CopyActionButtonsSection(
+                dismiss: dismiss,
+                onCopyTapped: { showingAlert = true }
+            )
         }
         .padding()
         .frame(
@@ -101,6 +82,8 @@ struct CopyTasksView: View {
         }
     }
 
+    // MARK: - Private Methods
+
     private func handleTrailingSlash(newconfig: inout SynchronizeConfiguration) {
         newconfig.localCatalog = newconfig.localCatalog.hasSuffix("/") ?
             newconfig.localCatalog : newconfig.localCatalog + "/"
@@ -108,7 +91,7 @@ struct CopyTasksView: View {
             newconfig.offsiteCatalog : newconfig.offsiteCatalog + "/"
     }
 
-    func executeCopyFiles() {
+    private func executeCopyFiles() {
         let dryrun = true
         var configuration = SynchronizeConfiguration()
         configuration.localCatalog = sourcecatalog
@@ -144,8 +127,6 @@ struct CopyTasksView: View {
         configuration.localCatalog = sourcecatalog
         configuration.offsiteCatalog = destinationcatalog
 
-        // showprogressview = false
-
         max = Double(result.linesCount)
 
         remotedatanumbers = RemoteDataNumbers(
@@ -165,3 +146,4 @@ struct CopyTasksView: View {
         showcopytask = true
     }
 }
+

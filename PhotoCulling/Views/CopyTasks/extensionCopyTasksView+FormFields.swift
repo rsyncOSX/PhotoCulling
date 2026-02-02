@@ -42,3 +42,90 @@ extension CopyTasksView {
         }
     }
 }
+
+// MARK: - Copy Options Section Component
+
+struct CopyOptionsSection: View {
+    @Binding var copytaggedfiles: Bool
+    @Binding var copyratedfiles: Int
+    @Binding var dryrun: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Copy Options")
+                .font(.headline)
+                .foregroundColor(.secondary)
+
+            VStack(alignment: .leading, spacing: 12) {
+                // Copy tagged files toggle
+                ToggleViewDefault(text: "Copy tagged files?",
+                                  binding: $copytaggedfiles)
+
+                // Dry run toggle
+                ToggleViewDefault(text: "Dry run?",
+                                  binding: $dryrun)
+
+                // Rating picker (only shown when not copying tagged files)
+                    RatingPickerSection(rating: $copyratedfiles)
+                        .disabled(copytaggedfiles)
+            }
+        }
+    }
+}
+
+// MARK: - Rating Picker Component
+
+struct RatingPickerSection: View {
+    @Binding var rating: Int
+
+    var body: some View {
+        VStack {
+            Label("Minimum Rating", systemImage: "star.fill")
+                .foregroundColor(.secondary)
+
+            Spacer()
+
+            Picker("Rating", selection: $rating) {
+                ForEach(0 ... 5, id: \.self) { number in
+                    HStack {
+                        ForEach(0 ..< number, id: \.self) { _ in
+                            Image(systemName: "star.fill")
+                                .font(.caption)
+                        }
+                        Text("\(number)")
+                    }
+                    .tag(number)
+                }
+            }
+            .pickerStyle(DefaultPickerStyle())
+            .frame(width: 120)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Action Buttons Component
+
+struct CopyActionButtonsSection: View {
+    let dismiss: DismissAction
+    let onCopyTapped: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ConditionalGlassButton(
+                systemImage: "arrowshape.right.fill",
+                text: "Start Copy",
+                helpText: "Start copying files"
+            ) {
+                onCopyTapped()
+            }
+
+            Spacer()
+
+            Button("Close", role: .close) {
+                dismiss()
+            }
+            .buttonStyle(RefinedGlassButtonStyle())
+        }
+    }
+}
