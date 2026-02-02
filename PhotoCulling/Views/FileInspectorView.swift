@@ -14,7 +14,7 @@ struct FileInspectorView: View {
                 Form {
                     Section("File Attributes") {
                         LabeledContent("Size", value: file.formattedSize)
-                        LabeledContent("Path", value: file.url.path)
+                        LabeledContent("Path", value: file.url.deletingLastPathComponent().path())
                         LabeledContent("Modified", value: file.dateModified.formatted(date: .abbreviated, time: .shortened))
                     }
 

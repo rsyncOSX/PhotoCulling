@@ -19,7 +19,7 @@ struct FileDetailView: View {
                 VStack {
                     Text(file.name)
                         .font(.headline)
-                    Text(file.url.absoluteString)
+                    Text(file.url.deletingLastPathComponent().path())
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
