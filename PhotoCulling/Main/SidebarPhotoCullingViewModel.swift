@@ -1,7 +1,7 @@
 import Foundation
 import Observation
-import OSLog
 import OSAKit
+import OSLog
 
 @Observable @MainActor
 final class SidebarPhotoCullingViewModel {
@@ -31,7 +31,7 @@ final class SidebarPhotoCullingViewModel {
     var sheetType: SheetType? = .copytasksview
     var remotedatanumbers: RemoteDataNumbers?
     var rating: Int = 0
-    
+
     // Zoom window state
     var zoomCGImageWindowFocused: Bool = false
     var zoomNSImageWindowFocused: Bool = false

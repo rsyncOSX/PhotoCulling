@@ -32,11 +32,11 @@ struct PhotoCullingApp: App {
                 zoomCGImageWindowFocused: $zoomCGImageWindowFocused,
                 zoomNSImageWindowFocused: $zoomNSImageWindowFocused
             )
-                .onDisappear {
-                    // Quit the app when the main window is closed
-                    performCleanupTask()
-                    NSApplication.shared.terminate(nil)
-                }
+            .onDisappear {
+                // Quit the app when the main window is closed
+                performCleanupTask()
+                NSApplication.shared.terminate(nil)
+            }
         }
         .commands {
             SidebarCommands()

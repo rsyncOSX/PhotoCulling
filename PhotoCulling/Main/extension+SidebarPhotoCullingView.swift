@@ -131,6 +131,17 @@ extension SidebarPhotoCullingView {
                 viewModel.selectedFileID = viewModel.files[index].id
                 viewModel.selectedFile = viewModel.files[index]
                 viewModel.isInspectorPresented = true
+
+                // Only update zoom window content if it's already in focus (don't open it)
+                let file = viewModel.files[index]
+                if zoomCGImageWindowFocused || zoomNSImageWindowFocused {
+                    JPGPreviewHandler.handle(
+                        file: file,
+                        setNSImage: { nsImage = $0 },
+                        setCGImage: { cgImage = $0 },
+                        openWindow: { _ in } // Don't open window on row selection
+                    )
+                }
             } else {
                 viewModel.isInspectorPresented = false
             }
@@ -238,18 +249,18 @@ extension SidebarPhotoCullingView {
             }
         }
     }
-    
+
     func applyPendingUpdatesAndFocus() {
         if let cgImage = viewModel.pendingCGImageUpdate {
             self.cgImage = cgImage
             zoomCGImageWindowFocused = true
         }
-        
+
         if let nsImage = viewModel.pendingNSImageUpdate {
             self.nsImage = nsImage
             zoomNSImageWindowFocused = true
         }
-        
+
         // Clear pending updates
         viewModel.pendingCGImageUpdate = nil
         viewModel.pendingNSImageUpdate = nil
