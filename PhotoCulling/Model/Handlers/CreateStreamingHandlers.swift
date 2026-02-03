@@ -46,8 +46,11 @@ struct CreateStreamingHandlers {
             rsyncPath: "/usr/bin/rsync",
             checkLineForError: { _ in },
             updateProcess: { _ in },
-            propagateError: { _ in },
-            checkForErrorInRsyncOutput: false,
+            propagateError: { error in
+                // Log errors from rsync process
+                print("ERROR: Rsync process error: \(error.localizedDescription)")
+            },
+            checkForErrorInRsyncOutput: true,
             environment: ["": ""]
         )
     }

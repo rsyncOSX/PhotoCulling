@@ -165,7 +165,23 @@ final class ExecuteCopyFiles {
                 }
             },
             processTermination: { [weak self] output, hiddenID in
-                print("DEBUG processTermination: output lines=\(output?.count ?? 0), hiddenID=\(hiddenID ?? -1)")
+                // Log exit code from the active process
+                let exitCode = self?.activeStreamingProcess?.terminationStatus ?? -999
+                print("DEBUG processTermination: output lines=\(output?.count ?? 0), hiddenID=\(hiddenID ?? -1), exitCode=\(exitCode)")
+                
+                // Log output and errors for debugging
+                if let output = output, !output.isEmpty {
+                    print("DEBUG processTermination: stdout output (\(output.count) lines):")
+                    for (index, line) in output.prefix(10).enumerated() {
+                        print("  [\(index)]: \(line)")
+                    }
+                    if output.count > 10 {
+                        print("  ... (\(output.count - 10) more lines)")
+                    }
+                } else {
+                    print("WARNING: processTermination: NO OUTPUT from rsync!")
+                }
+                
                 Task { @MainActor in
                     await self?.handleProcessTermination(
                         stringoutputfromrsync: output,
