@@ -21,10 +21,17 @@ struct PhotoCullingApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var nsImage: NSImage?
     @State private var cgImage: CGImage?
+    @State private var zoomCGImageWindowFocused: Bool = false
+    @State private var zoomNSImageWindowFocused: Bool = false
 
     var body: some Scene {
         Window("Photo Culling", id: "main-window") {
-            SidebarPhotoCullingView(nsImage: $nsImage, cgImage: $cgImage)
+            SidebarPhotoCullingView(
+                nsImage: $nsImage,
+                cgImage: $cgImage,
+                zoomCGImageWindowFocused: $zoomCGImageWindowFocused,
+                zoomNSImageWindowFocused: $zoomNSImageWindowFocused
+            )
                 .onDisappear {
                     // Quit the app when the main window is closed
                     performCleanupTask()
@@ -39,6 +46,12 @@ struct PhotoCullingApp: App {
 
         Window("ZoomcgImage", id: "zoom-window-cgImage") {
             ZoomableCSImageView(cgImage: cgImage)
+                .onAppear {
+                    zoomCGImageWindowFocused = true
+                }
+                .onDisappear {
+                    zoomCGImageWindowFocused = false
+                }
         }
         .defaultPosition(.center)
         .defaultSize(width: 800, height: 600)
@@ -46,6 +59,12 @@ struct PhotoCullingApp: App {
         // If there is a extracted JPG image
         Window("ZoomnsImage", id: "zoom-window-nsImage") {
             ZoomableNSImageView(nsImage: nsImage)
+                .onAppear {
+                    zoomNSImageWindowFocused = true
+                }
+                .onDisappear {
+                    zoomNSImageWindowFocused = false
+                }
         }
         .defaultPosition(.center)
         .defaultSize(width: 800, height: 600)

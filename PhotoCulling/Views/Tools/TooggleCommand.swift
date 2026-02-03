@@ -13,6 +13,7 @@ struct ToggleCommands: Commands {
     @FocusedBinding(\.aborttask) private var aborttask
     @FocusedBinding(\.navigateUp) private var navigateUp
     @FocusedBinding(\.navigateDown) private var navigateDown
+    @FocusedBinding(\.pressEnter) private var pressEnter
 
     var body: some Commands {
         CommandMenu("Table Navigation") {
@@ -23,6 +24,10 @@ struct ToggleCommands: Commands {
 
             CommandButton("Previous row", action: { navigateUp = true }, shortcut: .init(.upArrow, modifiers: [.command]))
             CommandButton("Next row", action: { navigateDown = true }, shortcut: .init(.downArrow, modifiers: [.command]))
+            
+            Divider()
+            
+            CommandButton("Apply & Focus", action: { pressEnter = true }, shortcut: .init(.return, modifiers: []))
         }
     }
 }
@@ -103,6 +108,10 @@ struct FocusedNavigateDown: FocusedValueKey {
     typealias Value = Binding<Bool>
 }
 
+struct FocusedPressEnter: FocusedValueKey {
+    typealias Value = Binding<Bool>
+}
+
 extension FocusedValues {
     var togglerow: FocusedTogglerow.Value? {
         get { self[FocusedTogglerow.self] }
@@ -122,5 +131,10 @@ extension FocusedValues {
     var navigateDown: FocusedNavigateDown.Value? {
         get { self[FocusedNavigateDown.self] }
         set { self[FocusedNavigateDown.self] = newValue }
+    }
+    
+    var pressEnter: FocusedPressEnter.Value? {
+        get { self[FocusedPressEnter.self] }
+        set { self[FocusedPressEnter.self] = newValue }
     }
 }

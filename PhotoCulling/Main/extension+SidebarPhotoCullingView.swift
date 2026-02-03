@@ -147,6 +147,12 @@ extension SidebarPhotoCullingView {
                 viewModel.focusnavigateDown = false
             }
         }
+        .onChange(of: viewModel.focusPressEnter) {
+            if viewModel.focusPressEnter {
+                applyPendingUpdatesAndFocus()
+                viewModel.focusPressEnter = false
+            }
+        }
         .contextMenu(forSelectionType: FileItem.ID.self) { _ in
         } primaryAction: { _ in
             guard let selectedID = viewModel.selectedFileID,
@@ -209,15 +215,44 @@ extension SidebarPhotoCullingView {
             viewModel.isInspectorPresented = true
         }
 
-        // Update ZoomableNSImageView if it's open
+        // Update zoom windows based on their focus state
         if let file = selectedFile {
-            JPGPreviewHandler.handle(
-                file: file,
-                setNSImage: { nsImage = $0 },
-                setCGImage: { cgImage = $0 },
-                openWindow: { id in openWindow(id: id) }
-            )
+            if zoomCGImageWindowFocused || zoomNSImageWindowFocused {
+                // Window is in focus, update immediately
+                JPGPreviewHandler.handle(
+                    file: file,
+                    setNSImage: { nsImage = $0 },
+                    setCGImage: { cgImage = $0 },
+                    openWindow: { id in openWindow(id: id) }
+                )
+            } else {
+                // Window is in background, defer update until Enter is pressed
+                viewModel.pendingCGImageUpdate = nil
+                viewModel.pendingNSImageUpdate = nil
+                JPGPreviewHandler.handle(
+                    file: file,
+                    setNSImage: { viewModel.pendingNSImageUpdate = $0 },
+                    setCGImage: { viewModel.pendingCGImageUpdate = $0 },
+                    openWindow: { id in openWindow(id: id) }
+                )
+            }
         }
+    }
+    
+    func applyPendingUpdatesAndFocus() {
+        if let cgImage = viewModel.pendingCGImageUpdate {
+            self.cgImage = cgImage
+            zoomCGImageWindowFocused = true
+        }
+        
+        if let nsImage = viewModel.pendingNSImageUpdate {
+            self.nsImage = nsImage
+            zoomNSImageWindowFocused = true
+        }
+        
+        // Clear pending updates
+        viewModel.pendingCGImageUpdate = nil
+        viewModel.pendingNSImageUpdate = nil
     }
 
     // MARK: - Helper Functions

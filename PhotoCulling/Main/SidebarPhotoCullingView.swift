@@ -9,6 +9,8 @@ struct SidebarPhotoCullingView: View {
 
     @Binding var nsImage: NSImage?
     @Binding var cgImage: CGImage?
+    @Binding var zoomCGImageWindowFocused: Bool
+    @Binding var zoomNSImageWindowFocused: Bool
 
     @State var viewModel = SidebarPhotoCullingViewModel()
 
@@ -45,6 +47,7 @@ struct SidebarPhotoCullingView: View {
             .focusedSceneValue(\.togglerow, $viewModel.focustogglerow)
             .focusedSceneValue(\.navigateUp, $viewModel.focusnavigateUp)
             .focusedSceneValue(\.navigateDown, $viewModel.focusnavigateDown)
+            .focusedSceneValue(\.pressEnter, $viewModel.focusPressEnter)
             .sheet(isPresented: $viewModel.showcopytask) {
                 SidebarSheetContent(
                     viewModel: viewModel,

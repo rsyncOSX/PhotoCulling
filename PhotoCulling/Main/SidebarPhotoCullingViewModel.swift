@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import OSLog
+import OSAKit
 
 @Observable @MainActor
 final class SidebarPhotoCullingViewModel {
@@ -24,11 +25,18 @@ final class SidebarPhotoCullingViewModel {
     var focusaborttask: Bool = false
     var focusnavigateUp: Bool = false
     var focusnavigateDown: Bool = false
+    var focusPressEnter: Bool = false
     var showcopytask: Bool = false
     var alertType: SidebarAlertView.AlertType?
     var sheetType: SheetType? = .copytasksview
     var remotedatanumbers: RemoteDataNumbers?
     var rating: Int = 0
+    
+    // Zoom window state
+    var zoomCGImageWindowFocused: Bool = false
+    var zoomNSImageWindowFocused: Bool = false
+    var pendingCGImageUpdate: CGImage?
+    var pendingNSImageUpdate: NSImage?
 
     var cullingmanager = ObservableCullingManager()
     private var processedURLs: Set<URL> = []
