@@ -6,10 +6,16 @@
 //
 
 import Foundation
+import OSLog
 import RsyncProcessStreaming
 
 @MainActor
 struct CreateStreamingHandlers {
+    /// Shared error handler that logs errors using OSLog
+    private static let errorHandler: (Error) -> Void = { error in
+        Logger.process.error("Rsync process error: \(error.localizedDescription)")
+    }
+    
     /// Create handlers with streaming output support
     /// - Parameters:
     ///   - fileHandler: Progress callback (file count)
@@ -26,9 +32,7 @@ struct CreateStreamingHandlers {
             rsyncPath: "/usr/bin/rsync",
             checkLineForError: { _ in },
             updateProcess: { _ in },
-            propagateError: { error in
-                print("ERROR propagateError: \(error.localizedDescription)")
-            },
+            propagateError: Self.errorHandler,
             checkForErrorInRsyncOutput: true,
             environment: ["": ""]
         )
@@ -48,9 +52,7 @@ struct CreateStreamingHandlers {
             rsyncPath: "/usr/bin/rsync",
             checkLineForError: { _ in },
             updateProcess: { _ in },
-            propagateError: { error in
-                print("ERROR propagateError: \(error.localizedDescription)")
-            },
+            propagateError: Self.errorHandler,
             checkForErrorInRsyncOutput: true,
             environment: ["": ""]
         )
