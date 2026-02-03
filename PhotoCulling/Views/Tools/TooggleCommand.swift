@@ -18,9 +18,9 @@ struct ToggleCommands: Commands {
         CommandMenu("Table Navigation") {
             CommandButton("Tag row", action: { togglerow = true }, shortcut: "t")
             CommandButton("Abort task", action: { aborttask = true }, shortcut: "k")
-            
+
             Divider()
-            
+
             CommandButton("Previous row", action: { navigateUp = true }, shortcut: .init(.upArrow, modifiers: [.command]))
             CommandButton("Next row", action: { navigateDown = true }, shortcut: .init(.downArrow, modifiers: [.command]))
         }
@@ -33,7 +33,7 @@ struct CommandButton: View {
     let label: String
     let action: () -> Void
     let shortcut: KeyboardShortcut?
-    
+
     init(_ label: String, action: @escaping () -> Void, shortcut: String? = nil) {
         self.label = label
         self.action = action
@@ -43,13 +43,13 @@ struct CommandButton: View {
             self.shortcut = nil
         }
     }
-    
+
     init(_ label: String, action: @escaping () -> Void, shortcut: KeyboardShortcut) {
         self.label = label
         self.action = action
         self.shortcut = shortcut
     }
-    
+
     var body: some View {
         if let shortcut = shortcut {
             Button(label, action: action).keyboardShortcut(shortcut)
@@ -113,12 +113,12 @@ extension FocusedValues {
         get { self[FocusedAborttask.self] }
         set { self[FocusedAborttask.self] = newValue }
     }
-    
+
     var navigateUp: FocusedNavigateUp.Value? {
         get { self[FocusedNavigateUp.self] }
         set { self[FocusedNavigateUp.self] = newValue }
     }
-    
+
     var navigateDown: FocusedNavigateDown.Value? {
         get { self[FocusedNavigateDown.self] }
         set { self[FocusedNavigateDown.self] = newValue }

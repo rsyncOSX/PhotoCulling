@@ -187,6 +187,8 @@ extension SidebarPhotoCullingView {
 
         guard !filteredAndRated.isEmpty else { return }
 
+        var selectedFile: FileItem?
+
         if let currentID = viewModel.selectedFileID,
            let currentIndex = filteredAndRated.firstIndex(where: { $0.id == currentID }) {
             let newIndex: Int
@@ -197,12 +199,24 @@ extension SidebarPhotoCullingView {
             }
             viewModel.selectedFileID = filteredAndRated[newIndex].id
             viewModel.selectedFile = filteredAndRated[newIndex]
+            selectedFile = filteredAndRated[newIndex]
             viewModel.isInspectorPresented = true
         } else {
             // If no selection, select the first file
             viewModel.selectedFileID = filteredAndRated.first?.id
             viewModel.selectedFile = filteredAndRated.first
+            selectedFile = filteredAndRated.first
             viewModel.isInspectorPresented = true
+        }
+
+        // Update ZoomableNSImageView if it's open
+        if let file = selectedFile {
+            JPGPreviewHandler.handle(
+                file: file,
+                setNSImage: { nsImage = $0 },
+                setCGImage: { cgImage = $0 },
+                openWindow: { id in openWindow(id: id) }
+            )
         }
     }
 
