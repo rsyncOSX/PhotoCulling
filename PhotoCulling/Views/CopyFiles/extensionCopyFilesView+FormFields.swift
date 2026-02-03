@@ -59,6 +59,28 @@ extension CopyFilesView {
                         catalogs: true,
                         bookmarkKey: "destBookmark"
                     )
+                    .onChange(of: destinationcatalog) {
+                        if copytaggedfiles {
+                            max = Double(viewModel.extractTaggedfilenames().count)
+                        } else {
+                            copyratedfiles = 3 // default
+                            max = Double(viewModel.extractRatedfilenames(copyratedfiles).count)
+                        }
+                        Logger.process.debugMessageOnly("CopyfilesView: max is \(max)")
+                    }
+                    .onChange(of: copytaggedfiles) {
+                        if copytaggedfiles {
+                            max = Double(viewModel.extractTaggedfilenames().count)
+                        } else {
+                            copyratedfiles = 3 // default
+                            max = Double(viewModel.extractRatedfilenames(copyratedfiles).count)
+                        }
+                        Logger.process.debugMessageOnly("CopyfilesView: max is \(max)")
+                    }
+                    .onChange(of: copyratedfiles) {
+                        max = Double(viewModel.extractRatedfilenames(copyratedfiles).count)
+                        Logger.process.debugMessageOnly("CopyfilesView: max is \(max)")
+                    }
                 }
             }
         }
@@ -108,7 +130,7 @@ struct RatingPickerSection: View {
             Spacer()
 
             Picker("Rating", selection: $rating) {
-                ForEach(0 ... 5, id: \.self) { number in
+                ForEach(1 ... 5, id: \.self) { number in
                     HStack {
                         ForEach(0 ..< number, id: \.self) { _ in
                             Image(systemName: "star.fill")

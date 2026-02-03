@@ -23,6 +23,7 @@ struct CopyFilesView: View {
     @State var showingAlert: Bool = false
     @State var progress: Double = 0
     @State var max: Double = 0
+    @State var copyfilesinprogress: Bool = false
 
     @State private var executionManager: ExecuteCopyFiles?
     @State private var showprogressview = false
@@ -41,7 +42,13 @@ struct CopyFilesView: View {
             )
 
             Divider()
-
+            
+            if copyfilesinprogress {
+                
+                ProgressCount(max: max, progress: progress, statusText: "Copy files in progress, please wait..")
+                
+            }
+            
             // Source and destination catalogs
             sourceanddestination
 
@@ -51,9 +58,8 @@ struct CopyFilesView: View {
             CopyActionButtonsSection(
                 dismiss: dismiss,
                 onCopyTapped: {
-                    guard sourcecatalog.isEmpty == false, destinationcatalog.isEmpty == false else {
-                        return
-                    }
+                    guard sourcecatalog.isEmpty == false,
+                            destinationcatalog.isEmpty == false else { return }
                     showingAlert = true
                 }
             )
@@ -69,6 +75,8 @@ struct CopyFilesView: View {
                 title: Text("Copy ARW files"),
                 message: Text("Are you sure you want to copy all tagged ARW files?"),
                 primaryButton: .destructive(Text("Copy")) {
+                    
+                    copyfilesinprogress = true
                     executeCopyFiles()
                 },
                 secondaryButton: .cancel()
@@ -82,7 +90,7 @@ struct CopyFilesView: View {
     }
 
     private func executeCopyFiles() {
-        var configuration = SynchronizeConfiguration()
+        let configuration = SynchronizeConfiguration()
 
         executionManager = ExecuteCopyFiles(
             configuration: configuration,
@@ -111,11 +119,12 @@ struct CopyFilesView: View {
     }
 
     private func handleCompletion(result: CopyDataResult) {
+        // This is for display and information only
         var configuration = SynchronizeConfiguration()
         configuration.localCatalog = sourcecatalog
         configuration.offsiteCatalog = destinationcatalog
 
-        max = Double(result.linesCount)
+        copyfilesinprogress = false
 
         remotedatanumbers = RemoteDataNumbers(
             stringoutputfromrsync: result.output,
