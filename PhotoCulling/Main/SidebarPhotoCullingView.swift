@@ -139,12 +139,4 @@ struct SidebarPhotoCullingView: View {
     func abort() {
         viewModel.abort()
     }
-
-    func fileHandler(_ update: Int) {
-        viewModel.fileHandler(update)
-    }
-
-    func maxfilesHandler(_ maxfiles: Int) {
-        viewModel.maxfilesHandler(maxfiles)
-    }
 }

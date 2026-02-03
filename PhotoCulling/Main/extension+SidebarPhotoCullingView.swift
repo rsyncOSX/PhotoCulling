@@ -178,13 +178,6 @@ extension SidebarPhotoCullingView {
         }
     }
 
-    // MARK: - Navigation Helper
-
-    enum NavigationDirection {
-        case previous
-        case next
-    }
-
     func applyPendingUpdatesAndFocus() {
         if let cgImage = viewModel.pendingCGImageUpdate {
             self.cgImage = cgImage

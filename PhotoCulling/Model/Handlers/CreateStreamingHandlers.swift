@@ -16,22 +16,23 @@ struct CreateStreamingHandlers {
     ///   - processTermination: Called when process completes (receives final output)
     ///   - streamingHandler: Optional handler for line-by-line processing
     /// - Returns: ProcessHandlers configured for streaming
-    func createHandlers(
-        fileHandler: @escaping (Int) -> Void,
-        processTermination: @escaping ([String]?, Int?) -> Void
-    ) -> ProcessHandlers {
-        ProcessHandlers(
-            processTermination: processTermination,
-            fileHandler: fileHandler,
-            rsyncPath: "/usr/bin/rsync",
-            checkLineForError: { _ in },
-            updateProcess: { _ in },
-            propagateError: { _ in },
-            checkForErrorInRsyncOutput: false,
-            environment: ["": ""]
-        )
-    }
-
+    /**
+     func createHandlers(
+         fileHandler: @escaping (Int) -> Void,
+         processTermination: @escaping ([String]?, Int?) -> Void
+     ) -> ProcessHandlers {
+         ProcessHandlers(
+             processTermination: processTermination,
+             fileHandler: fileHandler,
+             rsyncPath: "/usr/bin/rsync",
+             checkLineForError: { _ in },
+             updateProcess: { _ in },
+             propagateError: { _ in },
+             checkForErrorInRsyncOutput: false,
+             environment: ["": ""]
+         )
+     }
+     */
     func createHandlersWithCleanup(
         fileHandler: @escaping (Int) -> Void,
         processTermination: @escaping ([String]?, Int?) -> Void,
