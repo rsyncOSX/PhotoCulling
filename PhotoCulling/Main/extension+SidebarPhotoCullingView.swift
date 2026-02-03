@@ -185,59 +185,6 @@ extension SidebarPhotoCullingView {
         case next
     }
 
-    func navigateToAdjacentFile(direction: NavigationDirection) {
-        let filteredAndRated = viewModel.filteredFiles.compactMap { file in
-            (viewModel.getRating(for: file) >= viewModel.rating) ? file : nil
-        }
-
-        guard !filteredAndRated.isEmpty else { return }
-
-        var selectedFile: FileItem?
-
-        if let currentID = viewModel.selectedFileID,
-           let currentIndex = filteredAndRated.firstIndex(where: { $0.id == currentID }) {
-            let newIndex: Int
-            if direction == .previous {
-                newIndex = max(0, currentIndex - 1)
-            } else {
-                newIndex = min(filteredAndRated.count - 1, currentIndex + 1)
-            }
-            viewModel.selectedFileID = filteredAndRated[newIndex].id
-            viewModel.selectedFile = filteredAndRated[newIndex]
-            selectedFile = filteredAndRated[newIndex]
-            viewModel.isInspectorPresented = true
-        } else {
-            // If no selection, select the first file
-            viewModel.selectedFileID = filteredAndRated.first?.id
-            viewModel.selectedFile = filteredAndRated.first
-            selectedFile = filteredAndRated.first
-            viewModel.isInspectorPresented = true
-        }
-
-        // Update zoom windows based on their focus state
-        if let file = selectedFile {
-            if zoomCGImageWindowFocused || zoomNSImageWindowFocused {
-                // Window is in focus, update immediately
-                JPGPreviewHandler.handle(
-                    file: file,
-                    setNSImage: { nsImage = $0 },
-                    setCGImage: { cgImage = $0 },
-                    openWindow: { id in openWindow(id: id) }
-                )
-            } else {
-                // Window is in background, defer update until Enter is pressed
-                viewModel.pendingCGImageUpdate = nil
-                viewModel.pendingNSImageUpdate = nil
-                JPGPreviewHandler.handle(
-                    file: file,
-                    setNSImage: { viewModel.pendingNSImageUpdate = $0 },
-                    setCGImage: { viewModel.pendingCGImageUpdate = $0 },
-                    openWindow: { id in openWindow(id: id) }
-                )
-            }
-        }
-    }
-
     func applyPendingUpdatesAndFocus() {
         if let cgImage = viewModel.pendingCGImageUpdate {
             self.cgImage = cgImage
