@@ -1,6 +1,6 @@
+import OSLog
 import SwiftUI
 import UniformTypeIdentifiers
-import OSLog
 
 struct OpencatalogView: View {
     @Binding var selecteditem: String
