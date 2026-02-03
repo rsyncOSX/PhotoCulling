@@ -50,17 +50,16 @@ struct CopyTasksView: View {
             // Action buttons
             CopyActionButtonsSection(
                 dismiss: dismiss,
-                onCopyTapped: { showingAlert = true }
+                onCopyTapped: {
+                    guard sourcecatalog.isEmpty == false, destinationcatalog.isEmpty == false else {
+                        return
+                    }
+                    showingAlert = true
+                }
             )
         }
         .padding()
-        .frame(
-            minWidth: 600,
-            idealWidth: 600,
-            minHeight: 400,
-            idealHeight: 400,
-            alignment: .init(horizontal: .center, vertical: .center)
-        )
+        .frame(width: 650, height: 500, alignment: .init(horizontal: .center, vertical: .center))
         .task(id: selectedSource) {
             guard let selectedSource else { return }
             sourcecatalog = selectedSource.url.path

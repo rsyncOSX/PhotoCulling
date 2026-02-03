@@ -11,51 +11,56 @@ import SwiftUI
 extension CopyTasksView {
     var sourceanddestination: some View {
         Section("Source and Destination") {
-            VStack {
-                OpencatalogView(
-                    selecteditem: $sourcecatalog,
-                    catalogs: true,
-                    bookmarkKey: "sourceBookmark"
-                )
+            VStack(alignment: .trailing) {
+                HStack {
+                    HStack {
+                        Text(sourcecatalog)
+                        Image(systemName: "arrowshape.right.fill")
+                    }
+                    .padding()
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                    )
 
-                OpencatalogView(
-                    selecteditem: $destinationcatalog,
-                    catalogs: true,
-                    bookmarkKey: "destBookmark"
-                )
+                    OpencatalogView(
+                        selecteditem: $sourcecatalog,
+                        catalogs: true,
+                        bookmarkKey: "sourceBookmark"
+                    )
+                }
+
+                HStack {
+                    if destinationcatalog.isEmpty {
+                        HStack {
+                            Text("Select destination")
+                                .foregroundColor(Color.red)
+                            Image(systemName: "arrowshape.right.fill")
+                        }
+                        .padding()
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
+                    } else {
+                        HStack {
+                            Text(destinationcatalog)
+                            Image(systemName: "arrowshape.right.fill")
+                        }
+                        .padding()
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
+                    }
+
+                    OpencatalogView(
+                        selecteditem: $destinationcatalog,
+                        catalogs: true,
+                        bookmarkKey: "destBookmark"
+                    )
+                }
             }
-
-            /*
-             catalogField(catalog: $sourcecatalog,
-                          placeholder: "Add Source folder - required",
-                          selectedValue: sourcecatalog)
-
-             catalogField(catalog: $destinationcatalog,
-                          placeholder: "Add Destination folder - required",
-                          selectedValue: destinationcatalog,
-                          showErrorBorder: !sourcecatalog.isEmpty && destinationcatalog.isEmpty ||
-                              sourcecatalog.isEmpty && !destinationcatalog.isEmpty)
-              */
-        }
-    }
-
-    func catalogField(catalog: Binding<String>,
-                      placeholder: String,
-                      selectedValue: String?,
-                      showErrorBorder: Bool = false) -> some View {
-        HStack {
-            if sourcecatalog.isEmpty {
-                EditValueScheme(300, placeholder, catalog)
-                    .onAppear { if let value = selectedValue { catalog.wrappedValue = value } }
-                    .border(showErrorBorder ? Color.red : Color.clear, width: 2)
-            } else {
-                EditValueScheme(300, nil, catalog)
-                    .onAppear { if let value = selectedValue { catalog.wrappedValue = value } }
-                    .border(showErrorBorder ? Color.red : Color.clear, width: 2)
-            }
-
-            OpencatalogView(selecteditem: catalog, catalogs: true, bookmarkKey: "destBookmark")
-            // OpencatalogView(selecteditem: catalog, catalogs: true, bookmarkKey: "destBookmark")
         }
     }
 }
