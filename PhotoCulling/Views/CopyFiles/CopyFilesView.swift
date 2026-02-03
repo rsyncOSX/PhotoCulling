@@ -42,13 +42,11 @@ struct CopyFilesView: View {
             )
 
             Divider()
-            
+
             if copyfilesinprogress {
-                
                 ProgressCount(max: max, progress: progress, statusText: "Copy files in progress, please wait..")
-                
             }
-            
+
             // Source and destination catalogs
             sourceanddestination
 
@@ -59,7 +57,7 @@ struct CopyFilesView: View {
                 dismiss: dismiss,
                 onCopyTapped: {
                     guard sourcecatalog.isEmpty == false,
-                            destinationcatalog.isEmpty == false else { return }
+                          destinationcatalog.isEmpty == false else { return }
                     showingAlert = true
                 }
             )
@@ -75,7 +73,6 @@ struct CopyFilesView: View {
                 title: Text("Copy ARW files"),
                 message: Text("Are you sure you want to copy all tagged ARW files?"),
                 primaryButton: .destructive(Text("Copy")) {
-                    
                     copyfilesinprogress = true
                     executeCopyFiles()
                 },
