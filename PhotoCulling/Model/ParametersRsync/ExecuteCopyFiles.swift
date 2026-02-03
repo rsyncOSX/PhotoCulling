@@ -48,7 +48,10 @@ final class ExecuteCopyFiles {
     var onProgressUpdate: ((Double) -> Void)?
     var onCompletion: ((CopyDataResult) -> Void)?
 
-    func startcopyfiles() {
+    func startcopyfiles(
+        fallbacksource: String,
+        fallbackdest: String
+    ) {
         let arguments = ArgumentsSynchronize(config: config).argumentsSynchronize(
             dryRun: dryrun
         )
@@ -56,14 +59,6 @@ final class ExecuteCopyFiles {
         setupStreamingHandlers()
 
         guard var arguments, let streamingHandlers, arguments.count > 2 else { return }
-
-        let count = arguments.count
-        let source = arguments[count - 2]
-        let dest = arguments[count - 1]
-
-        // Remove source and dest from arguments
-        arguments.removeLast()
-        arguments.removeLast()
 
         // Add filter file if needed
         let includeparameter = "--include-from=" + savePath.path
@@ -74,8 +69,8 @@ final class ExecuteCopyFiles {
         }
         arguments.append("--exclude=*")
 
-        guard let sourceURL = getAccessedURL(fromBookmarkKey: "sourceBookmark", fallbackPath: source),
-              let destURL = getAccessedURL(fromBookmarkKey: "destBookmark", fallbackPath: dest)
+        guard let sourceURL = getAccessedURL(fromBookmarkKey: "sourceBookmark", fallbackPath: fallbacksource),
+              let destURL = getAccessedURL(fromBookmarkKey: "destBookmark", fallbackPath: fallbackdest)
         else {
             Logger.process.errorMessageOnly("Failed to access folders")
             return

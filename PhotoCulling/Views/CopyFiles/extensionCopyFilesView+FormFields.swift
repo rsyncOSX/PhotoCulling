@@ -8,7 +8,7 @@ import SwiftUI
 
 // MARK: - Form Field Sections
 
-extension CopyTasksView {
+extension CopyFilesView {
     var sourceanddestination: some View {
         Section("Source and Destination") {
             VStack(alignment: .trailing) {

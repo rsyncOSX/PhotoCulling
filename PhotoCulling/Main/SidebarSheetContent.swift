@@ -15,7 +15,7 @@ struct SidebarSheetContent: View {
     var body: some View {
         switch sheetType {
         case .copytasksview:
-            CopyTasksView(
+            CopyFilesView(
                 viewModel: viewModel,
                 selectedSource: $selectedSource,
                 remotedatanumbers: $remotedatanumbers,

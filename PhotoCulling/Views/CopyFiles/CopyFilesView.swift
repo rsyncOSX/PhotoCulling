@@ -1,5 +1,5 @@
 //
-//  CopyTasksView.swift
+//  CopyFilesView.swift
 //  RsyncUI
 //
 //  Created by Thomas Evensen on 11/12/2023.
@@ -8,7 +8,7 @@
 import OSLog
 import SwiftUI
 
-struct CopyTasksView: View {
+struct CopyFilesView: View {
     @Environment(\.dismiss) var dismiss
     @Bindable var viewModel: SidebarPhotoCullingViewModel
 
@@ -81,21 +81,8 @@ struct CopyTasksView: View {
         }
     }
 
-    // MARK: - Private Methods
-
-    private func handleTrailingSlash(newconfig: inout SynchronizeConfiguration) {
-        newconfig.localCatalog = newconfig.localCatalog.hasSuffix("/") ?
-            newconfig.localCatalog : newconfig.localCatalog + "/"
-        newconfig.offsiteCatalog = newconfig.offsiteCatalog.hasSuffix("/") ?
-            newconfig.offsiteCatalog : newconfig.offsiteCatalog + "/"
-    }
-
     private func executeCopyFiles() {
         var configuration = SynchronizeConfiguration()
-        configuration.localCatalog = sourcecatalog
-        configuration.offsiteCatalog = destinationcatalog
-
-        handleTrailingSlash(newconfig: &configuration)
 
         executionManager = ExecuteCopyFiles(
             configuration: configuration,
@@ -117,7 +104,10 @@ struct CopyTasksView: View {
             }
         }
 
-        executionManager?.startcopyfiles()
+        executionManager?.startcopyfiles(
+            fallbacksource: sourcecatalog,
+            fallbackdest: destinationcatalog
+        )
     }
 
     private func handleCompletion(result: CopyDataResult) {

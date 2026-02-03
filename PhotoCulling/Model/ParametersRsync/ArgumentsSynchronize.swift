@@ -19,7 +19,15 @@ final class ArgumentsSynchronize {
                 try rsyncparameterssynchronize.argumentsForSynchronize(forDisplay: false,
                                                                        verify: false,
                                                                        dryrun: dryRun)
-                return rsyncparameterssynchronize.computedArguments
+                var arguments = rsyncparameterssynchronize.computedArguments
+                // This is a hack, need to remow the two last empty arguments
+                // because we need to add sequrity scoped source and destination later
+                let count = arguments.count
+                guard count > 2 else { return nil }
+                if arguments[count - 1].isEmpty, arguments[count - 2].isEmpty {
+                    arguments.removeLast(2)
+                }
+                return arguments
             } catch {
                 return nil
             }
