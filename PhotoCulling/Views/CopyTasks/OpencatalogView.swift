@@ -26,13 +26,13 @@ struct OpencatalogView: View {
                           case let .success(url):
                               print("DEBUG: Selected URL: \(url.path)")
                               selecteditem = url.path
-                              
+
                               // Start accessing FIRST
                               guard url.startAccessingSecurityScopedResource() else {
                                   print("ERROR: Failed to start accessing security-scoped resource")
                                   return
                               }
-                              
+
                               // Try to create bookmark
                               do {
                                   let bookmarkData = try url.bookmarkData(
@@ -47,7 +47,7 @@ struct OpencatalogView: View {
                                   print("WARNING: Could not create bookmark, but path is still set: \(error)")
                                   // Path is still accessible via selecteditem
                               }
-                              
+
                               // Stop accessing (will be restarted when rsync runs)
                               url.stopAccessingSecurityScopedResource()
 

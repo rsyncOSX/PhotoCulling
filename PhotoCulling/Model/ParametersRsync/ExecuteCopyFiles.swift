@@ -250,7 +250,7 @@ final class ExecuteCopyFiles {
                 return tryFallbackPath(fallbackPath, key: key)
             }
         }
-        
+
         // If no bookmark exists, try the fallback path
         return tryFallbackPath(fallbackPath, key: key)
     }
