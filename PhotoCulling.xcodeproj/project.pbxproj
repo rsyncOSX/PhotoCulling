@@ -19,6 +19,7 @@
 		E90B07A22F1E58EA00A95D4A /* PhotoCulling.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PhotoCulling.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E97E975C2F210EAB001A4239 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E97E975D2F210EAB001A4239 /* PhotoCullingicon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = PhotoCullingicon.icon; sourceTree = "<group>"; };
+		E9ENTITLE2F1E58EA00A95D4A /* PhotoCulling.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PhotoCulling.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -49,6 +50,7 @@
 			children = (
 				E97E975C2F210EAB001A4239 /* Assets.xcassets */,
 				E97E975D2F210EAB001A4239 /* PhotoCullingicon.icon */,
+				E9ENTITLE2F1E58EA00A95D4A /* PhotoCulling.entitlements */,
 				E90B07A42F1E58EA00A95D4A /* PhotoCulling */,
 				E90B07A32F1E58EA00A95D4A /* Products */,
 			);
@@ -281,6 +283,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				AUTOMATION_APPLE_EVENTS = NO;
+				CODE_SIGN_ENTITLEMENTS = PhotoCulling.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 10;
@@ -337,6 +340,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				AUTOMATION_APPLE_EVENTS = NO;
+				CODE_SIGN_ENTITLEMENTS = PhotoCulling.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 10;
