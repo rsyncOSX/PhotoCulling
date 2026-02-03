@@ -22,6 +22,8 @@ final class SidebarPhotoCullingViewModel {
     var showingAlert: Bool = false
     var focustogglerow: Bool = false
     var focusaborttask: Bool = false
+    var focusnavigateUp: Bool = false
+    var focusnavigateDown: Bool = false
     var showcopytask: Bool = false
     var alertType: SidebarAlertView.AlertType?
     var sheetType: SheetType? = .copytasksview

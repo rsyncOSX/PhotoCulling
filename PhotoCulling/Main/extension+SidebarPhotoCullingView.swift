@@ -135,6 +135,18 @@ extension SidebarPhotoCullingView {
                 viewModel.isInspectorPresented = false
             }
         }
+        .onChange(of: viewModel.focusnavigateUp) {
+            if viewModel.focusnavigateUp {
+                navigateToAdjacentFile(direction: .previous)
+                viewModel.focusnavigateUp = false
+            }
+        }
+        .onChange(of: viewModel.focusnavigateDown) {
+            if viewModel.focusnavigateDown {
+                navigateToAdjacentFile(direction: .next)
+                viewModel.focusnavigateDown = false
+            }
+        }
         .contextMenu(forSelectionType: FileItem.ID.self) { _ in
         } primaryAction: { _ in
             guard let selectedID = viewModel.selectedFileID,
@@ -158,6 +170,39 @@ extension SidebarPhotoCullingView {
                 openWindow: { id in openWindow(id: id) }
             )
             return .handled
+        }
+    }
+
+    // MARK: - Navigation Helper
+
+    enum NavigationDirection {
+        case previous
+        case next
+    }
+
+    func navigateToAdjacentFile(direction: NavigationDirection) {
+        let filteredAndRated = viewModel.filteredFiles.compactMap { file in
+            (viewModel.getRating(for: file) >= viewModel.rating) ? file : nil
+        }
+
+        guard !filteredAndRated.isEmpty else { return }
+
+        if let currentID = viewModel.selectedFileID,
+           let currentIndex = filteredAndRated.firstIndex(where: { $0.id == currentID }) {
+            let newIndex: Int
+            if direction == .previous {
+                newIndex = max(0, currentIndex - 1)
+            } else {
+                newIndex = min(filteredAndRated.count - 1, currentIndex + 1)
+            }
+            viewModel.selectedFileID = filteredAndRated[newIndex].id
+            viewModel.selectedFile = filteredAndRated[newIndex]
+            viewModel.isInspectorPresented = true
+        } else {
+            // If no selection, select the first file
+            viewModel.selectedFileID = filteredAndRated.first?.id
+            viewModel.selectedFile = filteredAndRated.first
+            viewModel.isInspectorPresented = true
         }
     }
 

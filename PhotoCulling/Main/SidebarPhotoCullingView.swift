@@ -43,6 +43,8 @@ struct SidebarPhotoCullingView: View {
             )
             .toolbar { toolbarContent }
             .focusedSceneValue(\.togglerow, $viewModel.focustogglerow)
+            .focusedSceneValue(\.navigateUp, $viewModel.focusnavigateUp)
+            .focusedSceneValue(\.navigateDown, $viewModel.focusnavigateDown)
             .sheet(isPresented: $viewModel.showcopytask) {
                 SidebarSheetContent(
                     viewModel: viewModel,
