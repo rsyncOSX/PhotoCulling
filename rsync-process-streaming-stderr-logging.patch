@@ -1,0 +1,39 @@
+From a7a4a7089de2c875445f2ff77e3c2bcd8ac0c33a Mon Sep 17 00:00:00 2001
+From: GitHub Copilot <github-copilot@github.com>
+Date: Tue, 3 Feb 2026 06:16:41 +0000
+Subject: [PATCH] Add stderr logging for debugging zero output issues
+
+- Log exit code, stdout line count, and stderr line count on termination
+- Log all stderr content when present for debugging
+- This helps diagnose cases where rsync produces no stdout but writes to stderr
+---
+ .../RsyncProcessStreaming.swift                     | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/Sources/RsyncProcessStreaming/RsyncProcessStreaming.swift b/Sources/RsyncProcessStreaming/RsyncProcessStreaming.swift
+index 19b1324..fbd086b 100644
+--- a/Sources/RsyncProcessStreaming/RsyncProcessStreaming.swift
++++ b/Sources/RsyncProcessStreaming/RsyncProcessStreaming.swift
+@@ -358,6 +358,19 @@ public final class RsyncProcess {
+ 
+         defer { cleanupProcess() }
+ 
++        // Log termination details for debugging
++        Logger.process.debugMessage(
++            "RsyncProcessStreaming:  Process terminated with exit code \(task.terminationStatus), stdout lines: \(output?.count ?? 0), stderr lines: \(errors.count)"
++        )
++
++        // Log stderr content if present
++        if !errors.isEmpty {
++            Logger.process.debugMessage("RsyncProcessStreaming:  STDERR output:")
++            for error in errors {
++                Logger.process.debugMessage("  \(error)")
++            }
++        }
++
+         if cancelled {
+             Logger.process.debugMessage("RsyncProcessStreaming:  Terminated due to cancellation")
+             state = .terminated(exitCode: task.terminationStatus)
+-- 
+2.52.0
+
