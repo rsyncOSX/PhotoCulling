@@ -667,6 +667,113 @@ struct ZoomableCSImageView: View {
 - ✅ Easier to test zoom behavior
 - ✅ Can be saved/restored from user preferences
 
+### Current Implementation: Separate Window Pattern with Shared Bindings
+
+The app **currently addresses** the state loss issue through a clever architectural pattern that keeps the zoom window separate and independent while maintaining reactive updates:
+
+#### Architecture Pattern
+
+The zoom window is a **separate Scene** with a **shared `@State` binding**:
+
+```swift
+// PhotoCullingApp.swift
+@main
+struct PhotoCullingApp: App {
+    @State private var cgImage: CGImage?          // Shared state
+    @State private var zoomCGImageWindowFocused: Bool = false
+
+    var body: some Scene {
+        // Main window - keeps focus
+        Window("Photo Culling", id: "main-window") {
+            SidebarPhotoCullingView(
+                cgImage: $cgImage,  // Binding passed to main view
+                zoomCGImageWindowFocused: $zoomCGImageWindowFocused
+            )
+        }
+        .commands { /* ... */ }
+
+        // Separate zoom window - doesn't steal focus
+        Window("ZoomcgImage", id: "zoom-window-cgImage") {
+            ZoomableCSImageView(cgImage: cgImage)  // Receives binding updates
+                .onAppear {
+                    zoomCGImageWindowFocused = true
+                }
+                .onDisappear {
+                    zoomCGImageWindowFocused = false
+                }
+        }
+        .defaultPosition(.center)
+        .defaultSize(width: 800, height: 600)
+    }
+}
+```
+
+#### File Table Selection Updates
+
+When a user selects a row in the file table, the `onChange` handler conditionally updates the `cgImage` binding:
+
+```swift
+.onChange(of: viewModel.selectedFileID) {
+    if let index = viewModel.files.firstIndex(where: { $0.id == viewModel.selectedFileID }) {
+        let file = viewModel.files[index]
+        
+        // Only update zoom window if it's already in focus
+        if zoomCGImageWindowFocused || zoomNSImageWindowFocused {
+            JPGPreviewHandler.handle(
+                file: file,
+                setNSImage: { nsImage = $0 },
+                setCGImage: { cgImage = $0 },  // ← Updates the shared binding
+                openWindow: { _ in } // Don't open window on row selection
+            )
+        }
+    }
+}
+```
+
+#### How It Avoids State Loss
+
+1. **Separate Windows** - Each `Window` scene has its own identity in SwiftUI, so the zoom window doesn't get reconstructed when the main window updates
+2. **Binding Connection** - The `cgImage` binding connects both windows; updating it triggers reactive re-render in `ZoomableCSImageView` without destroying view state
+3. **Conditional Updates** - The `zoomCGImageWindowFocused` flag ensures updates only occur if the user has the zoom window open
+4. **Main Window Focus** - The zoom window doesn't have `.defaultFocus()`, so it doesn't steal focus from the main app
+
+#### Current Behavior
+
+- ✅ User opens a file → zoom window appears with that file's preview
+- ✅ User changes rows in the file table → zoom window updates with new image
+- ✅ Main window stays in focus → user can continue working without distraction
+- ⚠️ **Current Issue**: When `cgImage` changes, `ZoomableCSImageView` receives a new value, which causes the view to re-render and **reset zoom/pan state** to initial values (since `@State` properties are reinitialized)
+
+#### Trade-offs
+
+| Aspect | Current Pattern |
+|--------|-----------------|
+| **Complexity** | Low - simple binding mechanism |
+| **State Persistence** | ❌ Resets on image change |
+| **Focus Management** | ✅ Excellent - separate windows |
+| **Responsiveness** | ✅ Immediate binding updates |
+| **User Experience** | ⚠️ Zoom resets when switching files |
+
+#### Recommended Next Step
+
+Implement **Solution 1** (View Identity with `fileID`) to preserve zoom state while keeping the current separate window architecture:
+
+```swift
+// Add fileID parameter to identify which file is displayed
+ZoomableCSImageView(cgImage: cgImage, fileID: viewModel.selectedFileID)
+    .id(viewModel.selectedFileID)  // Preserves state while viewing same file
+    .onChange(of: cgImage) { _, newImage in
+        // Only reset if intentionally switching files
+        if viewModel.selectedFileID != previousFileID {
+            resetToFit()
+        }
+    }
+```
+
+This maintains all the architectural benefits while solving the state loss problem.
+
+---
+
 ### Solution 3: Hybrid Approach (Best for Immediate Implementation)
 
 Keep local state but improve the update logic:
