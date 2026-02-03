@@ -100,7 +100,7 @@ struct RemoteDataNumbers: Identifiable, Hashable {
                 stats = try parsersyncoutput.getstats()
                 Logger.process.debugMessageOnly("RemoteDataNumbers: getstats() SUCCESS")
             } catch let err {
-                print(err)
+                // Logger.process.errorMessageOnly(err)
             }
 
             filestransferred = parsersyncoutput.formatted_filestransferred

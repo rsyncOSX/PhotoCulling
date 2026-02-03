@@ -77,7 +77,7 @@ final class ExecuteCopyFiles {
         guard let sourceURL = getAccessedURL(fromBookmarkKey: "sourceBookmark", fallbackPath: source),
               let destURL = getAccessedURL(fromBookmarkKey: "destBookmark", fallbackPath: dest)
         else {
-            print("Failed to access folders")
+            Logger.process.errorMessageOnly("Failed to access folders")
             return
         }
 
@@ -87,8 +87,8 @@ final class ExecuteCopyFiles {
         arguments.append(sourceURL.path + "/")
         arguments.append(destURL.path + "/")
 
-        print("DEBUG: Final arguments: \(arguments)")
-        print("DEBUG: Number of arguments: \(arguments.count)")
+        Logger.process.debugMessageOnly("Final arguments: \(arguments)")
+        Logger.process.debugMessageOnly("Number of arguments: \(arguments.count)")
 
         // Write filter file
         Logger.process.debugMessageOnly("ExecuteCopyFiles: writing copyfilelist at \(savePath.path)")
@@ -98,7 +98,7 @@ final class ExecuteCopyFiles {
                 do {
                     try writeincludefilelist(filelist, to: savePath)
                 } catch {
-                    print("ERROR: Failed to write filter file: \(error)")
+                    Logger.process.errorMessageOnly(": Failed to write filter file: \(error)")
                 }
             }
         } else {
@@ -106,7 +106,7 @@ final class ExecuteCopyFiles {
                 do {
                     try writeincludefilelist(filelist, to: savePath)
                 } catch {
-                    print("ERROR: Failed to write filter file: \(error)")
+                    Logger.process.errorMessageOnly(": Failed to write filter file: \(error)")
                 }
             }
         }
@@ -122,7 +122,7 @@ final class ExecuteCopyFiles {
             try process.executeProcess()
             activeStreamingProcess = process
         } catch {
-            print("ERROR: executeProcess failed: \(error)")
+            Logger.process.errorMessageOnly(": executeProcess failed: \(error)")
             Task { @MainActor in
                 self.cleanup()
             }
@@ -153,7 +153,7 @@ final class ExecuteCopyFiles {
     private func setupStreamingHandlers() {
         streamingHandlers = CreateStreamingHandlers().createHandlersWithCleanup(
             fileHandler: { [weak self] count in
-                print("DEBUG fileHandler: count=\(count)")
+                Logger.process.debugMessageOnly("DEBUG fileHandler: count=\(count)")
                 Task { @MainActor in
                     let progress = Double(count)
                     self?.progress = progress
@@ -161,7 +161,7 @@ final class ExecuteCopyFiles {
                 }
             },
             processTermination: { [weak self] output, hiddenID in
-                print("DEBUG processTermination: output lines=\(output?.count ?? 0), hiddenID=\(hiddenID ?? -1)")
+                Logger.process.debugMessageOnly("DEBUG processTermination: output lines=\(output?.count ?? 0), hiddenID=\(hiddenID ?? -1)")
                 Task { @MainActor in
                     await self?.handleProcessTermination(
                         stringoutputfromrsync: output,
@@ -170,7 +170,7 @@ final class ExecuteCopyFiles {
                 }
             },
             cleanup: { [weak self] in
-                print("DEBUG cleanup called")
+                Logger.process.debugMessageOnly("DEBUG cleanup called")
                 Task { @MainActor in
                     self?.cleanup()
                 }
@@ -238,14 +238,14 @@ final class ExecuteCopyFiles {
                     bookmarkDataIsStale: &isStale
                 )
                 guard url.startAccessingSecurityScopedResource() else {
-                    print("ERROR: Failed to start accessing bookmark for \(key)")
+                    Logger.process.errorMessageOnly(": Failed to start accessing bookmark for \(key)")
                     // Try fallback instead
                     return tryFallbackPath(fallbackPath, key: key)
                 }
-                print("DEBUG: Successfully resolved bookmark for \(key)")
+                Logger.process.debugMessageOnly("Successfully resolved bookmark for \(key)")
                 return url
             } catch {
-                print("ERROR: Bookmark resolution failed for \(key): \(error)")
+                Logger.process.errorMessageOnly(": Bookmark resolution failed for \(key): \(error)")
                 // Try fallback instead
                 return tryFallbackPath(fallbackPath, key: key)
             }
@@ -256,13 +256,13 @@ final class ExecuteCopyFiles {
     }
 
     private func tryFallbackPath(_ fallbackPath: String, key: String) -> URL? {
-        print("WARNING: No bookmark found for \(key), attempting direct path access")
+        Logger.process.warning("WARNING: No bookmark found for \(key), attempting direct path access")
         let fallbackURL = URL(fileURLWithPath: fallbackPath)
         guard fallbackURL.startAccessingSecurityScopedResource() else {
-            print("ERROR: Failed to access fallback path for \(key)")
+            Logger.process.errorMessageOnly(": Failed to access fallback path for \(key)")
             return nil
         }
-        print("DEBUG: Successfully accessed fallback path for \(key)")
+        Logger.process.debugMessageOnly("Successfully accessed fallback path for \(key)")
         return fallbackURL
     }
 }

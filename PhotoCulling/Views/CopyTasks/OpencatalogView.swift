@@ -1,5 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import OSLog
 
 struct OpencatalogView: View {
     @Binding var selecteditem: String
@@ -24,12 +25,12 @@ struct OpencatalogView: View {
                       onCompletion: { result in
                           switch result {
                           case let .success(url):
-                              print("DEBUG: Selected URL: \(url.path)")
+                              Logger.process.debugMessageOnly("Selected URL: \(url.path)")
                               selecteditem = url.path
 
                               // Start accessing FIRST
                               guard url.startAccessingSecurityScopedResource() else {
-                                  print("ERROR: Failed to start accessing security-scoped resource")
+                                  Logger.process.errorMessageOnly(": Failed to start accessing security-scoped resource")
                                   return
                               }
 
@@ -41,10 +42,10 @@ struct OpencatalogView: View {
                                       relativeTo: nil
                                   )
                                   UserDefaults.standard.set(bookmarkData, forKey: bookmarkKey)
-                                  print("DEBUG: Bookmark saved for key: \(bookmarkKey)")
-                                  print("DEBUG: Bookmark data size: \(bookmarkData.count) bytes")
+                                  Logger.process.debugMessageOnly("Bookmark saved for key: \(bookmarkKey)")
+                                  Logger.process.debugMessageOnly("Bookmark data size: \(bookmarkData.count) bytes")
                               } catch {
-                                  print("WARNING: Could not create bookmark, but path is still set: \(error)")
+                                  Logger.process.warning("WARNING: Could not create bookmark, but path is still set: \(error)")
                                   // Path is still accessible via selecteditem
                               }
 
@@ -52,7 +53,7 @@ struct OpencatalogView: View {
                               url.stopAccessingSecurityScopedResource()
 
                           case let .failure(error):
-                              print("ERROR: File picker error: \(error)")
+                              Logger.process.errorMessageOnly(": File picker error: \(error)")
                           }
                       })
     }
