@@ -65,10 +65,6 @@ final class ExecuteCopyFiles {
         arguments.removeLast()
         arguments.removeLast()
 
-        // DON'T add duplicate flags - they're already in arguments!
-        // Just add the ones that aren't there
-        arguments.append("--no-extended-attributes")
-
         // Add filter file if needed
         let includeparameter = "--include-from=" + savePath.path
         arguments.append(includeparameter)
