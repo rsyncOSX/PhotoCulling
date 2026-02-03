@@ -1,8 +1,9 @@
+
 # PhotoCulling - Quality Analysis Report
 
 **Project:** PhotoCulling  
-**Analysis Date:** February 1, 2026  
-**Version:** 0.5.0  
+**Analysis Date:** February 3, 2026  
+**Version:** 0.6.0  
 **Language:** Swift (SwiftUI)  
 **Platform:** macOS
 
@@ -10,9 +11,10 @@
 
 ## Executive Summary
 
-PhotoCulling v0.5.0 represents a significant release milestone, establishing the application as a production-ready macOS utility for managing and culling Sony ARW (RAW) photo files. The project demonstrates strong technical competency in modern Swift development with excellent use of Swift Concurrency (async/await, actors) and SwiftUI. The v0.5.0 release has solidified the architectural foundations with a mature MVVM pattern, comprehensive data persistence, and polished user interface. The codebase maintains high development standards with clean architecture, proper use of modern Swift idioms, and professional build/deployment infrastructure. Version 0.5.0 represents the first production-ready release with full feature parity and professional quality standards.
 
-**Overall Quality Rating: 9.2/10** (↑ 0.2 from v0.4.6)
+PhotoCulling v0.6.0 marks a major advancement, building on the production-ready foundation of v0.5.0 and introducing critical improvements in security, maintainability, and user experience. The Sandbox compliance issue is now fully resolved, ensuring robust, secure file access and resource management across all workflows. This release also brings incremental enhancements to error handling, documentation, and code quality, while maintaining the high standards of Swift Concurrency, MVVM architecture, and professional build infrastructure. The project continues to demonstrate strong technical leadership and is well-positioned for future feature expansion.
+
+**Overall Quality Rating: 9.4/10** (↑ 0.2 from v0.5.0)
 
 ---
 
@@ -125,170 +127,77 @@ extension Logger {
 
 ---
 
+
 ## Areas for Improvement
 
-### 1. Error Handling & User Feedback ⭐⭐⭐
+### 1. Error Handling & User Feedback ⭐⭐⭐⭐
 
-**Issues:**
-- Silent failures in some areas (e.g., `print("Could not extract preview.")` on line 47 of extensionSidebarPhotoCullingView.swift)
-- No user-facing error messages for failed operations
-- Minimal validation of file operations
+**Progress:**
+- Silent failures have been further reduced; most critical operations now provide user-facing error messages or alerts.
+- Improved alert presentation in the ViewModel, with more robust error propagation from async operations.
 
-**Recommendations:**
-```swift
-// Instead of:
-print("Could not extract preview.")
-
-// Consider:
-struct PhotoError: Identifiable {
-    let id = UUID()
-    let message: String
-}
-
-@State private var errorAlert: PhotoError?
-
-// Then show Alert based on errorAlert state
-```
-
-### 2. Testing ⭐
-
-**Critical Gap:**
-- **No unit tests found in the project**
-- No integration tests
-- No UI tests
-
-**Impact:** High risk of regressions during refactoring or feature additions
+**Remaining Issues:**
+- Some edge-case failures (e.g., rare file system errors) may still lack user feedback.
+- Validation of file operations could be expanded.
 
 **Recommendations:**
-- Add XCTest target with unit tests for:
-  - `ObservableCullingManager` selection logic
-  - `ExtractEmbeddedPreview` image extraction
-  - Caching behavior in `ThumbnailProvider`
-  - File scanning and sorting logic
-- Add integration tests for actor interactions
-- Consider snapshot testing for SwiftUI views
+- Continue to expand user-facing error handling, especially for file I/O and image extraction failures.
+- Centralize error alert logic for consistency across views.
 
-### 3. Documentation ⭐⭐
+### 2. Testing ⭐⭐
 
-**Current state:**
-- Minimal inline comments
-- No function/parameter documentation
-- README only contains "Do not fork" notice
-- No architectural documentation
+**Progress:**
+- Initial test scaffolding has been introduced (XCTest target present), but coverage is still minimal.
+- Some unit tests for ViewModel logic and persistence have been started.
+
+**Remaining Issues:**
+- No integration or UI tests yet.
+- Test coverage remains low, so regression risk is still present.
 
 **Recommendations:**
-```swift
-/// Extracts the largest embedded JPEG preview from a Sony ARW file.
-/// 
-/// This method searches through all image sources in the ARW container,
-/// identifies JPEG previews, and returns the highest quality one available.
-///
-/// - Parameters:
-///   - arwURL: The file URL of the source ARW file
-///   - fullSize: If true, extracts preview at full resolution (>8640px), 
-///               otherwise limits to 8000px for faster processing
-/// - Returns: A CGImage of the preview, or nil if extraction fails
-/// - Note: Uses ImageIO framework for maximum compatibility
-func extractEmbeddedPreview(from arwURL: URL, fullSize: Bool = false) async -> CGImage?
-```
+- Expand unit tests for all business logic and actor methods.
+- Add integration and UI tests for critical workflows.
 
-Create comprehensive documentation:
-- Architecture overview (ARCHITECTURE.md)
-- API documentation for public interfaces
-- Usage guide in README.md
-- Contribution guidelines
+### 3. Documentation ⭐⭐⭐
+
+**Progress:**
+- Inline comments and function documentation have been improved for public interfaces.
+- README now includes a basic usage guide and build instructions.
+
+**Remaining Issues:**
+- No dedicated ARCHITECTURE.md yet.
+- API documentation is not comprehensive.
+
+**Recommendations:**
+- Add architectural documentation and expand API docs for all public types and methods.
 
 ### 4. State Management Complexity ⭐⭐⭐⭐⭐
 
-**Major Improvement in v0.4.6:**
-- **SidebarPhotoCullingViewModel introduced** - Comprehensive ViewModel consolidating all state and business logic
-- Proper `@Observable @MainActor` annotation ensures thread safety and reactivity
-- All 18 state properties now cleanly organized in a single Observable class
-- Business logic methods properly encapsulated in the ViewModel
-
-**Excellent ViewModel implementation:**
-
-```swift
-@Observable @MainActor
-final class SidebarPhotoCullingViewModel {
-    var sources: [FolderSource] = []
-    var selectedSource: FolderSource?
-    var files: [FileItem] = []
-    var filteredFiles: [FileItem] = []
-    var searchText = ""
-    var selectedFileID: FileItem.ID?
-    var sortOrder = [KeyPathComparator(\FileItem.name)]
-    var cullingmanager = ObservableCullingManager()
-    var progress: Double = 0
-    var max: Double = 0
-    
-    // Business logic methods:
-    func handleSourceChange(url: URL) async
-    func handleSortOrderChange() async
-    func handleSearchTextChange() async
-    func clearCaches() async
-    func fileHandler(_ update: Int)
-    func maxfilesHandler(_ maxfiles: Int)
-}
-```
-
-**Benefits achieved:**
-- Clean separation between View and ViewModel layers
-- Centralized state management - single source of truth
-- Thread-safe MainActor isolation for all state mutations
-- Easy to test ViewModel methods independently
-- Clear API with well-named methods describing intent
-- Proper async/await pattern for async operations
-
-**View layer improvements:**
-```swift
-struct SidebarPhotoCullingView: View {
-    @State var viewModel = SidebarPhotoCullingViewModel()
-    
-    var body: some View {
-        NavigationSplitView {
-            CatalogSidebarView(/*...with viewModel properties*/)
-        } content: {
-            FileContentView(
-                // Passes properties from viewModel bindings
-            )
-        }
-    }
-}
-```
-
-The view now acts purely as a presentation layer, delegating all logic to the ViewModel. This is exactly the pattern recommended in v0.4.2's improvement section.
+**Status:**
+- The ViewModel architecture remains a major strength, with all state and business logic consolidated and properly isolated.
+- Minor refinements have improved clarity and maintainability.
 
 ### 5. Security & Sandbox Compliance ⭐⭐⭐⭐⭐
 
-**Excellent practices:**
-- Proper use of `startAccessingSecurityScopedResource()` and `stopAccessingSecurityScopedResource()`
-- Cache directory properly scoped to app bundle ID
-- **Fixed:** Security-scoped resource lifecycle now correctly ordered in `ScanFiles.swift`
-  - Proper guard statement before accessing the resource
-  - Defer statement properly manages cleanup in all code paths
-  - No unreachable code in resource management
+**Resolved:**
+- The Sandbox compliance issue is now fully solved. All file access and resource management are robust and secure, with correct use of security-scoped resources and cleanup in all code paths.
+- No unreachable code remains in resource management.
 
-**Current correct implementation in ScanFiles.swift:**
-```swift
-@concurrent
-nonisolated func scanFiles(url: URL) async -> [FileItem] {
-    // Essential for Sandbox apps
-    guard url.startAccessingSecurityScopedResource() else { return [] }
-    defer { url.stopAccessingSecurityScopedResource() }
-    
-    // ... scanning logic ...
-    
-    return items  // Cleanup automatically handled by defer
-}
-```
+**Best Practices:**
+- Proper use of `startAccessingSecurityScopedResource()` and `stopAccessingSecurityScopedResource()` throughout.
+- Cache directory and file access are fully sandbox-compliant.
 
-**Previous issue (RESOLVED):** ~~Unreachable code~~ - ScanFiles.swift had improper defer placement that led to unreachable cleanup code. This has been fixed.
+**Recommendations:**
+- Consider bookmark persistence for seamless folder access across launches.
+- Add file size validation and EXIF stripping for privacy if needed.
 
-**Recommendations for future improvements:**
-- Consider bookmark persistence for user-selected folders to provide seamless access across app launches
-- Implement file size validation (reject files >500MB?) as a safety measure
-- Consider EXIF metadata stripping if privacy-sensitive image extraction is needed
+### 6. Code Duplication ⭐⭐⭐⭐⭐
+
+- No significant new duplication. Alert and error handling could be further consolidated as the app grows.
+
+### 7. Type Safety & API Design ⭐⭐⭐⭐⭐
+
+- Type safety remains excellent, with strong typing and proper isolation annotations throughout.
 
 ### 6. Code Duplication ⭐⭐⭐⭐⭐
 
@@ -485,559 +394,112 @@ func scanFilesIncremental(url: URL) -> AsyncStream<FileItem> {
 
 ---
 
+
 ## Recommendations by Priority
 
-### 🔴 Critical (Do Immediately - Post v0.5.0):
-1. **Add unit tests** - Priority 1 for production release
-   - Start with ViewModel logic (SidebarPhotoCullingViewModel methods)
-   - Core business logic (ObservableCullingManager, ExtractEmbeddedPreview, SavedFiles persistence)
-   - Caching behavior tests (ThumbnailProvider multi-tier cache)
-   - **Why critical:** Increases confidence in future updates and refactoring
-   - **Impact:** Prevents regressions, enables safe refactoring
+### 🔴 Critical (Do Immediately - Post v0.6.0):
+1. **Expand automated tests**
+    - Increase unit test coverage for ViewModel, actors, and persistence logic
+    - Add integration and UI tests for critical workflows
+    - **Why critical:** Prevents regressions, enables safe refactoring
+    - **Impact:** Increases confidence in future updates
 
-2. **Improve error handling** - Add user-facing alerts
-   - Replace silent failures with user notifications
-   - Implement alertType enhancements in ViewModel
-   - Add error recovery paths for failed operations
-   - **Why critical:** Users need clear feedback on operation outcomes
-   - **Impact:** Significantly improves user confidence in app reliability
+2. **Continue error handling improvements**
+    - Ensure all user-facing operations provide clear feedback
+    - Centralize alert logic for consistency
+    - **Why critical:** Improves user trust and reliability
 
-3. **Document architecture** - Create ARCHITECTURE.md
-   - Explain MVVM pattern implementation
-   - Document actor-based concurrency model
-   - Detail three-tier caching strategy
-   - **Why critical:** New developers need roadmap of codebase
-   - **Impact:** Accelerates onboarding, reduces bugs from misunderstanding
+3. **Document architecture**
+    - Create ARCHITECTURE.md with MVVM, actor, and caching strategy details
+    - Expand API documentation for all public types and methods
+    - **Why critical:** Accelerates onboarding, reduces bugs
 
-### 🟡 High Priority (v0.5.1 - Next Sprint):
-4. **Expand API documentation** - Add comprehensive comments
-   - Document all public interfaces
-   - ViewModel methods with parameter descriptions
-   - Actor method isolation guarantees
-   - Caching behavior documentation
+### 🟡 High Priority (v0.6.1 - Next Sprint):
+4. **Input validation**
+    - File size checks before processing
+    - Extension and path validation
+    - Memory availability checks for large operations
 
-5. **Add input validation** - Strengthen robustness
-   - File size checks before processing
-   - Extension validation (only .arw files)
-   - Catalog path validation
-   - Memory availability checks before large operations
+5. **Enhance error recovery**
+    - Implement abort/cancel methods with proper task management
+    - Graceful handling of file system/network errors
+    - Recovery suggestions for common failures
 
-6. **Enhance error recovery** - Complete error handling
-   - Implement abort() method with proper task cancellation
-   - Graceful handling of file system errors
-   - Network timeouts for remote operations
-   - Recovery suggestions for common failures
+6. **README improvements**
+    - Add usage instructions, workflow, features, screenshots, and roadmap
 
-7. **Improve README** - Professional documentation
-   - Usage instructions and workflow
-   - Build requirements and setup guide
-   - Features list with screenshots
-   - Known limitations and future roadmap
+### 🟢 Medium Priority (v0.6.2+):
+7. **Type-safe identifiers**
+    - Continue to reduce stringly-typed code with enums/constants
 
-### 🟢 Medium Priority (v0.5.2+):
-8. **Type-safe identifiers** - Reduce stringly-typed code
-   ```swift
-   enum WindowIdentifier: String {
-       case main = "main-window"
-       case zoomARW = "zoom-window-arw"
-   }
-   
-   enum SupportedFileType: String, CaseIterable {
-       case arw
-       case tiff, tif
-       case jpeg, jpg
-   }
-   ```
+8. **Performance optimization for large catalogs**
+    - Pagination, AsyncStream, and memory profiling for extreme cases
 
-9. **Performance optimization for large catalogs**
-   - Implement pagination for 1000+ files
-   - Consider AsyncStream for incremental loading
-   - Profile memory usage under extreme loads
-   - Test with 10,000+ file catalogs
+9. **Localization preparation**
+    - Extract user-facing strings, plan for localization
 
-10. **Localization preparation** - Support multiple languages
-    - Extract all user-facing strings to localizable files
-    - Plan for date/number format localization
-    - Create localization key structure
-
-11. **Accessibility improvements**
-    - VoiceOver support for all UI elements
-    - Keyboard navigation for all views
-    - High contrast mode support
-    - Font size accessibility adjustments
+10. **Accessibility improvements**
+     - VoiceOver, keyboard navigation, high contrast, font size support
 
 ### 🔵 Low Priority (Future Enhancement):
-12. **Snapshot tests** - Ensure UI consistency across releases
-13. **Extended performance profiling** - Test edge cases
-14. **Benchmark comparisons** - Document performance characteristics
-15. **User preference system** - Customizable UI behavior
+11. **Snapshot tests**
+12. **Extended performance profiling**
+13. **Benchmark comparisons**
+14. **User preference system**
 
 ---
 
-## Version 0.5.0 - Production Release ✨
+
+## Version 0.6.0 - Major Update ✨
 
 ### 🎯 Release Status: PRODUCTION READY
 
-Version 0.5.0 marks PhotoCulling's transition to a production-ready application. This release consolidates all architectural improvements from previous versions and introduces the following enhancements:
+Version 0.6.0 builds on the production foundation of v0.5.0, delivering critical security and maintainability improvements, especially the full resolution of the Sandbox compliance issue. This release also brings incremental enhancements to error handling, documentation, and code quality, while maintaining the high standards of Swift Concurrency, MVVM architecture, and professional build infrastructure.
 
-### ✅ Major Accomplishments in v0.5.0:
+### ✅ Major Accomplishments in v0.6.0:
 
-#### 1. **Build & Deployment Infrastructure** ⭐⭐⭐⭐⭐
-- Professional Makefile with comprehensive build automation
-- Version 0.5.0 hardcoded in build system
-- Clean debug and release build targets
-- Apple notarization integration for code signing
-- DMG packaging for distribution
-- Automated OSNotification system for build progress
-- Version consistency across all build artifacts
+#### 1. **Sandbox Compliance Fully Resolved**
+- All file access and resource management are now robust and secure, with correct use of security-scoped resources and cleanup in all code paths.
+- No unreachable code remains in resource management.
 
-**Makefile features:**
-```makefile
-VERSION = 0.5.0
-build: clean archive notarize sign prepare-dmg open
-debug: clean archive-debug open-debug
-```
+#### 2. **Improved Error Handling**
+- Most critical operations now provide user-facing error messages or alerts.
+- Alert presentation in the ViewModel is more robust, with better error propagation from async operations.
 
-#### 2. **Production-Grade Release Management**
-- Versioning consistency across build system, app bundle
-- Automated notarization workflow for macOS distribution
-- Proper code signing for App Store/direct distribution
-- Clean build artifacts and workspace management
-- Professional export options (exportOptions.plist)
+#### 3. **Initial Automated Testing**
+- XCTest target added; initial unit tests for ViewModel and persistence logic.
 
-#### 3. **Application Maturity**
-- Feature-complete for Sony ARW photo management
-- Stable MVVM architecture with proper state management
-- Comprehensive data persistence system
-- Multi-tier caching strategy for performance
-- Thread-safe concurrent operations throughout
-- Professional error handling and user feedback
+#### 4. **Documentation Improvements**
+- Inline comments and function documentation improved for public interfaces.
+- README now includes a basic usage guide and build instructions.
 
-#### 4. **Quality Metrics at v0.5.0**
+#### 5. **Ongoing Code Quality and Performance**
+- Maintains high standards in architecture, concurrency, and UI/UX.
+- Minor refinements to ViewModel and actor patterns.
 
-**Code Organization:**
-- 23 Swift files organized in logical categories
-- Clean separation of concerns (Actors, Views, Models, Extensions, Main)
-- Professional naming conventions and consistent style
-
-**Performance Optimizations:**
-- 3-tier caching system (RAM → Disk → Generate)
-- Parallel file scanning with task groups
-- Intelligent thumbnail preloading
-- Efficient search/sort operations with Observable pattern
-
-**Feature Completeness:**
-- Source folder management with security-scoped access
-- Photo grid with LazyVGrid for memory efficiency
-- Detailed file inspection and metadata display
-- Comprehensive search and sorting capabilities
-- File tagging/culling system with JSON persistence
-- Copy task management with progress tracking
-- Zoom windows for detailed image inspection
-
-### 🔧 Technical Achievements:
-
-**Concurrency Excellence:**
-- All potentially-blocking operations properly async
-- Actor-based isolation for thread-safe state
-- MainActor for UI state management
-- Proper task cancellation support
-- Efficient use of ProcessInfo.activeProcessorCount
-
-**Data Integrity:**
-- Proper file system access with security-scoped resources
-- Sandbox-compliant caching strategy
-- UUID-based record identification
-- Atomic JSON persistence operations
-- Date tracking for audit trails
-
-**User Experience:**
-- Responsive UI with smooth animations
-- Non-blocking operations with progress indicators
-- Clear visual feedback for all operations
-- Polished component design (ProgressCount with gradients)
-- Comprehensive file metadata display
-
-### 📋 Quality Snapshot at v0.5.0:
+### 📋 Quality Snapshot at v0.6.0:
 
 | Aspect | Score | Notes |
 |--------|-------|-------|
-| Architecture | 9.5/10 | Excellent MVVM pattern with Observable macro |
-| Performance | 9.0/10 | Multi-tier caching and efficient parallelism |
-| Code Quality | 9.0/10 | Consistent style, modern Swift idioms |
-| State Management | 10/10 | Proper Observable ViewModel with MainActor |
-| Data Persistence | 9.0/10 | Comprehensive JSON system with proper serialization |
-| Security | 9.0/10 | Sandbox-compliant, security-scoped resource access |
-| Build/Deploy | 9.0/10 | Professional Makefile, notarization support |
-| UI/UX | 9.0/10 | Polished interface with smooth animations |
-| Maintainability | 9.0/10 | Clean code organization, good separation of concerns |
-| Testing | 2/10 | 🔴 CRITICAL GAP: No automated tests |
-| Documentation | 4/10 | 🟡 Needs improvement beyond README |
-
----
-
-## Recent Updates (v0.4.6)
-
-### ✅ Major Improvements in v0.4.6:
-
-1. **ViewModel Architecture Implementation**
-   - SidebarPhotoCullingViewModel introduced with @Observable @MainActor annotation
-   - All state consolidated into single ViewModel class
-   - Business logic methods properly encapsulated:
-     - handleSourceChange(url:) - async source selection
-     - handleSortOrderChange() - async sorting with progress tracking
-     - handleSearchTextChange() - async search filtering
-     - clearCaches() - proper resource cleanup
-     - fileHandler(_:) and maxfilesHandler(_:) - progress tracking handlers
-   - Improved testability - ViewModel methods can now be tested independently
-   - Clean separation between presentation (View) and logic layers
-
-2. **Enhanced Error & State Management**
-   - alertType property for typed alerts (enum-based)
-   - sheetType property for modal presentation (enum-based)
-   - remotedatanumbers tracking for copy operations
-   - focustogglerow and focusaborttask for keyboard focus management
-   - showcopytask state properly managed
-
-3. **Improved View Layer**
-   - SidebarPhotoCullingView now clean and focused on presentation
-   - Reduced @State usage by moving to ViewModel
-   - Cleaner bindings with viewModel properties
-   - Better integration with FileContentView
-
-4. **Code Organization Improvements**
-   - ViewModel consolidates scattered logic into cohesive class
-   - Extension+SidebarPhotoCullingView still present but cleaner integration
-   - processedURLs properly private in ViewModel to prevent external access
-
-### Previous Updates (v0.4.2):
-
-1. **Data Persistence System**
-   - Comprehensive JSON-based persistence for tagged files
-   - SavedFiles and FileRecord structures with proper Codable conformance
-   - Dedicated read/write operations (ReadSavedFilesJSON, WriteSavedFilesJSON)
-   - DecodeSavedFiles for safe JSON decoding
-   - Catalog-based organization of file records
-
-2. **Date/Time Utilities**
-   - Extensive String extension with date parsing methods
-   - Date extension with multiple formatting options
-   - Both localized and en_US format support
-   - Validation methods for safe date parsing
-   - Consistent date handling across the application
-
-3. **UI/UX Enhancements**
-   - **ProgressCount view** - Polished circular progress indicator
-   - Spring-based animations for smooth transitions
-   - Numeric text transitions using `.contentTransition(.numericText)`
-   - Gradient strokes with rounded line caps
-   - Extracted FileContentView for better component reuse
-
-4. **State Management Improvements**
-   - ObservableCullingManager refactored (no catalog parameter required)
-   - Cleaner initialization pattern
-   - Better separation between persistence and UI state
-   - Progress tracking properly integrated into UI
-
-5. **Code Organization**
-   - New `/Model/JSON/` directory structure
-   - Separation of concerns (data models vs. decoding models)
-   - Extensions properly organized
-   - Consistent file structure and naming
-
-### Previous Updates (v0.4.1):
-
-1. **Security Fix - ScanFiles.swift**
-   - Fixed resource access pattern: guard statement now precedes defer
-   - Eliminated unreachable cleanup code
-   - Proper ordering ensures cleanup happens in all execution paths
-   
-2. **Type Safety Enhancement - FileHandlers.swift**
-   - Added `@MainActor` isolation to closure parameters
-   - Added `@Sendable` conformance for safe actor boundary crossing
-   - Improved compiler safety and intent clarity
-   
-3. **Actor Isolation Improvements**
-   - Proper `@concurrent` annotations on actor methods
-   - Correct `nonisolated` usage in ScanFiles for parallel processing
-   - Safe MainActor dispatch in ThumbnailProvider
-
----
-
-## Code Examples Review
-
-### ✅ Excellent Example: ProgressCount View (NEW in v0.4.2)
-
-```swift
-struct ProgressCount: View {
-    let max: Double
-    let progress: Double
-    let statusText: String
-
-    var body: some View {
-        VStack(spacing: 20) {
-            ZStack {
-                Circle()
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 12)
-
-                if max > 0 {
-                    Circle()
-                        .trim(from: 0, to: min(progress / max, 1.0))
-                        .stroke(
-                            LinearGradient(
-                                colors: [.blue, .cyan],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            style: StrokeStyle(lineWidth: 12, lineCap: .round)
-                        )
-                        .rotationEffect(.degrees(-90))
-                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: progress)
-                }
-
-                VStack(spacing: 4) {
-                    Text("\(Int(progress))")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
-                        .contentTransition(.numericText(countsDown: false))
-                }
-            }
-            .frame(width: 160, height: 160)
-
-            Text(statusText)
-                .font(.headline)
-                .foregroundStyle(.secondary)
-        }
-        .padding(32)
-    }
-}
-```
-
-**Why this is excellent:**
-- Clean, reusable component with clear API
-- Smooth spring animations for natural feel
-- `.contentTransition(.numericText)` for animated count updates
-- Visual polish with gradients and rounded caps
-- Defensive programming (max > 0 check, min/max clamping)
-- Self-contained styling and layout
-
-### ✅ Excellent Example: Data Persistence System (NEW in v0.4.2)
-
-```swift
-@Observable
-final class ObservableCullingManager {
-    var savedFiles = [SavedFiles]()
-
-    func loadSavedFiles() {
-        if let readjson = ReadSavedFilesJSON().readjsonfilesavedfiles() {
-            savedFiles = readjson
-        }
-    }
-
-    func toggleSelectionSavedFiles(in fileurl: URL?, toggledfilename: String) {
-        if let fileurl {
-            let arwcatalog = fileurl.deletingLastPathComponent()
-
-            if verifytoggleSelectionSavedFiles(in: arwcatalog, toggledfilename: toggledfilename) {
-                // Remove item
-                if let index = savedFiles.firstIndex(where: { $0.catalog == arwcatalog }) {
-                    savedFiles[index].filerecords?.removeAll { record in
-                        record.fileName == toggledfilename
-                    }
-                }
-            } else {
-                // Add new item with proper date tracking
-                let newrecord = FileRecord(
-                    fileName: toggledfilename,
-                    dateTagged: Date().en_string_from_date(),
-                    dateCopied: nil
-                )
-                // ... add to savedFiles
-            }
-            WriteSavedFilesJSON(savedFiles)  // Persist changes
-        }
-    }
-}
-
-struct SavedFiles: Identifiable, Codable {
-    var id = UUID()
-    var catalog: URL?
-    var dateStart: String?
-    var filerecords: [FileRecord]?
-}
-```
-
-**Why this is excellent:**
-- Clean separation of concerns (data model vs. persistence)
-- Proper Observable macro usage for reactive updates
-- Immediate persistence after state changes
-- Defensive programming with optional handling
-- Date tracking using consistent extensions
-- UUID-based identification preventing collisions
-
-### ✅ Excellent Example: ThumbnailProvider Actor
-
-```swift
-actor ThumbnailProvider {
-    nonisolated static let shared = ThumbnailProvider()
-    
-    private let memoryCache = NSCache<NSURL, DiscardableThumbnail>()
-    private var successCount = 0
-    private let diskCache = DiskCacheManager()
-    private var preloadTask: Task<Int, Never>?
-    
-    // Proper cancellation handling
-    private func cancelPreload() {
-        preloadTask?.cancel()
-        preloadTask = nil
-    }
-    
-    // Three-tier resolution: RAM → Disk → Generate
-    private func resolveImage(for url: URL, targetSize: Int) async throws -> NSImage {
-        // A. Check RAM
-        if let wrapper = memoryCache.object(forKey: nsUrl), wrapper.beginContentAccess() {
-            defer { wrapper.endContentAccess() }
-            return wrapper.image
-        }
-        
-        // B. Check Disk
-        if let diskImage = await diskCache.load(for: url) {
-            storeInMemory(diskImage, for: url)
-            return diskImage
-        }
-        
-        // C. Generate
-        let cgImage = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize))
-        let image = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
-        storeInMemory(image, for: url)
-        
-        Task.detached(priority: .background) {
-            await self.diskCache.save(cgImage, for: url)
-        }
-        
-        return image
-    }
-}
-```
-
-**Why this is excellent:**
-- Clear actor isolation
-- Proper resource lifecycle management
-- Well-structured async/await patterns
-- Background task for non-critical work
-- Cancellation support
-
-### ✅ Excellent Example: ViewModel Implementation (NEW in v0.4.6)
-
-```swift
-@Observable @MainActor
-final class SidebarPhotoCullingViewModel {
-    var sources: [FolderSource] = []
-    var selectedSource: FolderSource?
-    var files: [FileItem] = []
-    var filteredFiles: [FileItem] = []
-    var searchText = ""
-    var selectedFileID: FileItem.ID?
-    var sortOrder = [KeyPathComparator(\FileItem.name)]
-    var isShowingPicker = false
-    var isInspectorPresented = false
-    var selectedFile: FileItem?
-    var issorting: Bool = false
-    var progress: Double = 0
-    var max: Double = 0
-    var creatingthumbnails: Bool = false
-    var scanning: Bool = true
-    var showingAlert: Bool = false
-    var cullingmanager = ObservableCullingManager()
-    var alertType: SidebarAlertView.AlertType?
-    var sheetType: SheetType? = .copytasksview
-    private var processedURLs: Set<URL> = []
-    
-    func handleSourceChange(url: URL) async {
-        files = await ScanFiles().scanFiles(url: url)
-        filteredFiles = await ScanFiles().sortFiles(files, by: sortOrder, searchText: searchText)
-        
-        guard !files.isEmpty else {
-            scanning = false
-            return
-        }
-        
-        scanning = false
-        cullingmanager.loadSavedFiles()
-        
-        if !processedURLs.contains(url) {
-            processedURLs.insert(url)
-            creatingthumbnails = true
-            await ThumbnailProvider.shared.preloadCatalog(at: url, targetSize: ThumbnailSize.preview)
-            creatingthumbnails = false
-        }
-    }
-    
-    func handleSortOrderChange() async {
-        issorting = true
-        filteredFiles = await ScanFiles().sortFiles(files, by: sortOrder, searchText: searchText)
-        issorting = false
-    }
-    
-    func handleSearchTextChange() async {
-        issorting = true
-        filteredFiles = await ScanFiles().sortFiles(files, by: sortOrder, searchText: searchText)
-        issorting = false
-    }
-    
-    func clearCaches() async {
-        await ThumbnailProvider.shared.clearCaches()
-        sources.removeAll()
-        selectedSource = nil
-        filteredFiles.removeAll()
-        files.removeAll()
-        selectedFile = nil
-    }
-    
-    func fileHandler(_ update: Int) {
-        progress = Double(update)
-    }
-    
-    func maxfilesHandler(_ maxfiles: Int) {
-        max = Double(maxfiles)
-    }
-}
-```
-
-**Why this is excellent:**
-- Proper MVVM pattern with Observable macro for reactivity
-- MainActor annotation ensures all state mutations happen on main thread
-- Centralized state management - single source of truth
-- Clean separation of concerns between view and logic
-- Methods with clear names describing intent (handleSourceChange, handleSortOrderChange)
-- Async/await patterns properly implemented
-- Typed errors and sheets with enum properties (alertType, sheetType)
-- Private property (processedURLs) prevents accidental external access
-- Easy to unit test individual methods
-- Clear API contract for views consuming this ViewModel
-
-## Build & Deployment ⭐⭐⭐⭐
-
-**Strengths:**
-- Professional Makefile with debug/release targets
-- Notarization integration
-- Proper code signing setup
-- SwiftLint/SwiftFormat integration
-
-**Makefile highlights:**
-```makefile
-build: clean archive notarize sign prepare-dmg open
-debug: clean archive-debug open-debug
-```
-
-Clean separation of debug and release workflows is excellent practice.
+| Architecture | 9.5/10 | Mature MVVM, Observable macro |
+| Performance | 9.0/10 | Multi-tier caching, parallelism |
+| Code Quality | 9.2/10 | Consistent style, modern Swift |
+| State Management | 10/10 | Observable ViewModel, MainActor |
+| Data Persistence | 9.0/10 | JSON system, proper serialization |
+| Security | 10/10 | Sandbox-compliant, security-scoped (issue fully resolved) |
+| Build/Deploy | 9.0/10 | Makefile, notarization, code signing |
+| UI/UX | 9.0/10 | Polished interface, smooth animations |
+| Maintainability | 9.2/10 | Clean code, improved docs |
+| Testing | 4/10 | Initial unit tests present |
+| Documentation | 6/10 | Improved, but needs architecture/API docs |
 
 ---
 
 ## Conclusion
 
-PhotoCulling v0.5.0 represents a significant milestone: the transition from a technically excellent development project to a production-ready macOS application. The architecture has evolved to enterprise-grade standards with proper MVVM pattern implementation, comprehensive state management, and professional build/deployment infrastructure.
+PhotoCulling v0.6.0 represents a new high-water mark for the project, with the Sandbox compliance issue fully resolved and incremental improvements across error handling, documentation, and maintainability. The codebase is robust, secure, and well-architected, with a clear path to further quality gains through expanded testing and documentation. The project is approved for production use and is well-positioned for future feature expansion and onboarding of new contributors.
 
-### v0.5.0 - Production Ready Status ✨
+### v0.6.0 - Production Ready Status ✨
 
 This release consolidates all previous architectural improvements and introduces professional build infrastructure. The application demonstrates:
 
@@ -1048,101 +510,20 @@ This release consolidates all previous architectural improvements and introduces
 - **Professional user experience** - Polished UI with smooth animations and responsive feedback
 - **Thread-safe concurrency** - Excellent use of Swift's actor model throughout
 - **Robust data persistence** - JSON-based system with UUID tracking and audit trails
+- **Full Sandbox compliance** - Secure, robust file/resource management
 
 ### Path to 9.5/10 Rating:
 
-To reach the next quality tier, v0.5.1+ should focus on:
-1. **Automated testing** (would directly improve 2/10 → 6-7/10) - Most critical gap
-2. **Comprehensive documentation** - ARCHITECTURE.md and API docs (4/10 → 8/10)
+To reach the next quality tier, v0.6.1+ should focus on:
+1. **Automated testing** (would directly improve 4/10 → 7-8/10)
+2. **Comprehensive documentation** - ARCHITECTURE.md and API docs (6/10 → 8-9/10)
 3. **Enhanced error handling** - User-facing feedback for all operations
-4. **Type-safe patterns** - Reduce stringly-typed code with enums
+4. **Type-safe patterns** - Continue to reduce stringly-typed code with enums
 
 These improvements are now achievable due to the excellent ViewModel architecture making business logic independently testable.
 
-### Key Accomplishments Across All Versions:
-
-**v0.5.0 (Production Release):**
-- ✅ Professional Makefile with build automation
-- ✅ Notarization and code signing integration
-- ✅ Production-ready versioning
-- ✅ Feature-complete photo management system
-- ✅ Enterprise-grade code organization
-
-**v0.4.6 (Architecture Solidification):**
-- ✅ ViewModel pattern properly implemented
-- ✅ Observable macro for reactive updates
-- ✅ MVVM architecture complete
-
-**v0.4.2 (Data & UI Polish):**
-- ✅ Comprehensive JSON persistence system
-- ✅ Date/time utility framework
-- ✅ Polished ProgressCount component
-- ✅ Enhanced UI/UX consistency
-
-**v0.4.1 (Security Hardening):**
-- ✅ Fixed resource access patterns
-- ✅ Type-safe closure handling
-- ✅ Proper actor isolation
-
-### Remaining Critical Gap:
-
-**Automated Testing (2/10)** - This is the primary lever to increase overall rating. The excellent architecture now makes testing feasible:
-- ViewModel methods are pure and testable
-- Model classes are decoupled from views
-- Actors have clear responsibilities
-- Caching logic is isolated and testable
-
-### Final Score: 9.2/10 (↑ 0.2 from v0.4.6)
-
-**Category Breakdown:**
-- Architecture: 9.5/10 (↑↑ mature MVVM pattern)
-- Performance: 9/10 (multi-tier caching, efficient parallelism)
-- Code Quality: 9/10 (consistent style, modern Swift)
-- State Management: 10/10 (proper Observable ViewModel)
-- Data Persistence: 9/10 (comprehensive JSON system)
-- Security: 9/10 (sandbox-compliant, security-scoped)
-- Build/Deploy: 9/10 ⭐ NEW (professional Makefile, notarization)
-- UI/UX: 9/10 (polished components, smooth animations)
-- Maintainability: 9/10 (clean organization, good separation)
-- Testing: 2/10 ⚠️ (CRITICAL - no automated tests)
-- Documentation: 4/10 (minimal beyond README)
-
-### Production Readiness Checklist:
-
-- ✅ Feature-complete for stated use case
-- ✅ Professional build infrastructure
-- ✅ Code signing and notarization
-- ✅ Error handling with graceful degradation
-- ✅ Data persistence with audit trails
-- ✅ Performance optimized with caching
-- ✅ Thread-safe concurrent operations
-- ✅ Responsive UI with smooth animations
-- ❌ Automated test coverage (deferred to v0.5.1)
-- ❌ Comprehensive documentation (deferred to v0.5.1)
-
-### Recommendation:
-
-PhotoCulling v0.5.0 is **approved for production use**. The codebase is solid, well-architected, and demonstrates strong technical competency. Post-release focus should prioritize automated testing and documentation to reach 9.5+/10 quality tier and establish best practices for future maintenance.
-
-### Next Steps:
-
-1. **v0.5.1:** Focus on testing infrastructure
-   - Unit tests for ViewModel logic
-   - Integration tests for persistence
-   - Actor behavior validation tests
-
-2. **v0.5.2:** Documentation & polish
-   - ARCHITECTURE.md
-   - API documentation
-   - Enhanced README with examples
-
-3. **Future versions:** Feature expansion & localization
-   - Additional camera RAW support
-   - Multi-language support
-   - Advanced filtering and tagging
-
 ---
 
-*Quality Analysis - PhotoCulling v0.5.0*  
-*Analysis conducted: February 1, 2026*  
+*Quality Analysis - PhotoCulling v0.6.0*  
+*Analysis conducted: February 3, 2026*  
 *Project Status: Production Ready ✨*
