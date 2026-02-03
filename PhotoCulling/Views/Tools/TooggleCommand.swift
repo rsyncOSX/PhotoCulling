@@ -11,19 +11,12 @@ import SwiftUI
 struct ToggleCommands: Commands {
     @FocusedBinding(\.togglerow) private var togglerow
     @FocusedBinding(\.aborttask) private var aborttask
-    @FocusedBinding(\.navigateUp) private var navigateUp
-    @FocusedBinding(\.navigateDown) private var navigateDown
     @FocusedBinding(\.pressEnter) private var pressEnter
 
     var body: some Commands {
         CommandMenu("Table Navigation") {
             CommandButton("Tag row", action: { togglerow = true }, shortcut: "t")
             CommandButton("Abort task", action: { aborttask = true }, shortcut: "k")
-
-            Divider()
-
-            CommandButton("Previous row", action: { navigateUp = true }, shortcut: .init(.upArrow, modifiers: [.command]))
-            CommandButton("Next row", action: { navigateDown = true }, shortcut: .init(.downArrow, modifiers: [.command]))
 
             Divider()
 
@@ -100,14 +93,6 @@ struct FocusedAborttask: FocusedValueKey {
     typealias Value = Binding<Bool>
 }
 
-struct FocusedNavigateUp: FocusedValueKey {
-    typealias Value = Binding<Bool>
-}
-
-struct FocusedNavigateDown: FocusedValueKey {
-    typealias Value = Binding<Bool>
-}
-
 struct FocusedPressEnter: FocusedValueKey {
     typealias Value = Binding<Bool>
 }
@@ -121,16 +106,6 @@ extension FocusedValues {
     var aborttask: FocusedAborttask.Value? {
         get { self[FocusedAborttask.self] }
         set { self[FocusedAborttask.self] = newValue }
-    }
-
-    var navigateUp: FocusedNavigateUp.Value? {
-        get { self[FocusedNavigateUp.self] }
-        set { self[FocusedNavigateUp.self] = newValue }
-    }
-
-    var navigateDown: FocusedNavigateDown.Value? {
-        get { self[FocusedNavigateDown.self] }
-        set { self[FocusedNavigateDown.self] = newValue }
     }
 
     var pressEnter: FocusedPressEnter.Value? {

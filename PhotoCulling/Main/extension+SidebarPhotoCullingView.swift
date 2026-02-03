@@ -146,18 +146,6 @@ extension SidebarPhotoCullingView {
                 viewModel.isInspectorPresented = false
             }
         }
-        .onChange(of: viewModel.focusnavigateUp) {
-            if viewModel.focusnavigateUp {
-                navigateToAdjacentFile(direction: .previous)
-                viewModel.focusnavigateUp = false
-            }
-        }
-        .onChange(of: viewModel.focusnavigateDown) {
-            if viewModel.focusnavigateDown {
-                navigateToAdjacentFile(direction: .next)
-                viewModel.focusnavigateDown = false
-            }
-        }
         .onChange(of: viewModel.focusPressEnter) {
             if viewModel.focusPressEnter {
                 applyPendingUpdatesAndFocus()
