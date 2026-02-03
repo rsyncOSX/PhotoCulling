@@ -14,4 +14,11 @@ PhotoCulling is a new macOS app designed to help you quickly and efficiently cul
 
 If you find PhotoCulling useful, please consider starring [the repository](https://github.com/rsyncOSX/PhotoCulling). Your support helps drive further development!
 
+## Developer Documentation
+
+For developers working with the codebase:
+- **[QUICK_ANSWER.md](QUICK_ANSWER.md)** - Quick reference for using `@Binding` with `FolderSource?`
+- **[BINDING_USAGE_GUIDE.md](BINDING_USAGE_GUIDE.md)** - Comprehensive guide to working with SwiftUI bindings
+- **[PhotoCulling/Examples/](PhotoCulling/Examples/)** - Code examples demonstrating binding patterns
+
 ![](images/photoculling.png)
