@@ -26,8 +26,14 @@ struct OpencatalogView: View {
                           case let .success(url):
                               print("DEBUG: Selected URL: \(url.path)")
                               selecteditem = url.path
-
-                              // Try to create bookmark (may fail for some paths)
+                              
+                              // Start accessing FIRST
+                              guard url.startAccessingSecurityScopedResource() else {
+                                  print("ERROR: Failed to start accessing security-scoped resource")
+                                  return
+                              }
+                              
+                              // Try to create bookmark
                               do {
                                   let bookmarkData = try url.bookmarkData(
                                       options: .withSecurityScope,
@@ -39,8 +45,11 @@ struct OpencatalogView: View {
                                   print("DEBUG: Bookmark data size: \(bookmarkData.count) bytes")
                               } catch {
                                   print("WARNING: Could not create bookmark, but path is still set: \(error)")
-                                  // Path is available in selecteditem even without bookmark
+                                  // Path is still accessible via selecteditem
                               }
+                              
+                              // Stop accessing (will be restarted when rsync runs)
+                              url.stopAccessingSecurityScopedResource()
 
                           case let .failure(error):
                               print("ERROR: File picker error: \(error)")

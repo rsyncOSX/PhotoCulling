@@ -230,8 +230,8 @@ final class ExecuteCopyFiles {
         }
     }
 
-    func getAccessedURL(fromBookmarkKey key: String, fallbackPath _: String) -> URL? {
-        // Try bookmark ONLY - don't fall back to direct path
+    func getAccessedURL(fromBookmarkKey key: String, fallbackPath: String) -> URL? {
+        // Try bookmark first
         if let bookmarkData = UserDefaults.standard.data(forKey: key) {
             do {
                 var isStale = false
@@ -241,16 +241,32 @@ final class ExecuteCopyFiles {
                     relativeTo: nil,
                     bookmarkDataIsStale: &isStale
                 )
-                _ = url.startAccessingSecurityScopedResource()
+                guard url.startAccessingSecurityScopedResource() else {
+                    print("ERROR: Failed to start accessing bookmark for \(key)")
+                    // Try fallback instead
+                    return tryFallbackPath(fallbackPath, key: key)
+                }
                 print("DEBUG: Successfully resolved bookmark for \(key)")
                 return url
             } catch {
                 print("ERROR: Bookmark resolution failed for \(key): \(error)")
-                return nil
+                // Try fallback instead
+                return tryFallbackPath(fallbackPath, key: key)
             }
         }
+        
+        // If no bookmark exists, try the fallback path
+        return tryFallbackPath(fallbackPath, key: key)
+    }
 
-        print("ERROR: No bookmark found for \(key)")
-        return nil
+    private func tryFallbackPath(_ fallbackPath: String, key: String) -> URL? {
+        print("WARNING: No bookmark found for \(key), attempting direct path access")
+        let fallbackURL = URL(fileURLWithPath: fallbackPath)
+        guard fallbackURL.startAccessingSecurityScopedResource() else {
+            print("ERROR: Failed to access fallback path for \(key)")
+            return nil
+        }
+        print("DEBUG: Successfully accessed fallback path for \(key)")
+        return fallbackURL
     }
 }
