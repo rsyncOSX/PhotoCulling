@@ -148,7 +148,6 @@ final class ExecuteCopyFiles {
     private func setupStreamingHandlers() {
         streamingHandlers = CreateStreamingHandlers().createHandlersWithCleanup(
             fileHandler: { [weak self] count in
-                Logger.process.debugMessageOnly("DEBUG fileHandler: count=\(count)")
                 Task { @MainActor in
                     let progress = Double(count)
                     self?.progress = progress
@@ -156,7 +155,6 @@ final class ExecuteCopyFiles {
                 }
             },
             processTermination: { [weak self] output, hiddenID in
-                Logger.process.debugMessageOnly("DEBUG processTermination: output lines=\(output?.count ?? 0), hiddenID=\(hiddenID ?? -1)")
                 Task { @MainActor in
                     await self?.handleProcessTermination(
                         stringoutputfromrsync: output,
