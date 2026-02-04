@@ -49,6 +49,7 @@ func createTestImage(width: Int = 100, height: Int = 100) -> NSImage {
 // MARK: - Tests
 
 @Suite("ThumbnailProvider Tests")
+@MainActor
 struct ThumbnailProviderTests {
     // MARK: - Initialization Tests
 
@@ -249,6 +250,7 @@ struct ThumbnailProviderTests {
 // MARK: - Performance Tests
 
 @Suite("ThumbnailProvider Performance Tests")
+@MainActor
 struct ThumbnailProviderPerformanceTests {
     @Test("Statistics gathering is fast")
     func testStatisticsPerformance() async {
@@ -280,6 +282,7 @@ struct ThumbnailProviderPerformanceTests {
 // MARK: - Integration Tests
 
 @Suite("ThumbnailProvider Integration Tests")
+@MainActor
 struct ThumbnailProviderIntegrationTests {
     @Test("Multiple operations in sequence work correctly")
     func testMultipleOperationsSequence() async {

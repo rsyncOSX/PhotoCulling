@@ -14,6 +14,7 @@ import Foundation
 import Testing
 
 @Suite("ThumbnailProvider Advanced Memory Tests")
+@MainActor
 struct ThumbnailProviderAdvancedMemoryTests {
     @Test("Small cost limit triggers rapid evictions")
     func testRapidEvictionsWithSmallCostLimit() async {
@@ -53,6 +54,7 @@ struct ThumbnailProviderAdvancedMemoryTests {
 }
 
 @Suite("ThumbnailProvider Stress Tests")
+@MainActor
 struct ThumbnailProviderStressTests {
     @Test("Handles rapid sequential operations")
     func testRapidSequentialOperations() async {
@@ -102,6 +104,7 @@ struct ThumbnailProviderStressTests {
 }
 
 @Suite("ThumbnailProvider Edge Case Tests")
+@MainActor
 struct ThumbnailProviderEdgeCaseTests {
     @Test("Config with zero cost limit")
     func testZeroCostLimit() async {
@@ -157,6 +160,7 @@ struct ThumbnailProviderEdgeCaseTests {
 }
 
 @Suite("ThumbnailProvider Configuration Tests")
+@MainActor
 struct ThumbnailProviderConfigurationTests {
     @Test("Different configs have different limits")
     func testConfigDifferences() async {
@@ -185,6 +189,7 @@ struct ThumbnailProviderConfigurationTests {
 }
 
 @Suite("ThumbnailProvider Discardable Content Tests")
+@MainActor
 struct ThumbnailProviderDiscardableContentTests {
     @Test("DiscardableThumbnail tracks access correctly")
     func testDiscardableThumbnailAccess() async {
@@ -227,6 +232,7 @@ struct ThumbnailProviderDiscardableContentTests {
 }
 
 @Suite("ThumbnailProvider Isolation Tests")
+@MainActor
 struct ThumbnailProviderIsolationTests {
     @Test("Shared instance is consistent")
     func testSharedInstanceConsistency() async {
@@ -255,6 +261,7 @@ struct ThumbnailProviderIsolationTests {
 }
 
 @Suite("ThumbnailProvider Scalability Tests")
+@MainActor
 struct ThumbnailProviderScalabilityTests {
     @Test("Handles variable target sizes")
     func testVariousTargetSizes() async {

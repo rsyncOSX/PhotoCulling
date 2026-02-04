@@ -16,6 +16,7 @@ import Testing
 // MARK: - Example: Custom Memory Limit Scenarios
 
 @Suite("Custom Memory Limit Tests")
+@MainActor
 struct CustomMemoryLimitTests {
     /// Example 1: Test with 5 MB cache limit
     /// Useful for testing with moderate cache sizes
