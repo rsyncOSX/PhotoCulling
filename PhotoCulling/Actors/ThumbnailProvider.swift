@@ -17,12 +17,12 @@ enum ThumbnailError: Error {
 /// Delegate to track NSCache evictions for monitoring memory pressure
 final class CacheDelegate: NSObject, NSCacheDelegate, @unchecked Sendable {
     nonisolated static let shared = CacheDelegate()
-    
-    nonisolated override init() {
+
+    override nonisolated init() {
         super.init()
     }
-    
-    nonisolated func cache(_ cache: NSCache<AnyObject, AnyObject>, willEvictObject obj: AnyObject) {
+
+    nonisolated func cache(_: NSCache<AnyObject, AnyObject>, willEvictObject obj: AnyObject) {
         if let thumbnail = obj as? DiscardableThumbnail {
             Logger.process.debug("NSCache eviction triggered - Cost: \(thumbnail.cost) bytes")
         }
@@ -53,7 +53,7 @@ actor ThumbnailProvider {
     init() {
         memoryCache.totalCostLimit = 200 * 2560 * 2560 // 1.25 GB
         memoryCache.countLimit = 500
-        
+
         // Set delegate to track evictions
         memoryCache.delegate = CacheDelegate.shared
     }
@@ -198,16 +198,16 @@ actor ThumbnailProvider {
     func clearCaches() async {
         let hitRate = cacheHits + cacheMisses > 0 ? Double(cacheHits) / Double(cacheHits + cacheMisses) * 100 : 0
         Logger.process.info("Cache Statistics - Hits: \(self.cacheHits), Misses: \(self.cacheMisses), Hit Rate: \(String(format: "%.1f", hitRate))%")
-        
+
         memoryCache.removeAllObjects()
         await diskCache.pruneCache(maxAgeInDays: 0)
-        
+
         // Reset statistics
         cacheHits = 0
         cacheMisses = 0
         cacheEvictions = 0
     }
-    
+
     /// Get current cache statistics for monitoring
     func getCacheStatistics() async -> (hits: Int, misses: Int, evictions: Int, hitRate: Double) {
         let total = cacheHits + cacheMisses
