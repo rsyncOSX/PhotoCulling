@@ -14,6 +14,17 @@ enum ThumbnailError: Error {
     case generationFailed
 }
 
+/// Delegate to track NSCache evictions for monitoring memory pressure
+final class CacheDelegate: NSObject, NSCacheDelegate, @unchecked Sendable {
+    static let shared = CacheDelegate()
+    
+    nonisolated func cache(_ cache: NSCache<AnyObject, AnyObject>, willEvictObject obj: AnyObject) {
+        if let thumbnail = obj as? DiscardableThumbnail {
+            Logger.process.debug("NSCache eviction triggered - Cost: \(thumbnail.cost) bytes")
+        }
+    }
+}
+
 actor ThumbnailProvider {
     nonisolated static let shared = ThumbnailProvider()
 
@@ -21,6 +32,11 @@ actor ThumbnailProvider {
     private let memoryCache = NSCache<NSURL, DiscardableThumbnail>()
     private var successCount = 0
     private let diskCache = DiskCacheManager()
+
+    // Cache statistics for monitoring
+    private var cacheHits = 0
+    private var cacheMisses = 0
+    private var cacheEvictions = 0
 
     /// Track the current preload task so we can cancel it
     private var preloadTask: Task<Int, Never>?
@@ -33,6 +49,9 @@ actor ThumbnailProvider {
     init() {
         memoryCache.totalCostLimit = 200 * 2560 * 2560 // 1.25 GB
         memoryCache.countLimit = 500
+        
+        // Set delegate to track evictions
+        memoryCache.delegate = CacheDelegate.shared
     }
 
     func setFileHandlers(_ fileHandlers: FileHandlers) {
@@ -91,9 +110,10 @@ actor ThumbnailProvider {
         // A. Check RAM
         if let wrapper = memoryCache.object(forKey: url as NSURL), wrapper.beginContentAccess() {
             wrapper.endContentAccess()
+            cacheHits += 1
             let newCount = incrementAndGetCount()
             await fileHandlers?.fileHandler(newCount)
-            Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - found in RAM Cache")
+            Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - found in RAM Cache (hits: \(cacheHits))")
             return
         }
 
@@ -103,9 +123,10 @@ actor ThumbnailProvider {
 
         if let diskImage = await diskCache.load(for: url) {
             storeInMemory(diskImage, for: url)
+            cacheMisses += 1
             let newCount = incrementAndGetCount()
             await fileHandlers?.fileHandler(newCount)
-            Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - found in DISK Cache")
+            Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - found in DISK Cache (misses: \(cacheMisses))")
             return
         }
 
@@ -171,8 +192,23 @@ actor ThumbnailProvider {
     }
 
     func clearCaches() async {
+        let hitRate = cacheHits + cacheMisses > 0 ? Double(cacheHits) / Double(cacheHits + cacheMisses) * 100 : 0
+        Logger.process.info("Cache Statistics - Hits: \(self.cacheHits), Misses: \(self.cacheMisses), Hit Rate: \(String(format: "%.1f", hitRate))%")
+        
         memoryCache.removeAllObjects()
         await diskCache.pruneCache(maxAgeInDays: 0)
+        
+        // Reset statistics
+        cacheHits = 0
+        cacheMisses = 0
+        cacheEvictions = 0
+    }
+    
+    /// Get current cache statistics for monitoring
+    func getCacheStatistics() async -> (hits: Int, misses: Int, evictions: Int, hitRate: Double) {
+        let total = cacheHits + cacheMisses
+        let hitRate = total > 0 ? Double(cacheHits) / Double(total) * 100 : 0
+        return (cacheHits, cacheMisses, cacheEvictions, hitRate)
     }
 
     func thumbnail(for url: URL, targetSize: Int) async -> NSImage? {
@@ -193,15 +229,16 @@ actor ThumbnailProvider {
             // The 'image' variable holds a strong reference to the NSImage,
             // so it's safe to tell the cache we are done accessing it.
             defer { wrapper.endContentAccess() }
-
-            Logger.process.debugThreadOnly("resolveImage: found in RAM Cache")
+            cacheHits += 1
+            Logger.process.debugThreadOnly("resolveImage: found in RAM Cache (hits: \(cacheHits))")
             return wrapper.image
         }
 
         // B. Check Disk
         if let diskImage = await diskCache.load(for: url) {
             storeInMemory(diskImage, for: url)
-            Logger.process.debugThreadOnly("resolveImage: found in Disk Cache")
+            cacheMisses += 1
+            Logger.process.debugThreadOnly("resolveImage: found in Disk Cache (misses: \(cacheMisses))")
             return diskImage
         }
 

@@ -397,55 +397,28 @@ func scanFilesIncremental(url: URL) -> AsyncStream<FileItem> {
 
 ## Recommendations by Priority
 
+**For a complete and prioritized list of all recommendations, including caching system improvements and technical debt, see [TODO.md](TODO.md).**
+
+### Summary of Key Areas:
+
 ### 🔴 Critical (Do Immediately - Post v0.6.0):
-1. **Expand automated tests**
-    - Increase unit test coverage for ViewModel, actors, and persistence logic
-    - Add integration and UI tests for critical workflows
-    - **Why critical:** Prevents regressions, enables safe refactoring
-    - **Impact:** Increases confidence in future updates
-
-2. **Continue error handling improvements**
-    - Ensure all user-facing operations provide clear feedback
-    - Centralize alert logic for consistency
-    - **Why critical:** Improves user trust and reliability
-
-3. **Document architecture**
-    - Create ARCHITECTURE.md with MVVM, actor, and caching strategy details
-    - Expand API documentation for all public types and methods
-    - **Why critical:** Accelerates onboarding, reduces bugs
+1. **Expand automated tests** - See [TODO.md](TODO.md#-critical-do-immediately---post-v060)
+2. **Continue error handling improvements** - See [TODO.md](TODO.md#-critical-do-immediately---post-v060)
+3. **Document architecture** - See [TODO.md](TODO.md#-critical-do-immediately---post-v060)
 
 ### 🟡 High Priority (v0.6.1 - Next Sprint):
-4. **Input validation**
-    - File size checks before processing
-    - Extension and path validation
-    - Memory availability checks for large operations
-
-5. **Enhance error recovery**
-    - Implement abort/cancel methods with proper task management
-    - Graceful handling of file system/network errors
-    - Recovery suggestions for common failures
-
-6. **README improvements**
-    - Add usage instructions, workflow, features, screenshots, and roadmap
+4. **Input validation** - See [TODO.md](TODO.md#-high-priority-v061---next-sprint)
+5. **Enhance error recovery** - See [TODO.md](TODO.md#-high-priority-v061---next-sprint)
+6. **README improvements** - See [TODO.md](TODO.md#-high-priority-v061---next-sprint)
 
 ### 🟢 Medium Priority (v0.6.2+):
-7. **Type-safe identifiers**
-    - Continue to reduce stringly-typed code with enums/constants
-
-8. **Performance optimization for large catalogs**
-    - Pagination, AsyncStream, and memory profiling for extreme cases
-
-9. **Localization preparation**
-    - Extract user-facing strings, plan for localization
-
-10. **Accessibility improvements**
-     - VoiceOver, keyboard navigation, high contrast, font size support
+7. **Type-safe identifiers** - See [TODO.md](TODO.md#-medium-priority-v062)
+8. **Performance optimization for large catalogs** - See [TODO.md](TODO.md#-medium-priority-v062)
+9. **Localization preparation** - See [TODO.md](TODO.md#-medium-priority-v062)
+10. **Accessibility improvements** - See [TODO.md](TODO.md#-medium-priority-v062)
 
 ### 🔵 Low Priority (Future Enhancement):
-11. **Snapshot tests**
-12. **Extended performance profiling**
-13. **Benchmark comparisons**
-14. **User preference system**
+See [TODO.md](TODO.md#-low-priority-future-enhancement) for additional low-priority items.
 
 ---
 

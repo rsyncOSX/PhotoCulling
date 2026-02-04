@@ -16,22 +16,25 @@ final class DiscardableThumbnail: NSObject, NSDiscardableContent, @unchecked Sen
     nonisolated init(image: NSImage) {
         self.image = image
 
-        // IMPROVEMENT: Calculate cost using actual pixel dimensions, not logical points.
-        // This ensures NSCache knows the true RAM footprint of your 2560px images.
-        let width: Int
-        let height: Int
+        // Calculate cost based on actual pixel dimensions from all representations
+        // This ensures NSCache accurately tracks RAM footprint for LRU eviction
+        var totalCost = 0
 
-        if let rep = image.representations.first {
-            width = rep.pixelsWide
-            height = rep.pixelsHigh
-        } else {
-            // Fallback to logical size if representations are missing
-            width = Int(image.size.width)
-            height = Int(image.size.height)
+        // Sum up all representations' pixel costs (RGBA = 4 bytes per pixel)
+        for rep in image.representations {
+            let pixelCost = rep.pixelsWide * rep.pixelsHigh * 4
+            totalCost += pixelCost
         }
 
-        // 4 bytes per pixel (RGBA)
-        cost = width * height * 4
+        // If no representations found, fall back to logical size estimate
+        if totalCost == 0 {
+            let width = Int(image.size.width)
+            let height = Int(image.size.height)
+            totalCost = width * height * 4
+        }
+
+        // Add overhead buffer (~10%) for NSImage wrapper and caching metadata
+        cost = Int(Double(totalCost) * 1.1)
 
         super.init()
     }
