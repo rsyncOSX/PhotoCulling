@@ -22,9 +22,11 @@ final class CacheDelegate: NSObject, NSCacheDelegate, @unchecked Sendable {
         super.init()
     }
 
-    nonisolated func cache(_: NSCache<AnyObject, AnyObject>, willEvictObject obj: AnyObject) {
-        if let thumbnail = obj as? DiscardableThumbnail {
-            Logger.process.debug("NSCache eviction triggered - Cost: \(thumbnail.cost) bytes")
+    /// ✅ FIX: Change 'obj: AnyObject' to 'obj: Any'
+    nonisolated func cache(_: NSCache<AnyObject, AnyObject>, willEvictObject obj: Any) {
+        // The cast still works exactly the same way
+        if let image = obj as? NSImage {
+            Logger.process.debugMessageOnly("Evicted image: \(image)")
         }
     }
 }
@@ -53,7 +55,6 @@ actor ThumbnailProvider {
     init() {
         memoryCache.totalCostLimit = 200 * 2560 * 2560 // 1.25 GB
         memoryCache.countLimit = 500
-
         // Set delegate to track evictions
         memoryCache.delegate = CacheDelegate.shared
     }
