@@ -31,13 +31,28 @@ final class CacheDelegate: NSObject, NSCacheDelegate, @unchecked Sendable {
     }
 }
 
+struct CacheConfig {
+    let totalCostLimit: Int
+    let countLimit: Int
+    
+    nonisolated static let production = CacheConfig(
+        totalCostLimit: 200 * 2560 * 2560,  // 1.25 GB
+        countLimit: 500
+    )
+    
+    nonisolated static let testing = CacheConfig(
+        totalCostLimit: 100_000,  // Very small for testing evictions
+        countLimit: 5
+    )
+}
+
 actor ThumbnailProvider {
-    nonisolated static let shared = ThumbnailProvider()
+    nonisolated static let shared = ThumbnailProvider(config: .production)
 
     // 1. Isolated State
-    private let memoryCache = NSCache<NSURL, DiscardableThumbnail>()
+    private let memoryCache: NSCache<NSURL, DiscardableThumbnail>
     private var successCount = 0
-    private let diskCache = DiskCacheManager()
+    private let diskCache: DiskCacheManager
 
     // Cache statistics for monitoring
     private var cacheHits = 0
@@ -51,12 +66,14 @@ actor ThumbnailProvider {
     /// let supported: Set<String> = ["arw", "tiff", "tif", "jpeg", "jpg", "png", "heic", "heif"]
     let supported: Set<String> = ["arw"]
 
-    /// 2. Performance Limits
-    init() {
-        memoryCache.totalCostLimit = 200 * 2560 * 2560 // 1.25 GB
-        memoryCache.countLimit = 500
+    /// 2. Performance Limits - Configurable for testing
+    init(config: CacheConfig = .production, diskCache: DiskCacheManager? = nil) {
+        memoryCache = NSCache<NSURL, DiscardableThumbnail>()
+        memoryCache.totalCostLimit = config.totalCostLimit
+        memoryCache.countLimit = config.countLimit
         // Set delegate to track evictions
         memoryCache.delegate = CacheDelegate.shared
+        self.diskCache = diskCache ?? DiskCacheManager()
     }
 
     func setFileHandlers(_ fileHandlers: FileHandlers) {
