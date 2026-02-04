@@ -16,7 +16,11 @@ enum ThumbnailError: Error {
 
 /// Delegate to track NSCache evictions for monitoring memory pressure
 final class CacheDelegate: NSObject, NSCacheDelegate, @unchecked Sendable {
-    static let shared = CacheDelegate()
+    nonisolated static let shared = CacheDelegate()
+    
+    nonisolated override init() {
+        super.init()
+    }
     
     nonisolated func cache(_ cache: NSCache<AnyObject, AnyObject>, willEvictObject obj: AnyObject) {
         if let thumbnail = obj as? DiscardableThumbnail {
