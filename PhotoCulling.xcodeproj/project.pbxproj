@@ -15,8 +15,19 @@
 		E9C5897D2F2CA0AC00D8B063 /* RsyncProcessStreaming in Frameworks */ = {isa = PBXBuildFile; productRef = E9C5897C2F2CA0AC00D8B063 /* RsyncProcessStreaming */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		E95355E12F33B70A006C2851 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E90B079A2F1E58EA00A95D4A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E90B07A12F1E58EA00A95D4A;
+			remoteInfo = PhotoCulling;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		E90B07A22F1E58EA00A95D4A /* PhotoCulling.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PhotoCulling.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E95355DD2F33B70A006C2851 /* PhotoCullingTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PhotoCullingTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E97E975C2F210EAB001A4239 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E97E975D2F210EAB001A4239 /* PhotoCullingicon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = PhotoCullingicon.icon; sourceTree = "<group>"; };
 		E97E975E2F210EAB001A4239 /* PhotoCulling.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PhotoCulling.entitlements; sourceTree = "<group>"; };
@@ -26,6 +37,11 @@
 		E90B07A42F1E58EA00A95D4A /* PhotoCulling */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = PhotoCulling;
+			sourceTree = "<group>";
+		};
+		E95355DE2F33B70A006C2851 /* PhotoCullingTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = PhotoCullingTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -42,6 +58,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E95355DA2F33B70A006C2851 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -52,6 +75,7 @@
 				E97E975D2F210EAB001A4239 /* PhotoCullingicon.icon */,
 				E97E975E2F210EAB001A4239 /* PhotoCulling.entitlements */,
 				E90B07A42F1E58EA00A95D4A /* PhotoCulling */,
+				E95355DE2F33B70A006C2851 /* PhotoCullingTests */,
 				E90B07A32F1E58EA00A95D4A /* Products */,
 			);
 			sourceTree = "<group>";
@@ -60,6 +84,7 @@
 			isa = PBXGroup;
 			children = (
 				E90B07A22F1E58EA00A95D4A /* PhotoCulling.app */,
+				E95355DD2F33B70A006C2851 /* PhotoCullingTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -93,6 +118,29 @@
 			productReference = E90B07A22F1E58EA00A95D4A /* PhotoCulling.app */;
 			productType = "com.apple.product-type.application";
 		};
+		E95355DC2F33B70A006C2851 /* PhotoCullingTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E95355E52F33B70A006C2851 /* Build configuration list for PBXNativeTarget "PhotoCullingTests" */;
+			buildPhases = (
+				E95355D92F33B70A006C2851 /* Sources */,
+				E95355DA2F33B70A006C2851 /* Frameworks */,
+				E95355DB2F33B70A006C2851 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E95355E22F33B70A006C2851 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				E95355DE2F33B70A006C2851 /* PhotoCullingTests */,
+			);
+			name = PhotoCullingTests;
+			packageProductDependencies = (
+			);
+			productName = PhotoCullingTests;
+			productReference = E95355DD2F33B70A006C2851 /* PhotoCullingTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -105,6 +153,10 @@
 				TargetAttributes = {
 					E90B07A12F1E58EA00A95D4A = {
 						CreatedOnToolsVersion = 26.2;
+					};
+					E95355DC2F33B70A006C2851 = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = E90B07A12F1E58EA00A95D4A;
 					};
 				};
 			};
@@ -129,6 +181,7 @@
 			projectRoot = "";
 			targets = (
 				E90B07A12F1E58EA00A95D4A /* PhotoCulling */,
+				E95355DC2F33B70A006C2851 /* PhotoCullingTests */,
 			);
 		};
 /* End PBXProject section */
@@ -143,6 +196,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E95355DB2F33B70A006C2851 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -153,7 +213,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E95355D92F33B70A006C2851 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E95355E22F33B70A006C2851 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E90B07A12F1E58EA00A95D4A /* PhotoCulling */;
+			targetProxy = E95355E12F33B70A006C2851 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		E90B07AB2F1E58EB00A95D4A /* Debug */ = {
@@ -388,6 +463,46 @@
 			};
 			name = Release;
 		};
+		E95355E32F33B70A006C2851 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 93M47F4H9T;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = myapp.PhotoCullingTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PhotoCulling.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PhotoCulling";
+			};
+			name = Debug;
+		};
+		E95355E42F33B70A006C2851 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 93M47F4H9T;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = myapp.PhotoCullingTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PhotoCulling.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PhotoCulling";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -405,6 +520,15 @@
 			buildConfigurations = (
 				E90B07AE2F1E58EB00A95D4A /* Debug */,
 				E90B07AF2F1E58EB00A95D4A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E95355E52F33B70A006C2851 /* Build configuration list for PBXNativeTarget "PhotoCullingTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E95355E32F33B70A006C2851 /* Debug */,
+				E95355E42F33B70A006C2851 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -20,7 +20,7 @@ struct CustomMemoryLimitTests {
     /// Example 1: Test with 5 MB cache limit
     /// Useful for testing with moderate cache sizes
     @Test("5 MB cache limit scenario")
-    async func test5MBCacheLimit() {
+    func test5MBCacheLimit() async {
         let config = CacheConfig(
             totalCostLimit: 5_000_000, // 5 MB
             countLimit: 50
@@ -38,7 +38,7 @@ struct CustomMemoryLimitTests {
     /// Example 2: Test with 10 MB cache limit
     /// Good for simulating larger caches
     @Test("10 MB cache limit scenario")
-    async func test10MBCacheLimit() {
+    func test10MBCacheLimit() async {
         let config = CacheConfig(
             totalCostLimit: 10_000_000, // 10 MB
             countLimit: 100
@@ -52,7 +52,7 @@ struct CustomMemoryLimitTests {
     /// Example 3: Test with very small 100 KB limit
     /// Triggers evictions with small images
     @Test("100 KB strict cache limit")
-    async func test100KBLimit() {
+    func test100KBLimit() async {
         let config = CacheConfig(
             totalCostLimit: 100_000, // 100 KB
             countLimit: 3
@@ -69,7 +69,7 @@ struct CustomMemoryLimitTests {
     /// Example 4: Test with custom cost-heavy scenario
     /// For testing behavior with large images
     @Test("Custom cost-heavy scenario")
-    async func testCostHeavyScenario() {
+    func testCostHeavyScenario() async {
         let config = CacheConfig(
             totalCostLimit: 20_000_000, // 20 MB for large images
             countLimit: 10
@@ -86,7 +86,7 @@ struct CustomMemoryLimitTests {
 struct MemoryPressureScenarios {
     /// Test behavior when cache limit is reached
     @Test("Cache behavior near limit")
-    async func testCacheNearLimit() {
+    func testCacheNearLimit() async {
         // Create a config where cache fills up quickly
         let config = CacheConfig(
             totalCostLimit: 500_000, // 500 KB - relatively small
@@ -103,7 +103,7 @@ struct MemoryPressureScenarios {
 
     /// Test behavior when exceeding count limit
     @Test("Cache exceeding count limit")
-    async func testExceedCountLimit() {
+    func testExceedCountLimit() async {
         let config = CacheConfig(
             totalCostLimit: 50_000_000, // Large cost limit
             countLimit: 2 // Very low count limit
@@ -122,7 +122,7 @@ struct MemoryPressureScenarios {
 struct ConfigComparisonTests {
     /// Compare behavior across multiple config sizes
     @Test("Behavior across config sizes")
-    async func testMultipleConfigSizes() {
+    func testMultipleConfigSizes() async {
         let configs = [
             ("Small", CacheConfig(totalCostLimit: 100_000, countLimit: 2)),
             ("Medium", CacheConfig(totalCostLimit: 1_000_000, countLimit: 10)),
@@ -145,7 +145,7 @@ struct ConfigComparisonTests {
 struct EvictionMonitoringTests {
     /// Monitor eviction statistics
     @Test("Eviction statistics collection")
-    async func testEvictionStats() {
+    func testEvictionStats() async {
         let provider = ThumbnailProvider(config: .testing)
 
         // Initial state
@@ -163,7 +163,7 @@ struct EvictionMonitoringTests {
 
     /// Track hit/miss ratio
     @Test("Hit and miss ratio tracking")
-    async func testHitMissRatio() {
+    func testHitMissRatio() async {
         let provider = ThumbnailProvider(config: .testing)
 
         let stats = await provider.getCacheStatistics()
@@ -184,7 +184,7 @@ struct EvictionMonitoringTests {
 struct RealisticWorkloadTests {
     /// Simulate typical thumbnail browsing session
     @Test("Typical browsing session")
-    async func testTypicalBrowsingSession() {
+    func testTypicalBrowsingSession() async {
         // Config for typical photo viewing (2560x2560 thumbnails)
         let config = CacheConfig(
             totalCostLimit: 500_000_000, // 500 MB - reasonable for 100-150 thumbs
@@ -206,7 +206,7 @@ struct RealisticWorkloadTests {
 
     /// Simulate rapid scrolling with many thumbnails
     @Test("Rapid scrolling pattern")
-    async func testRapidScrolling() {
+    func testRapidScrolling() async {
         let config = CacheConfig(
             totalCostLimit: 100_000_000, // 100 MB
             countLimit: 50
@@ -230,7 +230,7 @@ struct RealisticWorkloadTests {
 struct MemoryPerformanceTests {
     /// Measure cache operations with different configs
     @Test("Operations speed with testing config")
-    async func testSpeedWithTestingConfig() {
+    func testSpeedWithTestingConfig() async {
         let provider = ThumbnailProvider(config: .testing)
 
         let start = Date()
@@ -245,7 +245,7 @@ struct MemoryPerformanceTests {
 
     /// Measure cache operations with production config
     @Test("Operations speed with production config")
-    async func testSpeedWithProductionConfig() {
+    func testSpeedWithProductionConfig() async {
         let provider = ThumbnailProvider(config: .production)
 
         let start = Date()
@@ -265,7 +265,7 @@ struct MemoryPerformanceTests {
 struct IntegrationTestExamples {
     /// Template for testing multiple operations together
     @Test("Multi-operation workflow")
-    async func testMultiOperationWorkflow() {
+    func testMultiOperationWorkflow() async {
         let provider = ThumbnailProvider(config: .testing)
 
         // Step 1: Get initial stats

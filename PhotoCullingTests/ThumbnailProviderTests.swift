@@ -12,6 +12,7 @@ import Testing
 
 // MARK: - Mock DiskCacheManager for testing
 
+/*
 actor MockDiskCacheManager: DiskCacheManager {
     private var cache: [URL: NSImage] = [:]
     var saveCallCount = 0
@@ -32,7 +33,7 @@ actor MockDiskCacheManager: DiskCacheManager {
         cache.removeAll()
     }
 }
-
+*/
 // MARK: - Test Image Generator
 
 func createTestImage(width: Int = 100, height: Int = 100) -> NSImage {
@@ -61,7 +62,7 @@ struct ThumbnailProviderTests {
     }
 
     @Test("Initializes with custom config")
-    async func testCustomConfigInitialization() {
+    func testCustomConfigInitialization() async {
         let testConfig = CacheConfig(totalCostLimit: 50000, countLimit: 3)
         let provider = ThumbnailProvider(config: testConfig)
         let stats = await provider.getCacheStatistics()
@@ -71,7 +72,7 @@ struct ThumbnailProviderTests {
     // MARK: - Cache Statistics Tests
 
     @Test("Cache hit rate calculates correctly")
-    async func testCacheHitRate() {
+    func testCacheHitRate() async {
         let provider = ThumbnailProvider(config: .testing)
 
         // Create test images
@@ -87,7 +88,7 @@ struct ThumbnailProviderTests {
     }
 
     @Test("Statistics reset after clear caches")
-    async func testStatisticsResetAfterClear() {
+    func testStatisticsResetAfterClear() async {
         let provider = ThumbnailProvider(config: .testing)
 
         // Get initial stats
@@ -105,7 +106,7 @@ struct ThumbnailProviderTests {
     // MARK: - Memory Limit Tests
 
     @Test("Cache respects count limit")
-    async func testCountLimit() {
+    func testCountLimit() async {
         let testConfig = CacheConfig(totalCostLimit: 10_000_000, countLimit: 3)
         let provider = ThumbnailProvider(config: testConfig)
 
@@ -127,7 +128,7 @@ struct ThumbnailProviderTests {
     }
 
     @Test("Cache respects cost limit")
-    async func testCostLimit() {
+    func testCostLimit() async {
         let testConfig = CacheConfig(totalCostLimit: 100_000, countLimit: 100)
         let provider = ThumbnailProvider(config: testConfig)
 
@@ -140,7 +141,7 @@ struct ThumbnailProviderTests {
     // MARK: - Cache Lookup Tests
 
     @Test("Thumbnail method handles missing files gracefully")
-    async func testThumbnailMissingFile() {
+    func testThumbnailMissingFile() async {
         let provider = ThumbnailProvider(config: .testing)
         let missingURL = URL(fileURLWithPath: "/nonexistent/file.jpg")
 
@@ -152,7 +153,7 @@ struct ThumbnailProviderTests {
     // MARK: - Clear Cache Tests
 
     @Test("Clear caches removes all cached items")
-    async func testClearCaches() {
+    func testClearCaches() async {
         let provider = ThumbnailProvider(config: .testing)
 
         // Clear caches
@@ -168,7 +169,7 @@ struct ThumbnailProviderTests {
     // MARK: - Preload Catalog Tests
 
     @Test("Preload catalog starts and can be tracked")
-    async func testPreloadCatalogInitiation() {
+    func testPreloadCatalogInitiation() async {
         let provider = ThumbnailProvider(config: .testing)
         let testDir = FileManager.default.temporaryDirectory
 
@@ -181,7 +182,7 @@ struct ThumbnailProviderTests {
     // MARK: - Concurrency Tests
 
     @Test("Provider handles concurrent access safely")
-    async func testConcurrentAccess() {
+    func testConcurrentAccess() async {
         let provider = ThumbnailProvider(config: .testing)
         let testURL = URL(fileURLWithPath: "/test/file.jpg")
 
@@ -200,7 +201,7 @@ struct ThumbnailProviderTests {
     // MARK: - Configuration Tests
 
     @Test("Config production has correct limits")
-    async func testProductionConfigLimits() {
+    func testProductionConfigLimits() async {
         let config = CacheConfig.production
 
         #expect(config.totalCostLimit == 200 * 2560 * 2560)
@@ -208,7 +209,7 @@ struct ThumbnailProviderTests {
     }
 
     @Test("Config testing has small limits")
-    async func testTestingConfigLimits() {
+    func testTestingConfigLimits() async {
         let config = CacheConfig.testing
 
         #expect(config.totalCostLimit == 100_000)
@@ -218,7 +219,7 @@ struct ThumbnailProviderTests {
     // MARK: - Cache Delegate Tests
 
     @Test("Cache delegate is properly set")
-    async func testCacheDelegateIsSet() {
+    func testCacheDelegateIsSet() async {
         let provider = ThumbnailProvider(config: .testing)
 
         // Verify provider initializes without crashing
@@ -230,7 +231,7 @@ struct ThumbnailProviderTests {
     // MARK: - Sendable Conformance Tests
 
     @Test("Provider is actor-isolated for thread safety")
-    async func testActorIsolation() {
+    func testActorIsolation() async {
         let provider = ThumbnailProvider(config: .testing)
 
         // Multiple concurrent accesses should not cause data races
@@ -250,7 +251,7 @@ struct ThumbnailProviderTests {
 @Suite("ThumbnailProvider Performance Tests")
 struct ThumbnailProviderPerformanceTests {
     @Test("Statistics gathering is fast")
-    async func testStatisticsPerformance() {
+    func testStatisticsPerformance() async {
         let provider = ThumbnailProvider(config: .testing)
 
         let startTime = Date()
@@ -264,7 +265,7 @@ struct ThumbnailProviderPerformanceTests {
     }
 
     @Test("Clear operation completes promptly")
-    async func testClearCachesPerformance() {
+    func testClearCachesPerformance() async {
         let provider = ThumbnailProvider(config: .testing)
 
         let startTime = Date()
@@ -281,7 +282,7 @@ struct ThumbnailProviderPerformanceTests {
 @Suite("ThumbnailProvider Integration Tests")
 struct ThumbnailProviderIntegrationTests {
     @Test("Multiple operations in sequence work correctly")
-    async func testMultipleOperationsSequence() {
+    func testMultipleOperationsSequence() async {
         let provider = ThumbnailProvider(config: .testing)
 
         // Get initial stats
@@ -297,7 +298,7 @@ struct ThumbnailProviderIntegrationTests {
     }
 
     @Test("Provider maintains isolation across instances")
-    async func testInstanceIsolation() {
+    func testInstanceIsolation() async {
         let provider1 = ThumbnailProvider(config: .testing)
         let provider2 = ThumbnailProvider(config: .testing)
 
