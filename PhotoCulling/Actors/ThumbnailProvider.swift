@@ -34,14 +34,14 @@ final class CacheDelegate: NSObject, NSCacheDelegate, @unchecked Sendable {
 struct CacheConfig {
     let totalCostLimit: Int
     let countLimit: Int
-    
+
     nonisolated static let production = CacheConfig(
-        totalCostLimit: 200 * 2560 * 2560,  // 1.25 GB
+        totalCostLimit: 200 * 2560 * 2560, // 1.25 GB
         countLimit: 500
     )
-    
+
     nonisolated static let testing = CacheConfig(
-        totalCostLimit: 100_000,  // Very small for testing evictions
+        totalCostLimit: 100_000, // Very small for testing evictions
         countLimit: 5
     )
 }
