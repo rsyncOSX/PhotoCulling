@@ -13,27 +13,27 @@ import Testing
 // MARK: - Mock DiskCacheManager for testing
 
 /*
-actor MockDiskCacheManager: DiskCacheManager {
-    private var cache: [URL: NSImage] = [:]
-    var saveCallCount = 0
-    var loadCallCount = 0
+ actor MockDiskCacheManager: DiskCacheManager {
+     private var cache: [URL: NSImage] = [:]
+     var saveCallCount = 0
+     var loadCallCount = 0
 
-    override func save(_ cgImage: CGImage, for url: URL) async {
-        saveCallCount += 1
-        let nsImage = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
-        cache[url] = nsImage
-    }
+     override func save(_ cgImage: CGImage, for url: URL) async {
+         saveCallCount += 1
+         let nsImage = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+         cache[url] = nsImage
+     }
 
-    override func load(for url: URL) async -> NSImage? {
-        loadCallCount += 1
-        return cache[url]
-    }
+     override func load(for url: URL) async -> NSImage? {
+         loadCallCount += 1
+         return cache[url]
+     }
 
-    override func pruneCache(maxAgeInDays _: Int) async {
-        cache.removeAll()
-    }
-}
-*/
+     override func pruneCache(maxAgeInDays _: Int) async {
+         cache.removeAll()
+     }
+ }
+ */
 // MARK: - Test Image Generator
 
 func createTestImage(width: Int = 100, height: Int = 100) -> NSImage {
@@ -63,7 +63,7 @@ struct ThumbnailProviderTests {
     }
 
     @Test("Initializes with custom config")
-    func testCustomConfigInitialization() async {
+    func customConfigInitialization() async {
         let testConfig = CacheConfig(totalCostLimit: 50000, countLimit: 3)
         let provider = ThumbnailProvider(config: testConfig)
         let stats = await provider.getCacheStatistics()
@@ -73,7 +73,7 @@ struct ThumbnailProviderTests {
     // MARK: - Cache Statistics Tests
 
     @Test("Cache hit rate calculates correctly")
-    func testCacheHitRate() async {
+    func cacheHitRate() async {
         let provider = ThumbnailProvider(config: .testing)
 
         // Create test images
@@ -89,7 +89,7 @@ struct ThumbnailProviderTests {
     }
 
     @Test("Statistics reset after clear caches")
-    func testStatisticsResetAfterClear() async {
+    func statisticsResetAfterClear() async {
         let provider = ThumbnailProvider(config: .testing)
 
         // Get initial stats
@@ -107,7 +107,7 @@ struct ThumbnailProviderTests {
     // MARK: - Memory Limit Tests
 
     @Test("Cache respects count limit")
-    func testCountLimit() async {
+    func testCountLimit() {
         let testConfig = CacheConfig(totalCostLimit: 10_000_000, countLimit: 3)
         let provider = ThumbnailProvider(config: testConfig)
 
@@ -129,7 +129,7 @@ struct ThumbnailProviderTests {
     }
 
     @Test("Cache respects cost limit")
-    func testCostLimit() async {
+    func costLimit() {
         let testConfig = CacheConfig(totalCostLimit: 100_000, countLimit: 100)
         let provider = ThumbnailProvider(config: testConfig)
 
@@ -142,7 +142,7 @@ struct ThumbnailProviderTests {
     // MARK: - Cache Lookup Tests
 
     @Test("Thumbnail method handles missing files gracefully")
-    func testThumbnailMissingFile() async {
+    func thumbnailMissingFile() async {
         let provider = ThumbnailProvider(config: .testing)
         let missingURL = URL(fileURLWithPath: "/nonexistent/file.jpg")
 
@@ -170,7 +170,7 @@ struct ThumbnailProviderTests {
     // MARK: - Preload Catalog Tests
 
     @Test("Preload catalog starts and can be tracked")
-    func testPreloadCatalogInitiation() async {
+    func preloadCatalogInitiation() async {
         let provider = ThumbnailProvider(config: .testing)
         let testDir = FileManager.default.temporaryDirectory
 
@@ -183,7 +183,7 @@ struct ThumbnailProviderTests {
     // MARK: - Concurrency Tests
 
     @Test("Provider handles concurrent access safely")
-    func testConcurrentAccess() async {
+    func concurrentAccess() async {
         let provider = ThumbnailProvider(config: .testing)
         let testURL = URL(fileURLWithPath: "/test/file.jpg")
 
@@ -202,7 +202,7 @@ struct ThumbnailProviderTests {
     // MARK: - Configuration Tests
 
     @Test("Config production has correct limits")
-    func testProductionConfigLimits() async {
+    func productionConfigLimits() {
         let config = CacheConfig.production
 
         #expect(config.totalCostLimit == 200 * 2560 * 2560)
@@ -210,7 +210,7 @@ struct ThumbnailProviderTests {
     }
 
     @Test("Config testing has small limits")
-    func testTestingConfigLimits() async {
+    func ingConfigLimits() {
         let config = CacheConfig.testing
 
         #expect(config.totalCostLimit == 100_000)
@@ -220,7 +220,7 @@ struct ThumbnailProviderTests {
     // MARK: - Cache Delegate Tests
 
     @Test("Cache delegate is properly set")
-    func testCacheDelegateIsSet() async {
+    func cacheDelegateIsSet() {
         let provider = ThumbnailProvider(config: .testing)
 
         // Verify provider initializes without crashing
@@ -232,7 +232,7 @@ struct ThumbnailProviderTests {
     // MARK: - Sendable Conformance Tests
 
     @Test("Provider is actor-isolated for thread safety")
-    func testActorIsolation() async {
+    func actorIsolation() async {
         let provider = ThumbnailProvider(config: .testing)
 
         // Multiple concurrent accesses should not cause data races
@@ -253,7 +253,7 @@ struct ThumbnailProviderTests {
 @MainActor
 struct ThumbnailProviderPerformanceTests {
     @Test("Statistics gathering is fast")
-    func testStatisticsPerformance() async {
+    func statisticsPerformance() async {
         let provider = ThumbnailProvider(config: .testing)
 
         let startTime = Date()
@@ -267,7 +267,7 @@ struct ThumbnailProviderPerformanceTests {
     }
 
     @Test("Clear operation completes promptly")
-    func testClearCachesPerformance() async {
+    func clearCachesPerformance() async {
         let provider = ThumbnailProvider(config: .testing)
 
         let startTime = Date()
@@ -285,7 +285,7 @@ struct ThumbnailProviderPerformanceTests {
 @MainActor
 struct ThumbnailProviderIntegrationTests {
     @Test("Multiple operations in sequence work correctly")
-    func testMultipleOperationsSequence() async {
+    func multipleOperationsSequence() async {
         let provider = ThumbnailProvider(config: .testing)
 
         // Get initial stats
@@ -301,7 +301,7 @@ struct ThumbnailProviderIntegrationTests {
     }
 
     @Test("Provider maintains isolation across instances")
-    func testInstanceIsolation() async {
+    func instanceIsolation() async {
         let provider1 = ThumbnailProvider(config: .testing)
         let provider2 = ThumbnailProvider(config: .testing)
 

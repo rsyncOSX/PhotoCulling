@@ -70,7 +70,7 @@ struct CustomMemoryLimitTests {
     /// Example 4: Test with custom cost-heavy scenario
     /// For testing behavior with large images
     @Test("Custom cost-heavy scenario")
-    func testCostHeavyScenario() async {
+    func costHeavyScenario() {
         let config = CacheConfig(
             totalCostLimit: 20_000_000, // 20 MB for large images
             countLimit: 10
@@ -87,7 +87,7 @@ struct CustomMemoryLimitTests {
 struct MemoryPressureScenarios {
     /// Test behavior when cache limit is reached
     @Test("Cache behavior near limit")
-    func testCacheNearLimit() async {
+    func cacheNearLimit() async {
         // Create a config where cache fills up quickly
         let config = CacheConfig(
             totalCostLimit: 500_000, // 500 KB - relatively small
@@ -104,7 +104,7 @@ struct MemoryPressureScenarios {
 
     /// Test behavior when exceeding count limit
     @Test("Cache exceeding count limit")
-    func testExceedCountLimit() async {
+    func exceedCountLimit() async {
         let config = CacheConfig(
             totalCostLimit: 50_000_000, // Large cost limit
             countLimit: 2 // Very low count limit
@@ -123,7 +123,7 @@ struct MemoryPressureScenarios {
 struct ConfigComparisonTests {
     /// Compare behavior across multiple config sizes
     @Test("Behavior across config sizes")
-    func testMultipleConfigSizes() async {
+    func multipleConfigSizes() async {
         let configs = [
             ("Small", CacheConfig(totalCostLimit: 100_000, countLimit: 2)),
             ("Medium", CacheConfig(totalCostLimit: 1_000_000, countLimit: 10)),
@@ -146,7 +146,7 @@ struct ConfigComparisonTests {
 struct EvictionMonitoringTests {
     /// Monitor eviction statistics
     @Test("Eviction statistics collection")
-    func testEvictionStats() async {
+    func evictionStats() async {
         let provider = ThumbnailProvider(config: .testing)
 
         // Initial state
@@ -164,7 +164,7 @@ struct EvictionMonitoringTests {
 
     /// Track hit/miss ratio
     @Test("Hit and miss ratio tracking")
-    func testHitMissRatio() async {
+    func hitMissRatio() async {
         let provider = ThumbnailProvider(config: .testing)
 
         let stats = await provider.getCacheStatistics()
@@ -185,7 +185,7 @@ struct EvictionMonitoringTests {
 struct RealisticWorkloadTests {
     /// Simulate typical thumbnail browsing session
     @Test("Typical browsing session")
-    func testTypicalBrowsingSession() async {
+    func typicalBrowsingSession() async {
         // Config for typical photo viewing (2560x2560 thumbnails)
         let config = CacheConfig(
             totalCostLimit: 500_000_000, // 500 MB - reasonable for 100-150 thumbs
@@ -207,7 +207,7 @@ struct RealisticWorkloadTests {
 
     /// Simulate rapid scrolling with many thumbnails
     @Test("Rapid scrolling pattern")
-    func testRapidScrolling() async {
+    func rapidScrolling() async {
         let config = CacheConfig(
             totalCostLimit: 100_000_000, // 100 MB
             countLimit: 50
@@ -231,7 +231,7 @@ struct RealisticWorkloadTests {
 struct MemoryPerformanceTests {
     /// Measure cache operations with different configs
     @Test("Operations speed with testing config")
-    func testSpeedWithTestingConfig() async {
+    func speedWithTestingConfig() async {
         let provider = ThumbnailProvider(config: .testing)
 
         let start = Date()
@@ -246,7 +246,7 @@ struct MemoryPerformanceTests {
 
     /// Measure cache operations with production config
     @Test("Operations speed with production config")
-    func testSpeedWithProductionConfig() async {
+    func speedWithProductionConfig() async {
         let provider = ThumbnailProvider(config: .production)
 
         let start = Date()
@@ -266,7 +266,7 @@ struct MemoryPerformanceTests {
 struct IntegrationTestExamples {
     /// Template for testing multiple operations together
     @Test("Multi-operation workflow")
-    func testMultiOperationWorkflow() async {
+    func multiOperationWorkflow() async {
         let provider = ThumbnailProvider(config: .testing)
 
         // Step 1: Get initial stats
