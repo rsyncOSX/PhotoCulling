@@ -88,8 +88,7 @@ final class SidebarPhotoCullingViewModel {
         issorting = false
     }
 
-    func clearCaches() async {
-        await ThumbnailProvider.shared.clearCaches()
+    func clearMemoryCachesandTagging() async {
         sources.removeAll()
         selectedSource = nil
         filteredFiles.removeAll()

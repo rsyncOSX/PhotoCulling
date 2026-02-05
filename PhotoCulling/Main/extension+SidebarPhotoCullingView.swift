@@ -54,18 +54,6 @@ extension SidebarPhotoCullingView {
             .disabled(viewModel.creatingthumbnails)
         }
 
-        ToolbarItem {
-            ConditionalGlassButton(
-                systemImage: "arrow.up.trash",
-                text: "",
-                helpText: "Reset memory and disk cache"
-            ) {
-                viewModel.alertType = .clearMemoryandThumbnails
-                viewModel.showingAlert = true
-            }
-            .disabled(viewModel.creatingthumbnails)
-        }
-
         ToolbarItem { Spacer() }
     }
 

@@ -72,6 +72,34 @@ actor DiskCacheManager {
         }
     }
 
+    func getDiskCacheSize() async -> Int {
+        let directory = cacheDirectory
+
+        return await Task.detached(priority: .utility) {
+            let fileManager = FileManager.default
+            let resourceKeys: [URLResourceKey] = [.totalFileAllocatedSizeKey]
+
+            guard let urls = try? fileManager.contentsOfDirectory(
+                at: directory,
+                includingPropertiesForKeys: resourceKeys,
+                options: .skipsHiddenFiles
+            ) else { return 0 }
+
+            var totalSize = 0
+            for fileURL in urls {
+                do {
+                    let values = try fileURL.resourceValues(forKeys: Set(resourceKeys))
+                    if let size = values.totalFileAllocatedSize {
+                        totalSize += size
+                    }
+                } catch {
+                    Logger.process.warning("DiskCacheManager: Failed to get size for \(fileURL.path): \(error)")
+                }
+            }
+            return totalSize
+        }.value
+    }
+
     func pruneCache(maxAgeInDays: Int = 30) async {
         // Capture cacheDirectory to avoid capturing 'self'
         let directory = cacheDirectory

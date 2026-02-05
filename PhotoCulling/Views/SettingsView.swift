@@ -28,6 +28,9 @@ struct SettingsView: View {
 struct CacheSettingsTab: View {
     @Environment(SettingsManager.self) var settingsManager
     @State private var showResetConfirmation = false
+    @State private var currentDiskCacheSize: Int = 0
+    @State private var isLoadingDiskCacheSize = false
+    @State private var isPruningDiskCache = false
 
     var body: some View {
         VStack(spacing: 16) {
@@ -117,6 +120,41 @@ struct CacheSettingsTab: View {
                         Text("Automatically populate memory cache from disk cache when app starts")
                             .font(.system(size: 11, weight: .regular))
                             .foregroundStyle(.secondary)
+                    }
+
+                    // Current Disk Cache Size with Prune Button
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "internaldrive")
+                                .font(.system(size: 10, weight: .medium))
+                            Text("Current Cache Use")
+                                .font(.system(size: 10, weight: .medium))
+                            Spacer()
+                            if isLoadingDiskCacheSize {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                            } else {
+                                Text(formatBytes(currentDiskCacheSize))
+                                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                            }
+                        }
+
+                        Button(action: pruneDiskCache) {
+                            HStack(spacing: 6) {
+                                if isPruningDiskCache {
+                                    ProgressView()
+                                        .scaleEffect(0.6)
+                                } else {
+                                    Image(systemName: "trash")
+                                        .font(.system(size: 10, weight: .semibold))
+                                }
+                                Text("Prune Cache")
+                                    .font(.system(size: 10, weight: .medium))
+                            }
+                            .frame(maxWidth: .infinity, alignment: .center)
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(isPruningDiskCache)
                     }
 
                     // Disk Cache Size - Compact
@@ -300,5 +338,38 @@ struct CacheSettingsTab: View {
                 }
             )
         }
+        .onAppear(perform: refreshDiskCacheSize)
+    }
+
+    private func refreshDiskCacheSize() {
+        isLoadingDiskCacheSize = true
+        Task {
+            let size = await ThumbnailProvider.shared.getDiskCacheSize()
+            await MainActor.run {
+                currentDiskCacheSize = size
+                isLoadingDiskCacheSize = false
+            }
+        }
+    }
+
+    private func pruneDiskCache() {
+        isPruningDiskCache = true
+        Task {
+            await ThumbnailProvider.shared.pruneDiskCache()
+            // Refresh the size after pruning
+            let size = await ThumbnailProvider.shared.getDiskCacheSize()
+            await MainActor.run {
+                currentDiskCacheSize = size
+                isPruningDiskCache = false
+            }
+        }
+    }
+
+    private func formatBytes(_ bytes: Int) -> String {
+        if bytes == 0 { return "0 B" }
+        let units = ["B", "KB", "MB", "GB"]
+        let unitIndex = Int(log2(Double(bytes)) / 10)
+        let size = Double(bytes) / pow(1024, Double(unitIndex))
+        return String(format: "%.1f %@", size, units[min(unitIndex, units.count - 1)])
     }
 }

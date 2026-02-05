@@ -64,7 +64,7 @@ struct SidebarPhotoCullingView: View {
                         extractJPGS: extractAllJPGS,
                         clearCaches: {
                             Task {
-                                await viewModel.clearCaches()
+                                await viewModel.clearMemoryCachesandTagging()
                             }
                         }
                     )

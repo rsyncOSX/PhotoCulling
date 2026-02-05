@@ -4,7 +4,6 @@ enum SidebarAlertView {
     enum AlertType {
         case extractJPGs
         case clearToggledFiles
-        case clearMemoryandThumbnails
     }
 
     typealias AlertActions = (
@@ -37,16 +36,6 @@ enum SidebarAlertView {
                     if let url = selectedSource?.url {
                         cullingManager.resetSavedFiles(in: url)
                     }
-                },
-                secondaryButton: .cancel()
-            )
-
-        case .clearMemoryandThumbnails:
-            return Alert(
-                title: Text("Reset Memory and Cached Thumbnails Files"),
-                message: Text("Are you sure you want to reset?"),
-                primaryButton: .destructive(Text("Reset")) {
-                    actions.clearCaches()
                 },
                 secondaryButton: .cancel()
             )

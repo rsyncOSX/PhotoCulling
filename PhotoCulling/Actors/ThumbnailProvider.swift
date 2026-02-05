@@ -254,6 +254,16 @@ actor ThumbnailProvider {
         return (cacheMemory, cacheDisk, cacheEvictions, hitRate)
     }
 
+    /// Get current disk cache size in bytes
+    func getDiskCacheSize() async -> Int {
+        await diskCache.getDiskCacheSize()
+    }
+
+    /// Prune disk cache to remove old files
+    func pruneDiskCache(maxAgeInDays: Int = 30) async {
+        await diskCache.pruneCache(maxAgeInDays: maxAgeInDays)
+    }
+
     func thumbnail(for url: URL, targetSize: Int) async -> NSImage? {
         do {
             return try await resolveImage(for: url, targetSize: targetSize)
