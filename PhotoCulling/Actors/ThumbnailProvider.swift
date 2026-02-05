@@ -36,14 +36,28 @@ struct CacheConfig {
     let countLimit: Int
 
     nonisolated static let production = CacheConfig(
-        totalCostLimit: 100 * 1024 * 1024, // ~409 MB for ~90 1024x1024 images
-        countLimit: 500
+        totalCostLimit: 500 * 1024 * 1024, // ~500 MB for ~112 1024x1024 images
+        countLimit: 1000
     )
 
     nonisolated static let testing = CacheConfig(
         totalCostLimit: 100_000, // Very small for testing evictions
         countLimit: 5
     )
+
+    /// Calculate appropriate cache limits based on thumbnail size
+    nonisolated static func forThumbnailSize(_ size: Int) -> CacheConfig {
+        // Estimate memory cost: width * height * 4 bytes * 1.1 (overhead)
+        let estimatedCostPerImage = (size * size * 4 * 11) / 10
+
+        // Store 100 images in memory cache, scale up for larger thumbnails
+        let totalCostLimit = max(500 * 1024 * 1024, estimatedCostPerImage * 100)
+        let countLimit = max(1000, estimatedCostPerImage > 0 ? (500 * 1024 * 1024) / estimatedCostPerImage : 500)
+
+        Logger.process.debugMessageOnly("CacheConfig: totalCostLimit: \(totalCostLimit), countLimit:\(countLimit)")
+
+        return CacheConfig(totalCostLimit: totalCostLimit, countLimit: countLimit)
+    }
 }
 
 actor ThumbnailProvider {
@@ -89,6 +103,13 @@ actor ThumbnailProvider {
     @discardableResult
     func preloadCatalog(at catalogURL: URL, targetSize: Int) async -> Int {
         cancelPreload()
+
+        // Reconfigure cache based on target size to ensure adequate memory for thumbnails
+        let config = CacheConfig.forThumbnailSize(targetSize)
+        memoryCache.totalCostLimit = config.totalCostLimit
+        memoryCache.countLimit = config.countLimit
+        let cacheMemMB = config.totalCostLimit / (1024 * 1024)
+        Logger.process.debugMessageOnly("Cache reconfigured for \(targetSize)px thumbnails: \(cacheMemMB)MB, limit: \(config.countLimit)")
 
         let task = Task {
             successCount = 0

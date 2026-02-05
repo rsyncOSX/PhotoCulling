@@ -16,8 +16,13 @@ struct CacheStatisticsView: View {
     var body: some View {
         VStack(spacing: 12) {
             HStack {
-                Text("Cache Statistics")
-                    .font(.system(size: 14, weight: .semibold))
+                VStack(spacing: 4) {
+                    Text("Cache Statistics")
+                        .font(.system(size: 14, weight: .semibold))
+                    Text("If disk cache exist when app is restarted, memory cache will be populated automatically from disk cache.")
+                        .font(.system(size: 12, weight: .semibold))
+                }
+
                 Spacer()
                 Button(action: refreshStatistics) {
                     Image(systemName: "arrow.clockwise")
@@ -35,7 +40,6 @@ struct CacheStatisticsView: View {
                             Text("% memory hits")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(.secondary)
-                            
                         }
 
                         ZStack {
@@ -52,8 +56,8 @@ struct CacheStatisticsView: View {
                                     style: StrokeStyle(lineWidth: 4, lineCap: .round)
                                 )
                                 .rotationEffect(.degrees(-90))
-                            
-                            Text(String(format: "%.1f%%", stats.hitRate))
+
+                            Text(String(format: "%.1f", stats.hitRate))
                                 .font(.system(size: 12, weight: .bold, design: .rounded))
                                 .padding(5)
                         }
@@ -141,7 +145,7 @@ struct StatisticItemView: View {
         VStack(spacing: 4) {
             Image(systemName: imagelabel)
                 .font(.system(size: 12, weight: .semibold))
-            
+
             Text("\(value)")
                 .font(.system(size: 14, weight: .bold, design: .rounded))
         }
