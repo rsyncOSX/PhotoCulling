@@ -17,13 +17,13 @@ struct CatalogSidebarView: View {
         .navigationTitle("Catalogs")
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 12) {
-                CacheStatisticsView(thumbnailProvider: ThumbnailProvider.shared)
-                
                 Button(action: { isShowingPicker = true }, label: {
                     Label("Add Catalog", systemImage: "plus")
                 })
                 .buttonStyle(.bordered)
                 .frame(maxWidth: .infinity)
+
+                CacheStatisticsView(thumbnailProvider: ThumbnailProvider.shared)
             }
             .padding()
         }

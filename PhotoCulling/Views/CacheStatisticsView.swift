@@ -5,8 +5,8 @@
 //  Created by Thomas Evensen on 05/02/2026.
 //
 
-import SwiftUI
 import Combine
+import SwiftUI
 
 struct CacheStatisticsView: View {
     @State private var statistics: (hits: Int, misses: Int, evictions: Int, hitRate: Double)?
@@ -139,6 +139,7 @@ struct CacheStatisticsView: View {
 }
 
 // MARK: - Statistic Item
+
 struct StatisticItemView: View {
     let label: String
     let value: Int
@@ -163,4 +164,3 @@ struct StatisticItemView: View {
         .cornerRadius(6)
     }
 }
-
