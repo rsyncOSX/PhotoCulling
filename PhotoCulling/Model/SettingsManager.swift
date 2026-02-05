@@ -54,6 +54,44 @@ class SettingsManager {
         }
     }
 
+    // MARK: - Thumbnail Size Settings
+
+    /// Grid thumbnail size in pixels (default: 100)
+    var thumbnailSizeGrid: Int = 100 {
+        didSet {
+            Task {
+                await saveSettings()
+            }
+        }
+    }
+
+    /// Preview thumbnail size in pixels (default: 1024)
+    var thumbnailSizePreview: Int = 1024 {
+        didSet {
+            Task {
+                await saveSettings()
+            }
+        }
+    }
+
+    /// Full size thumbnail in pixels (default: 8700)
+    var thumbnailSizeFullSize: Int = 8700 {
+        didSet {
+            Task {
+                await saveSettings()
+            }
+        }
+    }
+
+    /// Estimated cost per pixel for thumbnail (in bytes, default: 4 for RGBA)
+    var thumbnailCostPerPixel: Int = 4 {
+        didSet {
+            Task {
+                await saveSettings()
+            }
+        }
+    }
+
     // MARK: - Private Properties
 
     private let logger = Logger(subsystem: "com.photoculling", category: "SettingsManager")
@@ -104,6 +142,10 @@ class SettingsManager {
                 self.maxCachedThumbnails = savedSettings.maxCachedThumbnails
                 self.autoLoadDiskCache = savedSettings.autoLoadDiskCache
                 self.diskCacheSizeMB = savedSettings.diskCacheSizeMB
+                self.thumbnailSizeGrid = savedSettings.thumbnailSizeGrid
+                self.thumbnailSizePreview = savedSettings.thumbnailSizePreview
+                self.thumbnailSizeFullSize = savedSettings.thumbnailSizeFullSize
+                self.thumbnailCostPerPixel = savedSettings.thumbnailCostPerPixel
             }
 
             logger.debug("Settings loaded successfully")
@@ -129,7 +171,11 @@ class SettingsManager {
                 memoryCacheSizeMB: memoryCacheSizeMB,
                 maxCachedThumbnails: maxCachedThumbnails,
                 autoLoadDiskCache: autoLoadDiskCache,
-                diskCacheSizeMB: diskCacheSizeMB
+                diskCacheSizeMB: diskCacheSizeMB,
+                thumbnailSizeGrid: thumbnailSizeGrid,
+                thumbnailSizePreview: thumbnailSizePreview,
+                thumbnailSizeFullSize: thumbnailSizeFullSize,
+                thumbnailCostPerPixel: thumbnailCostPerPixel
             )
 
             let encoder = JSONEncoder()
@@ -150,6 +196,10 @@ class SettingsManager {
             self.maxCachedThumbnails = 50
             self.autoLoadDiskCache = true
             self.diskCacheSizeMB = 2000
+            self.thumbnailSizeGrid = 100
+            self.thumbnailSizePreview = 1024
+            self.thumbnailSizeFullSize = 8700
+            self.thumbnailCostPerPixel = 4
         }
         await saveSettings()
     }
@@ -162,4 +212,8 @@ private struct SavedSettings: Codable {
     let maxCachedThumbnails: Int
     let autoLoadDiskCache: Bool
     let diskCacheSizeMB: Int
+    let thumbnailSizeGrid: Int
+    let thumbnailSizePreview: Int
+    let thumbnailSizeFullSize: Int
+    let thumbnailCostPerPixel: Int
 }

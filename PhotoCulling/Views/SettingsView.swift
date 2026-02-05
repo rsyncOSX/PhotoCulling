@@ -19,7 +19,7 @@ struct SettingsView: View {
                 }
         }
         .padding(20)
-        .frame(minWidth: 400, minHeight: 300)
+        .frame(minWidth: 700, minHeight: 900)
     }
 }
 
@@ -130,6 +130,130 @@ struct CacheSettingsTab: View {
                         Text("Maximum size of cached files on disk")
                             .font(.system(size: 11, weight: .regular))
                             .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(12)
+                .background(Color(.controlBackgroundColor))
+                .cornerRadius(8)
+
+                // Thumbnail Settings Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Thumbnail Sizes")
+                        .font(.system(size: 14, weight: .semibold))
+
+                    Divider()
+
+                    // Grid Size
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Label("Grid Thumbnail Size", systemImage: "square.grid.2x2")
+                                .font(.system(size: 12, weight: .medium))
+                            Spacer()
+                            Text("\(settingsManager.thumbnailSizeGrid) px")
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        }
+                        Slider(
+                            value: Binding<Double>(
+                                get: { Double(settingsManager.thumbnailSizeGrid) },
+                                set: { settingsManager.thumbnailSizeGrid = Int($0) }
+                            ),
+                            in: 50 ... 200,
+                            step: 10
+                        )
+                        Text("Size for grid view thumbnails")
+                            .font(.system(size: 11, weight: .regular))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    // Preview Size
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Label("Preview Thumbnail Size", systemImage: "photo")
+                                .font(.system(size: 12, weight: .medium))
+                            Spacer()
+                            Text("\(settingsManager.thumbnailSizePreview) px")
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        }
+                        Slider(
+                            value: Binding<Double>(
+                                get: { Double(settingsManager.thumbnailSizePreview) },
+                                set: { settingsManager.thumbnailSizePreview = Int($0) }
+                            ),
+                            in: 256 ... 2048,
+                            step: 128
+                        )
+                        Text("Size for preview view thumbnails")
+                            .font(.system(size: 11, weight: .regular))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    // Full Size
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Label("Full Size Thumbnail", systemImage: "display")
+                                .font(.system(size: 12, weight: .medium))
+                            Spacer()
+                            Text("\(settingsManager.thumbnailSizeFullSize) px")
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        }
+                        Slider(
+                            value: Binding<Double>(
+                                get: { Double(settingsManager.thumbnailSizeFullSize) },
+                                set: { settingsManager.thumbnailSizeFullSize = Int($0) }
+                            ),
+                            in: 2048 ... 16384,
+                            step: 512
+                        )
+                        Text("Size for full-size view thumbnails")
+                            .font(.system(size: 11, weight: .regular))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    // Cost Per Pixel
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Label("Cost Per Pixel", systemImage: "function")
+                                .font(.system(size: 12, weight: .medium))
+                            Spacer()
+                            Text("\(settingsManager.thumbnailCostPerPixel) bytes")
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        }
+                        Slider(
+                            value: Binding<Double>(
+                                get: { Double(settingsManager.thumbnailCostPerPixel) },
+                                set: { settingsManager.thumbnailCostPerPixel = Int($0) }
+                            ),
+                            in: 1 ... 8,
+                            step: 1
+                        )
+                        HStack(spacing: 8) {
+                            Text("Memory cost per pixel (typically 4 for RGBA)")
+                                .font(.system(size: 11, weight: .regular))
+                                .foregroundStyle(.secondary)
+                            
+                            // Calculate estimated costs
+                            let gridCost = (settingsManager.thumbnailSizeGrid *
+                                           settingsManager.thumbnailSizeGrid *
+                                           settingsManager.thumbnailCostPerPixel) / 1024
+                            let previewCost = (settingsManager.thumbnailSizePreview *
+                                              settingsManager.thumbnailSizePreview *
+                                              settingsManager.thumbnailCostPerPixel) / 1024
+                            let fullCost = (settingsManager.thumbnailSizeFullSize *
+                                           settingsManager.thumbnailSizeFullSize *
+                                           settingsManager.thumbnailCostPerPixel) / 1024
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Est. Grid: \(gridCost) KB")
+                                    .font(.system(size: 10, weight: .regular))
+                                    .foregroundStyle(.secondary)
+                                Text("Est. Preview: \(previewCost) KB")
+                                    .font(.system(size: 10, weight: .regular))
+                                    .foregroundStyle(.secondary)
+                                Text("Est. Full: \(fullCost) KB")
+                                    .font(.system(size: 10, weight: .regular))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                     }
                 }
                 .padding(12)

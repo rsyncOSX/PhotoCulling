@@ -26,8 +26,6 @@ struct PhotoCullingApp: App {
     @State private var settingsManager = SettingsManager.shared
 
     var body: some Scene {
-        
-
         Window("Photo Culling", id: "main-window") {
             SidebarPhotoCullingView(
                 nsImage: $nsImage,
@@ -47,7 +45,7 @@ struct PhotoCullingApp: App {
 
             ToggleCommands()
         }
-        
+
         Settings {
             SettingsView()
                 .environment(settingsManager)
