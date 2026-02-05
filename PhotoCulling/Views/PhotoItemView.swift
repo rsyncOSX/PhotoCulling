@@ -70,9 +70,10 @@ struct PhotoItemView: View {
             Logger.process.debugMessageOnly("PhotoItemView (in GRID) loading thumbnail for \(url)")
             isLoading = true
             // Most likely a thumbnail is received from the populated NSCache<NSURL, NSImage>().
+            // Use preview size to match preload cache to avoid disk reads
             thumbnailImage = await ThumbnailProvider.shared.thumbnail(
                 for: url,
-                targetSize: ThumbnailSize.grid
+                targetSize: ThumbnailSize.preview
             )
             isLoading = false
         }
