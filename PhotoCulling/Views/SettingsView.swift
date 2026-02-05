@@ -19,7 +19,7 @@ struct SettingsView: View {
                 }
         }
         .padding(20)
-        .frame(minWidth: 700, minHeight: 900)
+        .frame(minWidth: 700, minHeight: 800)
     }
 }
 
@@ -39,48 +39,57 @@ struct CacheSettingsTab: View {
 
                     Divider()
 
-                    // Cache Size
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Label("Memory Cache Size", systemImage: "memorychip")
-                                .font(.system(size: 12, weight: .medium))
-                            Spacer()
-                            Text("\(settingsManager.memoryCacheSizeMB) MB")
-                                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                        }
-                        Slider(
-                            value: Binding<Double>(
-                                get: { Double(settingsManager.memoryCacheSizeMB) },
-                                set: { settingsManager.memoryCacheSizeMB = Int($0) }
-                            ),
-                            in: 100 ... 2000,
-                            step: 50
-                        )
+                    // Cache Size and Max Thumbnails - Horizontal Layout
+                    VStack(alignment: .leading, spacing: 8) {
                         Text("Higher values cache more thumbnails in memory")
-                            .font(.system(size: 11, weight: .regular))
+                            .font(.system(size: 10, weight: .regular))
                             .foregroundStyle(.secondary)
-                    }
 
-                    // Max Cached Thumbnails
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Label("Max Cached Thumbnails", systemImage: "photo.stack")
-                                .font(.system(size: 12, weight: .medium))
-                            Spacer()
-                            Text("\(settingsManager.maxCachedThumbnails)")
-                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        HStack(spacing: 16) {
+                            // Cache Size
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "memorychip")
+                                        .font(.system(size: 10, weight: .medium))
+                                    Text("Memory")
+                                        .font(.system(size: 10, weight: .medium))
+                                    Spacer()
+                                    Text("\(settingsManager.memoryCacheSizeMB) MB")
+                                        .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                }
+                                Slider(
+                                    value: Binding<Double>(
+                                        get: { Double(settingsManager.memoryCacheSizeMB) },
+                                        set: { settingsManager.memoryCacheSizeMB = Int($0) }
+                                    ),
+                                    in: 100 ... 2000,
+                                    step: 50
+                                )
+                                .frame(height: 18)
+                            }
+
+                            // Max Cached Thumbnails
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "photo.stack")
+                                        .font(.system(size: 10, weight: .medium))
+                                    Text("Max Thumb")
+                                        .font(.system(size: 10, weight: .medium))
+                                    Spacer()
+                                    Text("\(settingsManager.maxCachedThumbnails)")
+                                        .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                }
+                                Slider(
+                                    value: Binding<Double>(
+                                        get: { Double(settingsManager.maxCachedThumbnails) },
+                                        set: { settingsManager.maxCachedThumbnails = Int($0) }
+                                    ),
+                                    in: 10 ... 200,
+                                    step: 10
+                                )
+                                .frame(height: 18)
+                            }
                         }
-                        Slider(
-                            value: Binding<Double>(
-                                get: { Double(settingsManager.maxCachedThumbnails) },
-                                set: { settingsManager.maxCachedThumbnails = Int($0) }
-                            ),
-                            in: 10 ... 200,
-                            step: 10
-                        )
-                        Text("Number of thumbnail images to keep in memory")
-                            .font(.system(size: 11, weight: .regular))
-                            .foregroundStyle(.secondary)
                     }
                 }
                 .padding(12)
@@ -110,14 +119,16 @@ struct CacheSettingsTab: View {
                             .foregroundStyle(.secondary)
                     }
 
-                    // Disk Cache Size
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Label("Disk Cache Size", systemImage: "internaldrive")
-                                .font(.system(size: 12, weight: .medium))
+                    // Disk Cache Size - Compact
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "internaldrive")
+                                .font(.system(size: 10, weight: .medium))
+                            Text("Disk Cache Size")
+                                .font(.system(size: 10, weight: .medium))
                             Spacer()
                             Text("\(settingsManager.diskCacheSizeMB) MB")
-                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                .font(.system(size: 10, weight: .semibold, design: .rounded))
                         }
                         Slider(
                             value: Binding<Double>(
@@ -127,8 +138,9 @@ struct CacheSettingsTab: View {
                             in: 500 ... 5000,
                             step: 100
                         )
+                        .frame(height: 18)
                         Text("Maximum size of cached files on disk")
-                            .font(.system(size: 11, weight: .regular))
+                            .font(.system(size: 10, weight: .regular))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -230,18 +242,18 @@ struct CacheSettingsTab: View {
                             Text("Memory cost per pixel (typically 4 for RGBA)")
                                 .font(.system(size: 11, weight: .regular))
                                 .foregroundStyle(.secondary)
-                            
+
                             // Calculate estimated costs
                             let gridCost = (settingsManager.thumbnailSizeGrid *
-                                           settingsManager.thumbnailSizeGrid *
-                                           settingsManager.thumbnailCostPerPixel) / 1024
+                                settingsManager.thumbnailSizeGrid *
+                                settingsManager.thumbnailCostPerPixel) / 1024
                             let previewCost = (settingsManager.thumbnailSizePreview *
-                                              settingsManager.thumbnailSizePreview *
-                                              settingsManager.thumbnailCostPerPixel) / 1024
+                                settingsManager.thumbnailSizePreview *
+                                settingsManager.thumbnailCostPerPixel) / 1024
                             let fullCost = (settingsManager.thumbnailSizeFullSize *
-                                           settingsManager.thumbnailSizeFullSize *
-                                           settingsManager.thumbnailCostPerPixel) / 1024
-                            
+                                settingsManager.thumbnailSizeFullSize *
+                                settingsManager.thumbnailCostPerPixel) / 1024
+
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Est. Grid: \(gridCost) KB")
                                     .font(.system(size: 10, weight: .regular))
@@ -289,9 +301,4 @@ struct CacheSettingsTab: View {
             )
         }
     }
-}
-
-#Preview {
-    SettingsView()
-        .environment(SettingsManager.shared)
 }
