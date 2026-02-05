@@ -14,98 +14,88 @@ struct CacheStatisticsView: View {
     let thumbnailProvider: ThumbnailProvider
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             HStack {
-                VStack(spacing: 4) {
-                    Text("Cache Statistics")
-                        .font(.system(size: 14, weight: .semibold))
-                    Text("If disk cache exist when app is restarted, memory cache will be populated automatically from disk cache.")
-                        .font(.system(size: 12, weight: .semibold))
-                }
+                Text("Cache Statistics")
+                    .font(.system(size: 13, weight: .semibold))
 
                 Spacer()
                 Button(action: refreshStatistics) {
                     Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: 11, weight: .semibold))
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
             }
 
             if let stats = statistics {
-                VStack(spacing: 8) {
-                    // Hit Rate - Main metric
-                    HStack(spacing: 12) {
-                        VStack(spacing: 2) {
-                            Text("% memory hits")
-                                .font(.system(size: 12, weight: .medium))
+                HStack(spacing: 10) {
+                    // Hit Rate - Compact circular indicator
+                    ZStack {
+                        Circle()
+                            .stroke(Color.gray.opacity(0.2), lineWidth: 2)
+                        Circle()
+                            .trim(from: 0, to: min(stats.hitRate / 100, 1.0))
+                            .stroke(
+                                LinearGradient(
+                                    colors: [.green, .cyan],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                style: StrokeStyle(lineWidth: 2, lineCap: .round)
+                            )
+                            .rotationEffect(.degrees(-90))
+
+                        VStack(spacing: 0) {
+                            Text(String(format: "%.0f", stats.hitRate))
+                                .font(.system(size: 10, weight: .bold, design: .rounded))
+                            Text("%")
+                                .font(.system(size: 8, weight: .semibold))
                                 .foregroundStyle(.secondary)
                         }
-
-                        ZStack {
-                            Circle()
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 4)
-                            Circle()
-                                .trim(from: 0, to: min(stats.hitRate / 100, 1.0))
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [.green, .cyan],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    style: StrokeStyle(lineWidth: 4, lineCap: .round)
-                                )
-                                .rotationEffect(.degrees(-90))
-
-                            Text(String(format: "%.1f", stats.hitRate))
-                                .font(.system(size: 12, weight: .bold, design: .rounded))
-                                .padding(5)
-                        }
-                        .frame(width: 50, height: 50)
-
-                        Spacer()
                     }
+                    .frame(width: 36, height: 36)
 
                     Divider()
-                        .padding(.vertical, 4)
+                        .frame(height: 30)
 
-                    // Hits and Misses
-                    HStack(spacing: 12) {
-                        StatisticItemView(
-                            imagelabel: "memorychip",
-                            value: stats.hits,
-                            color: .green
-                        )
-                        StatisticItemView(
-                            imagelabel: "internaldrive",
-                            value: stats.misses,
-                            color: .orange
-                        )
-                        StatisticItemView(
-                            imagelabel: "trash",
-                            value: stats.evictions,
-                            color: .red
-                        )
-                    }
+                    // Hits and Misses - Compact horizontal
+                    StatisticItemView(
+                        imagelabel: "memorychip",
+                        value: stats.hits,
+                        color: .green
+                    )
+                    StatisticItemView(
+                        imagelabel: "internaldrive",
+                        value: stats.misses,
+                        color: .orange
+                    )
+                    StatisticItemView(
+                        imagelabel: "trash",
+                        value: stats.evictions,
+                        color: .red
+                    )
+
+                    Spacer()
                 }
-                .padding(10)
+                .padding(8)
                 .background(Color(.controlBackgroundColor))
-                .cornerRadius(8)
+                .cornerRadius(6)
             } else {
-                HStack {
+                HStack(spacing: 6) {
                     ProgressView()
-                        .scaleEffect(0.8)
-                    Text("Loading statistics...")
-                        .font(.system(size: 12, weight: .medium))
+                        .scaleEffect(0.7)
+                    Text("Loading...")
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
-                .padding(10)
+                .padding(8)
             }
         }
-        .padding(12)
+        .padding(10)
         .background(Color(.controlBackgroundColor).opacity(0.5))
-        .cornerRadius(10)
+        .cornerRadius(8)
         .onAppear(perform: setup)
         .onDisappear(perform: cleanup)
     }
