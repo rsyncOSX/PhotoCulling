@@ -32,11 +32,10 @@ struct CacheStatisticsView: View {
                     // Hit Rate - Main metric
                     HStack(spacing: 12) {
                         VStack(spacing: 2) {
-                            Text("Hit Rate (memory Cache)")
-                                .font(.system(size: 11, weight: .medium))
+                            Text("% memory hits")
+                                .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(.secondary)
-                            Text(String(format: "%.1f%%", stats.hitRate))
-                                .font(.system(size: 18, weight: .bold, design: .rounded))
+                            
                         }
 
                         ZStack {
@@ -53,6 +52,10 @@ struct CacheStatisticsView: View {
                                     style: StrokeStyle(lineWidth: 4, lineCap: .round)
                                 )
                                 .rotationEffect(.degrees(-90))
+                            
+                            Text(String(format: "%.1f%%", stats.hitRate))
+                                .font(.system(size: 12, weight: .bold, design: .rounded))
+                                .padding(5)
                         }
                         .frame(width: 50, height: 50)
 
@@ -65,31 +68,20 @@ struct CacheStatisticsView: View {
                     // Hits and Misses
                     HStack(spacing: 12) {
                         StatisticItemView(
-                            label: "Memory",
+                            imagelabel: "memorychip",
                             value: stats.hits,
                             color: .green
                         )
                         StatisticItemView(
-                            label: "Disk",
+                            imagelabel: "internaldrive",
                             value: stats.misses,
                             color: .orange
                         )
                         StatisticItemView(
-                            label: "Evictions",
+                            imagelabel: "trash",
                             value: stats.evictions,
                             color: .red
                         )
-                    }
-
-                    // Total requests
-                    let total = stats.hits + stats.misses
-                    HStack(spacing: 12) {
-                        Text("Total Requests")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text("\(total)")
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
                     }
                 }
                 .padding(10)
@@ -141,20 +133,15 @@ struct CacheStatisticsView: View {
 // MARK: - Statistic Item
 
 struct StatisticItemView: View {
-    let label: String
+    let imagelabel: String
     let value: Int
     let color: Color
 
     var body: some View {
         VStack(spacing: 4) {
-            HStack(spacing: 4) {
-                Circle()
-                    .fill(color.opacity(0.3))
-                    .frame(width: 6, height: 6)
-                Text(label)
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.secondary)
-            }
+            Image(systemName: imagelabel)
+                .font(.system(size: 12, weight: .semibold))
+            
             Text("\(value)")
                 .font(.system(size: 14, weight: .bold, design: .rounded))
         }
