@@ -19,7 +19,6 @@ v0.6.1 - [February 5, 2026](https://github.com/rsyncOSX/PhotoCulling/releases)
 
 - Browse and review photo catalogs
 - Filter and sort photos
-- Compare images side-by-side
 - Tag and rate photos
 - Copy selected photos with rsync
 
