@@ -215,8 +215,8 @@ struct RealisticWorkloadTests {
         let provider = ThumbnailProvider(config: config)
 
         // Simulate rapid requests
-        for i in 0 ..< 20 {
-            let url = URL(fileURLWithPath: "/photos/\(i).arw")
+        for index in 0 ..< 20 {
+            let url = URL(fileURLWithPath: "/photos/\(index).arw")
             _ = await provider.thumbnail(for: url, targetSize: 256)
         }
 

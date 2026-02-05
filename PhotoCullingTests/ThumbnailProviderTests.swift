@@ -192,11 +192,11 @@ struct ThumbnailProviderTests {
         async let result2 = provider.thumbnail(for: testURL, targetSize: 256)
         async let result3 = provider.thumbnail(for: testURL, targetSize: 256)
 
-        let (r1, r2, r3) = await (result1, result2, result3)
+        let (res1, res2, res3) = await (result1, result2, result3)
 
-        #expect(r1 == nil)
-        #expect(r2 == nil)
-        #expect(r3 == nil)
+        #expect(res1 == nil)
+        #expect(res2 == nil)
+        #expect(res3 == nil)
     }
 
     // MARK: - Configuration Tests
