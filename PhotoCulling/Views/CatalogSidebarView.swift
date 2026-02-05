@@ -16,12 +16,16 @@ struct CatalogSidebarView: View {
         }
         .navigationTitle("Catalogs")
         .safeAreaInset(edge: .bottom) {
-            Button(action: { isShowingPicker = true }, label: {
-                Label("Add Catalog", systemImage: "plus")
-            })
-            .buttonStyle(.bordered)
+            VStack(spacing: 12) {
+                CacheStatisticsView(thumbnailProvider: ThumbnailProvider.shared)
+                
+                Button(action: { isShowingPicker = true }, label: {
+                    Label("Add Catalog", systemImage: "plus")
+                })
+                .buttonStyle(.bordered)
+                .frame(maxWidth: .infinity)
+            }
             .padding()
-            .frame(maxWidth: .infinity)
         }
     }
 }
