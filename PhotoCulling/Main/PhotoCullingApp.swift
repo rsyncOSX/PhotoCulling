@@ -99,6 +99,6 @@ enum SupportedFileType: String, CaseIterable {
 
 enum ThumbnailSize {
     static let grid = 100
-    static let preview = 2560
+    static let preview = 1024
     static let fullSize = 8700
 }

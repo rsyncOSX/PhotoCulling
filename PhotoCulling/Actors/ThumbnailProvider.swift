@@ -36,7 +36,7 @@ struct CacheConfig {
     let countLimit: Int
 
     nonisolated static let production = CacheConfig(
-        totalCostLimit: 200 * 2560 * 2560, // 1.25 GB
+        totalCostLimit: 100 * 1024 * 1024, // ~409 MB for ~90 1024x1024 images
         countLimit: 500
     )
 
