@@ -1,17 +1,36 @@
 # PhotoCulling
 
-[![GitHub license](https://img.shields.io/github/license/rsyncOSX/RsyncUI)](https://github.com/rsyncOSX/PhotoCulling/blob/main/Licence.MD)
-![GitHub Releases](https://img.shields.io/github/downloads/rsyncosx/PhotoCulling/v0.6.0/total)
-[![GitHub issues](https://img.shields.io/github/issues/rsyncOSX/RsyncUI)](https://github.com/rsyncOSX/PhotoCulling/issues)
+[![GitHub license](https://img.shields.io/github/license/rsyncOSX/PhotoCulling)](https://github.com/rsyncOSX/PhotoCulling/blob/main/Licence.MD)
+![GitHub Releases](https://img.shields.io/github/downloads/rsyncosx/PhotoCulling/v0.6.1/total)
+[![GitHub issues](https://img.shields.io/github/issues/rsyncOSX/PhotoCulling)](https://github.com/rsyncOSX/PhotoCulling/issues)
 
+macOS photo review and selection application for Sony ARW raw files.
 
-PhotoCulling is a new macOS app designed to help you quickly and efficiently cull large sets of photos. With a streamlined interface and powerful selection tools, PhotoCulling makes it easy to review, compare, and select your best images.
+## Requirements
 
-| Release | macOS versions |   Latest version   |
-| ----------- |   ----------- | ----------- |
-| See release page GitHub   | macOS Tahoma and later | v0.6.0 - [February 3, 2026](https://github.com/rsyncOSX/PhotoCulling/releases) - in *active development* |
-| |  | [documentation](https://photoculling.netlify.app/docs/) and [changelog](https://photoculling.netlify.app/blog/) |
+- macOS 14 (Sonoma) or later
+- Apple Silicon or Intel Mac
 
-If you find PhotoCulling useful, please consider starring [the repository](https://github.com/rsyncOSX/PhotoCulling). Your support helps drive further development!
+## Current Version
+
+v0.6.1 - [February 5, 2026](https://github.com/rsyncOSX/PhotoCulling/releases)
+
+## Features
+
+- Browse and review photo catalogs
+- Filter and sort photos
+- Compare images side-by-side
+- Tag and rate photos
+- Copy selected photos with rsync
+
+## Building
+
+Requires Xcode 15+. See [documentation](https://photoculling.netlify.app/docs/) for build instructions.
+
+## License
+
+[MPL-2.0](Licence.MD)
+
+---
 
 ![](images/photoculling.png)
