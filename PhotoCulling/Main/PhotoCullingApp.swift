@@ -26,10 +26,7 @@ struct PhotoCullingApp: App {
     @State private var settingsManager = SettingsManager.shared
 
     var body: some Scene {
-        Settings {
-            SettingsView()
-                .environment(settingsManager)
-        }
+        
 
         Window("Photo Culling", id: "main-window") {
             SidebarPhotoCullingView(
@@ -49,6 +46,11 @@ struct PhotoCullingApp: App {
             SidebarCommands()
 
             ToggleCommands()
+        }
+        
+        Settings {
+            SettingsView()
+                .environment(settingsManager)
         }
 
         Window("ZoomcgImage", id: "zoom-window-cgImage") {
