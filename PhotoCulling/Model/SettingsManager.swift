@@ -1,0 +1,165 @@
+//
+//  SettingsManager.swift
+//  PhotoCulling
+//
+//  Created by Thomas Evensen on 05/02/2026.
+//
+
+// @Environment(SettingsManager.self) var settingsManager
+
+import Foundation
+import OSLog
+
+/// Observable settings manager for app configuration
+/// Persists settings to JSON in Application Support directory
+@Observable
+class SettingsManager {
+    static let shared = SettingsManager()
+
+    // MARK: - Memory Cache Settings
+
+    /// Maximum memory cache size in MB (default: 500)
+    var memoryCacheSizeMB: Int = 500 {
+        didSet {
+            Task {
+                await saveSettings()
+            }
+        }
+    }
+
+    /// Number of cached thumbnails to keep in memory (default: 50)
+    var maxCachedThumbnails: Int = 50 {
+        didSet {
+            Task {
+                await saveSettings()
+            }
+        }
+    }
+
+    /// Enable automatic disk cache population at startup (default: true)
+    var autoLoadDiskCache: Bool = true {
+        didSet {
+            Task {
+                await saveSettings()
+            }
+        }
+    }
+
+    /// Maximum disk cache size in MB (default: 2000)
+    var diskCacheSizeMB: Int = 2000 {
+        didSet {
+            Task {
+                await saveSettings()
+            }
+        }
+    }
+
+    // MARK: - Private Properties
+
+    private let logger = Logger(subsystem: "com.photoculling", category: "SettingsManager")
+    private let settingsFileName = "settings.json"
+
+    private var settingsURL: URL {
+        let appSupport = FileManager.default
+            .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        let appFolder = appSupport.appendingPathComponent("PhotoCulling", isDirectory: true)
+        return appFolder.appendingPathComponent(settingsFileName)
+    }
+
+    // MARK: - Initialization
+
+    private init() {
+        Task {
+            await loadSettings()
+        }
+    }
+
+    // MARK: - Public Methods
+
+    /// Load settings from JSON file
+    func loadSettings() async {
+        do {
+            let fileURL = settingsURL
+
+            // Create directory if it doesn't exist
+            let dirURL = fileURL.deletingLastPathComponent()
+            try FileManager.default.createDirectory(
+                at: dirURL,
+                withIntermediateDirectories: true,
+                attributes: nil
+            )
+
+            // If file doesn't exist, just use defaults
+            guard FileManager.default.fileExists(atPath: fileURL.path) else {
+                logger.debug("Settings file not found, using defaults")
+                return
+            }
+
+            let data = try Data(contentsOf: fileURL)
+            let decoder = JSONDecoder()
+            let savedSettings = try decoder.decode(SavedSettings.self, from: data)
+
+            await MainActor.run {
+                self.memoryCacheSizeMB = savedSettings.memoryCacheSizeMB
+                self.maxCachedThumbnails = savedSettings.maxCachedThumbnails
+                self.autoLoadDiskCache = savedSettings.autoLoadDiskCache
+                self.diskCacheSizeMB = savedSettings.diskCacheSizeMB
+            }
+
+            logger.debug("Settings loaded successfully")
+        } catch {
+            logger.error("Failed to load settings: \(error.localizedDescription)")
+        }
+    }
+
+    /// Save settings to JSON file
+    func saveSettings() async {
+        do {
+            let fileURL = settingsURL
+
+            // Create directory if it doesn't exist
+            let dirURL = fileURL.deletingLastPathComponent()
+            try FileManager.default.createDirectory(
+                at: dirURL,
+                withIntermediateDirectories: true,
+                attributes: nil
+            )
+
+            let settingsToSave = SavedSettings(
+                memoryCacheSizeMB: memoryCacheSizeMB,
+                maxCachedThumbnails: maxCachedThumbnails,
+                autoLoadDiskCache: autoLoadDiskCache,
+                diskCacheSizeMB: diskCacheSizeMB
+            )
+
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            let data = try encoder.encode(settingsToSave)
+
+            try data.write(to: fileURL, options: .atomic)
+            logger.debug("Settings saved successfully")
+        } catch {
+            logger.error("Failed to save settings: \(error.localizedDescription)")
+        }
+    }
+
+    /// Reset settings to defaults
+    func resetToDefaults() async {
+        await MainActor.run {
+            self.memoryCacheSizeMB = 500
+            self.maxCachedThumbnails = 50
+            self.autoLoadDiskCache = true
+            self.diskCacheSizeMB = 2000
+        }
+        await saveSettings()
+    }
+}
+
+// MARK: - Codable Model
+
+private struct SavedSettings: Codable {
+    let memoryCacheSizeMB: Int
+    let maxCachedThumbnails: Int
+    let autoLoadDiskCache: Bool
+    let diskCacheSizeMB: Int
+}

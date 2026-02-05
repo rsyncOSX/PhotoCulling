@@ -23,8 +23,14 @@ struct PhotoCullingApp: App {
     @State private var cgImage: CGImage?
     @State private var zoomCGImageWindowFocused: Bool = false
     @State private var zoomNSImageWindowFocused: Bool = false
+    @State private var settingsManager = SettingsManager.shared
 
     var body: some Scene {
+        Settings {
+            SettingsView()
+                .environment(settingsManager)
+        }
+
         Window("Photo Culling", id: "main-window") {
             SidebarPhotoCullingView(
                 nsImage: $nsImage,
@@ -32,6 +38,7 @@ struct PhotoCullingApp: App {
                 zoomCGImageWindowFocused: $zoomCGImageWindowFocused,
                 zoomNSImageWindowFocused: $zoomNSImageWindowFocused
             )
+            .environment(settingsManager)
             .onDisappear {
                 // Quit the app when the main window is closed
                 performCleanupTask()
