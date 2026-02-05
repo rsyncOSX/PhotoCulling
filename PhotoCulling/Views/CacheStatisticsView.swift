@@ -32,7 +32,7 @@ struct CacheStatisticsView: View {
                     // Hit Rate - Main metric
                     HStack(spacing: 12) {
                         VStack(spacing: 2) {
-                            Text("Hit Rate")
+                            Text("Hit Rate (memory Cache)")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundStyle(.secondary)
                             Text(String(format: "%.1f%%", stats.hitRate))
@@ -65,12 +65,12 @@ struct CacheStatisticsView: View {
                     // Hits and Misses
                     HStack(spacing: 12) {
                         StatisticItemView(
-                            label: "Hits",
+                            label: "Memory",
                             value: stats.hits,
                             color: .green
                         )
                         StatisticItemView(
-                            label: "Misses",
+                            label: "Disk",
                             value: stats.misses,
                             color: .orange
                         )

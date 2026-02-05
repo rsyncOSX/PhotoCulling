@@ -55,8 +55,8 @@ actor ThumbnailProvider {
     private let diskCache: DiskCacheManager
 
     // Cache statistics for monitoring
-    private var cacheHits = 0
-    private var cacheMisses = 0
+    private var cacheMemory = 0
+    private var cacheDisk = 0
     private var cacheEvictions = 0
 
     /// Track the current preload task so we can cancel it
@@ -132,10 +132,10 @@ actor ThumbnailProvider {
         // A. Check RAM
         if let wrapper = memoryCache.object(forKey: url as NSURL), wrapper.beginContentAccess() {
             wrapper.endContentAccess()
-            cacheHits += 1
+            cacheMemory += 1
             let newCount = incrementAndGetCount()
             await fileHandlers?.fileHandler(newCount)
-            Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - found in RAM Cache (hits: \(cacheHits))")
+            Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - found in RAM Cache (hits: \(cacheMemory))")
             return
         }
 
@@ -145,10 +145,10 @@ actor ThumbnailProvider {
 
         if let diskImage = await diskCache.load(for: url) {
             storeInMemory(diskImage, for: url)
-            cacheMisses += 1
+            cacheDisk += 1
             let newCount = incrementAndGetCount()
             await fileHandlers?.fileHandler(newCount)
-            Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - found in DISK Cache (misses: \(cacheMisses))")
+            Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - found in DISK Cache (misses: \(cacheDisk))")
             return
         }
 
@@ -214,23 +214,23 @@ actor ThumbnailProvider {
     }
 
     func clearCaches() async {
-        let hitRate = cacheHits + cacheMisses > 0 ? Double(cacheHits) / Double(cacheHits + cacheMisses) * 100 : 0
-        Logger.process.info("Cache Statistics - Hits: \(self.cacheHits), Misses: \(self.cacheMisses), Hit Rate: \(String(format: "%.1f", hitRate))%")
+        let hitRate = cacheMemory + cacheDisk > 0 ? Double(cacheMemory) / Double(cacheMemory + cacheDisk) * 100 : 0
+        Logger.process.info("Cache Statistics - Hits: \(self.cacheMemory), Misses: \(self.cacheDisk), Hit Rate: \(String(format: "%.1f", hitRate))%")
 
         memoryCache.removeAllObjects()
         await diskCache.pruneCache(maxAgeInDays: 0)
 
         // Reset statistics
-        cacheHits = 0
-        cacheMisses = 0
+        cacheMemory = 0
+        cacheDisk = 0
         cacheEvictions = 0
     }
 
     /// Get current cache statistics for monitoring
     func getCacheStatistics() async -> (hits: Int, misses: Int, evictions: Int, hitRate: Double) {
-        let total = cacheHits + cacheMisses
-        let hitRate = total > 0 ? Double(cacheHits) / Double(total) * 100 : 0
-        return (cacheHits, cacheMisses, cacheEvictions, hitRate)
+        let total = cacheMemory + cacheDisk
+        let hitRate = total > 0 ? Double(cacheMemory) / Double(total) * 100 : 0
+        return (cacheMemory, cacheDisk, cacheEvictions, hitRate)
     }
 
     func thumbnail(for url: URL, targetSize: Int) async -> NSImage? {
@@ -251,16 +251,16 @@ actor ThumbnailProvider {
             // The 'image' variable holds a strong reference to the NSImage,
             // so it's safe to tell the cache we are done accessing it.
             defer { wrapper.endContentAccess() }
-            cacheHits += 1
-            Logger.process.debugThreadOnly("resolveImage: found in RAM Cache (hits: \(cacheHits))")
+            cacheMemory += 1
+            Logger.process.debugThreadOnly("resolveImage: found in RAM Cache (hits: \(cacheMemory))")
             return wrapper.image
         }
 
         // B. Check Disk
         if let diskImage = await diskCache.load(for: url) {
             storeInMemory(diskImage, for: url)
-            cacheMisses += 1
-            Logger.process.debugThreadOnly("resolveImage: found in Disk Cache (misses: \(cacheMisses))")
+            cacheDisk += 1
+            Logger.process.debugThreadOnly("resolveImage: found in Disk Cache (misses: \(cacheDisk))")
             return diskImage
         }
 
