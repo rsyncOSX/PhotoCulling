@@ -100,7 +100,7 @@ actor ThumbnailProvider {
             let countLimit = estimatedCostPerImage > 0 ? totalCostlimit / estimatedCostPerImage : maxCachedThumbnails
 
             Logger.process.debugMessageOnly(
-                "test(): totalCostLimit: \(totalCostlimit), countLimit: \(countLimit), costPerPixel: \(thumbnailCostPerPixel)"
+                "ThumbnailProvider: setmemomorycachefromsavedsettings() totalCostLimit: \(totalCostlimit), countLimit: \(countLimit), costPerPixel: \(thumbnailCostPerPixel)"
             )
 
             memoryCache.totalCostLimit = totalCostlimit
