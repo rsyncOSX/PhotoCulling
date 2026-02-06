@@ -106,22 +106,6 @@ struct CacheSettingsTab: View {
 
                     Divider()
 
-                    // Auto Load Disk Cache
-                    VStack(alignment: .leading, spacing: 6) {
-                        Toggle(
-                            isOn: Binding<Bool>(
-                                get: { settingsManager.autoLoadDiskCache },
-                                set: { settingsManager.autoLoadDiskCache = $0 }
-                            )
-                        ) {
-                            Label("Auto-load Disk Cache at Startup", systemImage: "gear")
-                                .font(.system(size: 12, weight: .medium))
-                        }
-                        Text("Automatically populate memory cache from disk cache when app starts")
-                            .font(.system(size: 11, weight: .regular))
-                            .foregroundStyle(.secondary)
-                    }
-
                     // Current Disk Cache Size with Prune Button
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(spacing: 4) {
@@ -155,31 +139,6 @@ struct CacheSettingsTab: View {
                         }
                         .buttonStyle(.bordered)
                         .disabled(isPruningDiskCache)
-                    }
-
-                    // Disk Cache Size - Compact
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "internaldrive")
-                                .font(.system(size: 10, weight: .medium))
-                            Text("Disk Cache Size")
-                                .font(.system(size: 10, weight: .medium))
-                            Spacer()
-                            Text("\(settingsManager.diskCacheSizeMB) MB")
-                                .font(.system(size: 10, weight: .semibold, design: .rounded))
-                        }
-                        Slider(
-                            value: Binding<Double>(
-                                get: { Double(settingsManager.diskCacheSizeMB) },
-                                set: { settingsManager.diskCacheSizeMB = Int($0) }
-                            ),
-                            in: 500 ... 5000,
-                            step: 100
-                        )
-                        .frame(height: 18)
-                        Text("Maximum size of cached files on disk")
-                            .font(.system(size: 10, weight: .regular))
-                            .foregroundStyle(.secondary)
                     }
                 }
                 .padding(12)

@@ -36,24 +36,6 @@ class SettingsManager {
         }
     }
 
-    /// Enable automatic disk cache population at startup (default: true)
-    var autoLoadDiskCache: Bool = true {
-        didSet {
-            Task {
-                await saveSettings()
-            }
-        }
-    }
-
-    /// Maximum disk cache size in MB (default: 2000)
-    var diskCacheSizeMB: Int = 2000 {
-        didSet {
-            Task {
-                await saveSettings()
-            }
-        }
-    }
-
     // MARK: - Thumbnail Size Settings
 
     /// Grid thumbnail size in pixels (default: 100)
@@ -140,8 +122,6 @@ class SettingsManager {
             await MainActor.run {
                 self.memoryCacheSizeMB = savedSettings.memoryCacheSizeMB
                 self.maxCachedThumbnails = savedSettings.maxCachedThumbnails
-                self.autoLoadDiskCache = savedSettings.autoLoadDiskCache
-                self.diskCacheSizeMB = savedSettings.diskCacheSizeMB
                 self.thumbnailSizeGrid = savedSettings.thumbnailSizeGrid
                 self.thumbnailSizePreview = savedSettings.thumbnailSizePreview
                 self.thumbnailSizeFullSize = savedSettings.thumbnailSizeFullSize
@@ -170,8 +150,6 @@ class SettingsManager {
             let settingsToSave = SavedSettings(
                 memoryCacheSizeMB: memoryCacheSizeMB,
                 maxCachedThumbnails: maxCachedThumbnails,
-                autoLoadDiskCache: autoLoadDiskCache,
-                diskCacheSizeMB: diskCacheSizeMB,
                 thumbnailSizeGrid: thumbnailSizeGrid,
                 thumbnailSizePreview: thumbnailSizePreview,
                 thumbnailSizeFullSize: thumbnailSizeFullSize,
@@ -194,8 +172,6 @@ class SettingsManager {
         await MainActor.run {
             self.memoryCacheSizeMB = 500
             self.maxCachedThumbnails = 50
-            self.autoLoadDiskCache = true
-            self.diskCacheSizeMB = 2000
             self.thumbnailSizeGrid = 100
             self.thumbnailSizePreview = 1024
             self.thumbnailSizeFullSize = 8700
@@ -210,8 +186,6 @@ class SettingsManager {
 private struct SavedSettings: Codable {
     let memoryCacheSizeMB: Int
     let maxCachedThumbnails: Int
-    let autoLoadDiskCache: Bool
-    let diskCacheSizeMB: Int
     let thumbnailSizeGrid: Int
     let thumbnailSizePreview: Int
     let thumbnailSizeFullSize: Int
