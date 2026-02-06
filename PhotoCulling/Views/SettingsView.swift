@@ -226,7 +226,7 @@ struct CacheSettingsTab: View {
             .task {
                 // Initialize ThumbnailProvider with saved cost per pixel setting
                 await ThumbnailProvider.shared.setCostPerPixel(settingsManager.thumbnailCostPerPixel)
-                cacheConfig = await ThumbnailProvider.shared.exportCalulatedSavedSettings()
+                cacheConfig = await ThumbnailProvider.shared.exportCalculatedSavedSettings()
             }
         }
     }

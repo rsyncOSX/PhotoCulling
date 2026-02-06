@@ -88,13 +88,13 @@ actor ThumbnailProvider {
         Task {
             // Only set if config == nil, config is set in Tests
             if config == nil {
-                await self.setmemomorycachefromsavedsettings()
+                await self.setMemoryCacheFromSavedSettings()
                 Logger.process.debugMessageOnly("ThumbnailProvider: init() - successfully loaded saved settings")
             }
         }
     }
 
-    func exportCalulatedSavedSettings() async -> CacheConfig? {
+    func exportCalculatedSavedSettings() async -> CacheConfig? {
         if let settings = savedsettings {
             let thumbnailCostPerPixel = settings.thumbnailCostPerPixel // 4 default (RGBA bytes per pixel)
             let thumbnailSizePreview = settings.thumbnailSizePreview // 1024 default - used as estimate for cache limit
@@ -116,7 +116,7 @@ actor ThumbnailProvider {
         return nil
     }
 
-    func setmemomorycachefromsavedsettings() async {
+    func setMemoryCacheFromSavedSettings() async {
         savedsettings = await SettingsManager.shared.asyncgetsettings()
         if let settings = savedsettings {
             let thumbnailCostPerPixel = settings.thumbnailCostPerPixel // 4 default (RGBA bytes per pixel)
@@ -203,7 +203,7 @@ actor ThumbnailProvider {
 
         // A. Check RAM
         if let wrapper = memoryCache.object(forKey: url as NSURL), wrapper.beginContentAccess() {
-            wrapper.endContentAccess()
+            defer { wrapper.endContentAccess() }
             cacheMemory += 1
             let newCount = incrementAndGetCount()
             await fileHandlers?.fileHandler(newCount)
