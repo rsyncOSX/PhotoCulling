@@ -221,7 +221,7 @@ struct CacheSettingsTab: View {
                     // Cost Per Pixel
                     VStack(alignment: .leading, spacing: 6) {
                         HStack {
-                            Label("Cost Per Pixel", systemImage: "function")
+                            Label("Quality/Memory Trade-off", systemImage: "function")
                                 .font(.system(size: 12, weight: .medium))
                             Spacer()
                             Text("\(settingsManager.thumbnailCostPerPixel) bytes")
@@ -230,13 +230,19 @@ struct CacheSettingsTab: View {
                         Slider(
                             value: Binding<Double>(
                                 get: { Double(settingsManager.thumbnailCostPerPixel) },
-                                set: { settingsManager.thumbnailCostPerPixel = Int($0) }
+                                set: { newValue in
+                                    let intValue = Int(newValue)
+                                    settingsManager.thumbnailCostPerPixel = intValue
+                                    Task {
+                                        await ThumbnailProvider.shared.setCostPerPixel(intValue)
+                                    }
+                                }
                             ),
                             in: 1 ... 8,
                             step: 1
                         )
                         HStack(spacing: 8) {
-                            Text("Memory cost per pixel (typically 4 for RGBA)")
+                            Text("Lower values = lower quality/less memory. Higher values = better quality/more memory")
                                 .font(.system(size: 11, weight: .regular))
                                 .foregroundStyle(.secondary)
 
@@ -298,6 +304,12 @@ struct CacheSettingsTab: View {
             )
         }
         .onAppear(perform: refreshDiskCacheSize)
+        .onAppear {
+            // Initialize ThumbnailProvider with saved cost per pixel setting
+            Task {
+                await ThumbnailProvider.shared.setCostPerPixel(settingsManager.thumbnailCostPerPixel)
+            }
+        }
     }
 
     private func refreshDiskCacheSize() {
@@ -332,3 +344,4 @@ struct CacheSettingsTab: View {
         return String(format: "%.1f %@", size, units[min(unitIndex, units.count - 1)])
     }
 }
+

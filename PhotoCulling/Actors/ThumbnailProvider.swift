@@ -45,16 +45,18 @@ struct CacheConfig {
         countLimit: 5
     )
 
-    /// Calculate appropriate cache limits based on thumbnail size
-    nonisolated static func forThumbnailSize(_ size: Int) -> CacheConfig {
-        // Estimate memory cost: width * height * 4 bytes * 1.1 (overhead)
-        let estimatedCostPerImage = (size * size * 4 * 11) / 10
+    /// Calculate appropriate cache limits based on thumbnail size and cost per pixel
+    nonisolated static func forThumbnailSize(_ size: Int, costPerPixel: Int = 4) -> CacheConfig {
+        // Estimate memory cost: width * height * costPerPixel * 1.1 (overhead)
+        let estimatedCostPerImage = (size * size * costPerPixel * 11) / 10
 
         // Store 100 images in memory cache, scale up for larger thumbnails
         let totalCostLimit = max(500 * 1024 * 1024, estimatedCostPerImage * 100)
         let countLimit = max(1000, estimatedCostPerImage > 0 ? (500 * 1024 * 1024) / estimatedCostPerImage : 500)
 
-        Logger.process.debugMessageOnly("CacheConfig: totalCostLimit: \(totalCostLimit), countLimit:\(countLimit)")
+        Logger.process.debugMessageOnly(
+            "CacheConfig: totalCostLimit: \(totalCostLimit), countLimit: \(countLimit), costPerPixel: \(costPerPixel)"
+        )
 
         return CacheConfig(totalCostLimit: totalCostLimit, countLimit: countLimit)
     }
@@ -77,6 +79,8 @@ actor ThumbnailProvider {
     private var preloadTask: Task<Int, Never>?
 
     private var fileHandlers: FileHandlers?
+    /// Memory cost per pixel for thumbnails (1-8 bytes) - affects quality
+    private var costPerPixel: Int = 4
     /// let supported: Set<String> = ["arw", "tiff", "tif", "jpeg", "jpg", "png", "heic", "heif"]
     let supported: Set<String> = ["arw"]
 
@@ -94,6 +98,10 @@ actor ThumbnailProvider {
         self.fileHandlers = fileHandlers
     }
 
+    func setCostPerPixel(_ cost: Int) {
+        self.costPerPixel = max(1, min(8, cost)) // Clamp between 1-8
+    }
+
     private func cancelPreload() {
         preloadTask?.cancel()
         preloadTask = nil
@@ -104,12 +112,14 @@ actor ThumbnailProvider {
     func preloadCatalog(at catalogURL: URL, targetSize: Int) async -> Int {
         cancelPreload()
 
-        // Reconfigure cache based on target size to ensure adequate memory for thumbnails
-        let config = CacheConfig.forThumbnailSize(targetSize)
+        // Reconfigure cache based on target size and cost per pixel to ensure adequate memory for thumbnails
+        let config = CacheConfig.forThumbnailSize(targetSize, costPerPixel: costPerPixel)
         memoryCache.totalCostLimit = config.totalCostLimit
         memoryCache.countLimit = config.countLimit
         let cacheMemMB = config.totalCostLimit / (1024 * 1024)
-        Logger.process.debugMessageOnly("Cache reconfigured for \(targetSize)px thumbnails: \(cacheMemMB)MB, limit: \(config.countLimit)")
+        Logger.process.debugMessageOnly(
+            "Cache reconfigured for \(targetSize)px thumbnails: \(cacheMemMB)MB, limit: \(config.countLimit), costPerPixel: \(costPerPixel)"
+        )
 
         let task = Task {
             successCount = 0
@@ -178,7 +188,7 @@ actor ThumbnailProvider {
             if Task.isCancelled { return }
 
             // 1. Call the worker - we get a thread-safe CGImage
-            let cgImage = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize))
+            let cgImage = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize), qualityCost: costPerPixel)
 
             // 2. Create NSImage HERE, inside the Actor
             let image = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
@@ -202,7 +212,8 @@ actor ThumbnailProvider {
     }
 
     /// Renamed to reflect that it uses generic ImageIO, not Sony-specific SDKs
-    private nonisolated func extractSonyThumbnail(from url: URL, maxDimension: CGFloat) async throws -> CGImage {
+    /// qualityCost: 1-8 bytes per pixel, controls interpolation quality
+    private nonisolated func extractSonyThumbnail(from url: URL, maxDimension: CGFloat, qualityCost: Int = 4) async throws -> CGImage {
         try await Task.detached(priority: .userInitiated) {
             let options = [kCGImageSourceShouldCache: false] as CFDictionary
 
@@ -210,14 +221,46 @@ actor ThumbnailProvider {
                 throw ThumbnailError.invalidSource
             }
 
+            // Map quality cost to interpolation quality
+            let interpolationQuality: CGInterpolationQuality
+            switch qualityCost {
+            case 1...2:
+                interpolationQuality = .low
+
+            case 3...4:
+                interpolationQuality = .medium
+
+            default: // 5...8
+                interpolationQuality = .high
+            }
+
             let thumbOptions: [CFString: Any] = [
                 kCGImageSourceCreateThumbnailFromImageAlways: true,
                 kCGImageSourceCreateThumbnailWithTransform: true,
-                kCGImageSourceThumbnailMaxPixelSize: maxDimension
+                kCGImageSourceThumbnailMaxPixelSize: maxDimension,
+                kCGImageSourceShouldCacheImmediately: false
             ]
 
-            guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, thumbOptions as CFDictionary) else {
+            guard var image = CGImageSourceCreateThumbnailAtIndex(source, 0, thumbOptions as CFDictionary) else {
                 throw ThumbnailError.generationFailed
+            }
+
+            // Apply interpolation quality through image rendering context
+            if qualityCost != 4 { // Only reprocess if different from default
+                let colorSpace = CGColorSpaceCreateDeviceRGB()
+                if let context = CGContext(data: nil,
+                                          width: image.width,
+                                          height: image.height,
+                                          bitsPerComponent: image.bitsPerComponent,
+                                          bytesPerRow: 0,
+                                          space: colorSpace,
+                                          bitmapInfo: image.bitmapInfo.rawValue) {
+                    context.interpolationQuality = interpolationQuality
+                    context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+                    if let processedImage = context.makeImage() {
+                        image = processedImage
+                    }
+                }
             }
 
             return image
@@ -299,7 +342,7 @@ actor ThumbnailProvider {
         Logger.process.debugThreadOnly("resolveImage: CREATING thumbnail")
 
         // 1. Get the Sendable CGImage
-        let cgImage = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize))
+        let cgImage = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize), qualityCost: costPerPixel)
 
         // 2. Wrap in NSImage for display (inside Actor)
         let image = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
