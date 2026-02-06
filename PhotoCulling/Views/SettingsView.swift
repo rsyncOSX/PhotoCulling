@@ -344,4 +344,3 @@ struct CacheSettingsTab: View {
         return String(format: "%.1f %@", size, units[min(unitIndex, units.count - 1)])
     }
 }
-

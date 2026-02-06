@@ -224,10 +224,10 @@ actor ThumbnailProvider {
             // Map quality cost to interpolation quality
             let interpolationQuality: CGInterpolationQuality
             switch qualityCost {
-            case 1...2:
+            case 1 ... 2:
                 interpolationQuality = .low
 
-            case 3...4:
+            case 3 ... 4:
                 interpolationQuality = .medium
 
             default: // 5...8
@@ -249,12 +249,12 @@ actor ThumbnailProvider {
             if qualityCost != 4 { // Only reprocess if different from default
                 let colorSpace = CGColorSpaceCreateDeviceRGB()
                 if let context = CGContext(data: nil,
-                                          width: image.width,
-                                          height: image.height,
-                                          bitsPerComponent: image.bitsPerComponent,
-                                          bytesPerRow: 0,
-                                          space: colorSpace,
-                                          bitmapInfo: image.bitmapInfo.rawValue) {
+                                           width: image.width,
+                                           height: image.height,
+                                           bitsPerComponent: image.bitsPerComponent,
+                                           bytesPerRow: 0,
+                                           space: colorSpace,
+                                           bitmapInfo: image.bitmapInfo.rawValue) {
                     context.interpolationQuality = interpolationQuality
                     context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
                     if let processedImage = context.makeImage() {
