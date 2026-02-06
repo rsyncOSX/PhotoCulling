@@ -19,7 +19,7 @@ struct SettingsView: View {
                 }
         }
         .padding(20)
-        .frame(minWidth: 250, minHeight: 700)
+        .frame(width: 450, height: 620)
     }
 }
 
@@ -92,37 +92,37 @@ struct CacheSettingsTab: View {
                                 )
                                 .frame(height: 18)
                             }
-
-                            // Current Disk Cache Size with Prune Button
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "internaldrive")
-                                        .font(.system(size: 10, weight: .medium))
-                                    Text("Current use: ")
-                                        .font(.system(size: 10, weight: .medium))
-
-                                    if isLoadingDiskCacheSize {
-                                        ProgressView()
-                                            .fixedSize()
-                                    } else {
-                                        Text(formatBytes(currentDiskCacheSize))
-                                            .font(.system(size: 10, weight: .semibold, design: .rounded))
-                                    }
-                                }
-
-                                ConditionalGlassButton(
-                                    systemImage: "trash",
-                                    text: "Prune Disk Cache",
-                                    helpText: "Prune disk cache to free up space."
-                                ) {
-                                    pruneDiskCache()
-                                }
-                                .disabled(isPruningDiskCache)
-                            }
-                            .padding(12)
-                            .background(Color(.controlBackgroundColor))
-                            .cornerRadius(8)
                         }
+
+                        // Current Disk Cache Size with Prune Button
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "internaldrive")
+                                    .font(.system(size: 10, weight: .medium))
+                                Text("Current use: ")
+                                    .font(.system(size: 10, weight: .medium))
+
+                                if isLoadingDiskCacheSize {
+                                    ProgressView()
+                                        .fixedSize()
+                                } else {
+                                    Text(formatBytes(currentDiskCacheSize))
+                                        .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                }
+                            }
+
+                            ConditionalGlassButton(
+                                systemImage: "trash",
+                                text: "Prune Disk Cache",
+                                helpText: "Prune disk cache to free up space."
+                            ) {
+                                pruneDiskCache()
+                            }
+                            .disabled(isPruningDiskCache)
+                        }
+                        .padding(12)
+                        .background(Color(.controlBackgroundColor))
+                        .cornerRadius(8)
                     }
                 }
                 .padding(12)
@@ -176,28 +176,6 @@ struct CacheSettingsTab: View {
                             step: 128
                         )
                         Text("Size for preview view thumbnails")
-                            .font(.system(size: 11, weight: .regular))
-                            .foregroundStyle(.secondary)
-                    }
-
-                    // Full Size
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Label("Full Size Thumbnail", systemImage: "display")
-                                .font(.system(size: 12, weight: .medium))
-                            Spacer()
-                            Text("\(settingsManager.thumbnailSizeFullSize) px")
-                                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                        }
-                        Slider(
-                            value: Binding<Double>(
-                                get: { Double(settingsManager.thumbnailSizeFullSize) },
-                                set: { settingsManager.thumbnailSizeFullSize = Int($0) }
-                            ),
-                            in: 2048 ... 16384,
-                            step: 512
-                        )
-                        Text("Size for full-size view thumbnails")
                             .font(.system(size: 11, weight: .regular))
                             .foregroundStyle(.secondary)
                     }

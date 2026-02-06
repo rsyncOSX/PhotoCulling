@@ -19,7 +19,6 @@ struct CacheStatisticsView: View {
                 Text("Cache Statistics")
                     .font(.system(size: 13, weight: .semibold))
 
-                Spacer()
                 Button(action: refreshStatistics) {
                     Image(systemName: "arrow.clockwise")
                         .font(.system(size: 11, weight: .semibold))
@@ -29,36 +28,33 @@ struct CacheStatisticsView: View {
             }
 
             if let stats = statistics {
-                HStack(spacing: 10) {
-                    // Hit Rate - Compact circular indicator
-                    ZStack {
-                        Circle()
-                            .stroke(Color.gray.opacity(0.2), lineWidth: 2)
-                        Circle()
-                            .trim(from: 0, to: min(stats.hitRate / 100, 1.0))
-                            .stroke(
-                                LinearGradient(
-                                    colors: [.green, .cyan],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                style: StrokeStyle(lineWidth: 2, lineCap: .round)
-                            )
-                            .rotationEffect(.degrees(-90))
+                // Hit Rate - Compact circular indicator
+                ZStack {
+                    Circle()
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 2)
+                    Circle()
+                        .trim(from: 0, to: min(stats.hitRate / 100, 1.0))
+                        .stroke(
+                            LinearGradient(
+                                colors: [.green, .cyan],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            style: StrokeStyle(lineWidth: 2, lineCap: .round)
+                        )
+                        .rotationEffect(.degrees(-90))
 
-                        VStack(spacing: 0) {
-                            Text(String(format: "%.0f", stats.hitRate))
-                                .font(.system(size: 10, weight: .bold, design: .rounded))
-                            Text("%")
-                                .font(.system(size: 8, weight: .semibold))
-                                .foregroundStyle(.secondary)
-                        }
+                    VStack(spacing: 0) {
+                        Text(String(format: "%.0f", stats.hitRate))
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                        Text("%")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(.secondary)
                     }
-                    .frame(width: 36, height: 36)
+                }
+                .frame(width: 36, height: 36)
 
-                    Divider()
-                        .frame(height: 30)
-
+                HStack(spacing: 10) {
                     // Hits and Misses - Compact horizontal
                     StatisticItemView(
                         imagelabel: "memorychip",

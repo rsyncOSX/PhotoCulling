@@ -23,6 +23,8 @@ struct CatalogSidebarView: View {
                 .buttonStyle(.bordered)
                 .frame(maxWidth: .infinity)
 
+                Divider()
+
                 CacheStatisticsView(thumbnailProvider: ThumbnailProvider.shared)
             }
             .padding()
