@@ -75,6 +75,7 @@ struct ZoomableCSImageView: View {
             } else {
                 HStack {
                     ProgressView()
+                        .fixedSize()
 
                     Text("Extracting image, please wait...")
                         .font(.title)

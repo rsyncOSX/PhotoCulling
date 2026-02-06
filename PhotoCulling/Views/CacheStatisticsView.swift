@@ -84,7 +84,7 @@ struct CacheStatisticsView: View {
             } else {
                 HStack(spacing: 6) {
                     ProgressView()
-                        .scaleEffect(0.7)
+                        .fixedSize()
                     Text("Loading...")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)

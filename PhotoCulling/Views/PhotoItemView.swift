@@ -37,7 +37,7 @@ struct PhotoItemView: View {
                             .frame(height: CGFloat(ThumbnailSize.grid))
                             .overlay {
                                 ProgressView()
-                                    .controlSize(.small)
+                                    .fixedSize()
                             }
                     } else {
                         ZStack {

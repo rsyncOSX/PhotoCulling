@@ -76,6 +76,7 @@ struct ZoomableNSImageView: View {
             } else {
                 HStack {
                     ProgressView()
+                        .fixedSize()
 
                     Text("Loading image...")
                         .font(.title)

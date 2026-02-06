@@ -81,6 +81,7 @@ struct FileContentView: View {
                     if issorting {
                         HStack {
                             ProgressView()
+                                .fixedSize()
 
                             Text("Sorting files, please wait...")
                                 .font(.title)

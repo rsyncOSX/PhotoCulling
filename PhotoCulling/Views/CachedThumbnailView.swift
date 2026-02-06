@@ -17,7 +17,7 @@ struct CachedThumbnailView: View {
                     .cornerRadius(8)
             } else if isLoading {
                 ProgressView()
-                    .controlSize(.small)
+                    .fixedSize()
             } else {
                 ContentUnavailableView("Select an Image", systemImage: "photo")
             }

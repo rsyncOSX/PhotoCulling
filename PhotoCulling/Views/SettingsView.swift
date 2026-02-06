@@ -19,7 +19,7 @@ struct SettingsView: View {
                 }
         }
         .padding(20)
-        .frame(minWidth: 700, minHeight: 800)
+        .frame(minWidth: 250, minHeight: 700)
     }
 }
 
@@ -37,7 +37,7 @@ struct CacheSettingsTab: View {
             VStack(alignment: .leading, spacing: 20) {
                 // Memory Cache Section
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Memory Cache")
+                    Text("Memory & Disk Cache")
                         .font(.system(size: 14, weight: .semibold))
 
                     Divider()
@@ -92,53 +92,37 @@ struct CacheSettingsTab: View {
                                 )
                                 .frame(height: 18)
                             }
-                        }
-                    }
-                }
-                .padding(12)
-                .background(Color(.controlBackgroundColor))
-                .cornerRadius(8)
 
-                // Disk Cache Section
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Disk Cache")
-                        .font(.system(size: 14, weight: .semibold))
+                            // Current Disk Cache Size with Prune Button
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "internaldrive")
+                                        .font(.system(size: 10, weight: .medium))
+                                    Text("Current use: ")
+                                        .font(.system(size: 10, weight: .medium))
 
-                    Divider()
-
-                    // Current Disk Cache Size with Prune Button
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "internaldrive")
-                                .font(.system(size: 10, weight: .medium))
-                            Text("Current Cache Use")
-                                .font(.system(size: 10, weight: .medium))
-                            Spacer()
-                            if isLoadingDiskCacheSize {
-                                ProgressView()
-                                    .scaleEffect(0.8)
-                            } else {
-                                Text(formatBytes(currentDiskCacheSize))
-                                    .font(.system(size: 10, weight: .semibold, design: .rounded))
-                            }
-                        }
-
-                        Button(action: pruneDiskCache) {
-                            HStack(spacing: 6) {
-                                if isPruningDiskCache {
-                                    ProgressView()
-                                        .scaleEffect(0.6)
-                                } else {
-                                    Image(systemName: "trash")
-                                        .font(.system(size: 10, weight: .semibold))
+                                    if isLoadingDiskCacheSize {
+                                        ProgressView()
+                                            .fixedSize()
+                                    } else {
+                                        Text(formatBytes(currentDiskCacheSize))
+                                            .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                    }
                                 }
-                                Text("Prune Cache")
-                                    .font(.system(size: 10, weight: .medium))
+
+                                ConditionalGlassButton(
+                                    systemImage: "trash",
+                                    text: "Prune Disk Cache",
+                                    helpText: "Prune disk cache to free up space."
+                                ) {
+                                    pruneDiskCache()
+                                }
+                                .disabled(isPruningDiskCache)
                             }
-                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(12)
+                            .background(Color(.controlBackgroundColor))
+                            .cornerRadius(8)
                         }
-                        .buttonStyle(.bordered)
-                        .disabled(isPruningDiskCache)
                     }
                 }
                 .padding(12)
@@ -286,7 +270,7 @@ struct CacheSettingsTab: View {
                         .font(.system(size: 12, weight: .medium))
                 }
             )
-            .buttonStyle(.bordered)
+            .buttonStyle(RefinedGlassButtonStyle())
             .confirmationDialog(
                 "Reset Settings",
                 isPresented: $showResetConfirmation,
