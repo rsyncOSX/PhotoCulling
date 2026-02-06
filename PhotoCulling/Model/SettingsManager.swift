@@ -12,8 +12,8 @@ import OSLog
 
 /// Observable settings manager for app configuration
 /// Persists settings to JSON in Application Support directory
-@Observable
-class SettingsManager {
+@Observable @MainActor
+final class SettingsManager {
     static let shared = SettingsManager()
 
     // MARK: - Memory Cache Settings
