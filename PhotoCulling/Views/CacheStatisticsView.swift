@@ -9,7 +9,7 @@ import Combine
 import SwiftUI
 
 struct CacheStatisticsView: View {
-    @State private var statistics: (hits: Int, misses: Int, evictions: Int, hitRate: Double)?
+    @State private var statistics: CacheStatistics?
     @State private var refreshTimer: AnyCancellable?
     let thumbnailProvider: ThumbnailProvider
 

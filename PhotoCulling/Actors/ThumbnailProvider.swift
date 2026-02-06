@@ -328,7 +328,8 @@ actor ThumbnailProvider {
 
     func clearCaches() async {
         let hitRate = cacheMemory + cacheDisk > 0 ? Double(cacheMemory) / Double(cacheMemory + cacheDisk) * 100 : 0
-        Logger.process.info("Cache Statistics - Hits: \(self.cacheMemory), Misses: \(self.cacheDisk), Hit Rate: \(String(format: "%.1f", hitRate))%")
+        let hitRateStr = String(format: "%.1f", hitRate)
+        Logger.process.info("Cache Statistics - Hits: \(self.cacheMemory), Misses: \(self.cacheDisk), Hit Rate: \(hitRateStr)%")
 
         memoryCache.removeAllObjects()
         await diskCache.pruneCache(maxAgeInDays: 0)
@@ -340,10 +341,15 @@ actor ThumbnailProvider {
     }
 
     /// Get current cache statistics for monitoring
-    func getCacheStatistics() async -> (hits: Int, misses: Int, evictions: Int, hitRate: Double) {
+    func getCacheStatistics() async -> CacheStatistics {
         let total = cacheMemory + cacheDisk
         let hitRate = total > 0 ? Double(cacheMemory) / Double(total) * 100 : 0
-        return (cacheMemory, cacheDisk, cacheEvictions, hitRate)
+        return CacheStatistics(
+            hits: cacheMemory,
+            misses: cacheDisk,
+            evictions: cacheEvictions,
+            hitRate: hitRate
+        )
     }
 
     /// Get current disk cache size in bytes
