@@ -10,11 +10,12 @@
 import Foundation
 import OSLog
 
-/// Observable settings manager for app configuration
-/// Persists settings to JSON in Application Support directory
-@Observable @MainActor
+// Observable settings manager for app configuration
+// Persists settings to JSON in Application Support directory
+
+@Observable
 final class SettingsManager {
-    static let shared = SettingsManager()
+    @MainActor static let shared = SettingsManager()
 
     // MARK: - Memory Cache Settings
 
@@ -179,11 +180,23 @@ final class SettingsManager {
         }
         await saveSettings()
     }
+
+    @concurrent
+    nonisolated func asyncgetsettings() async -> SavedSettings {
+        await SavedSettings(
+            memoryCacheSizeMB: self.memoryCacheSizeMB,
+            maxCachedThumbnails: self.maxCachedThumbnails,
+            thumbnailSizeGrid: self.thumbnailSizeGrid,
+            thumbnailSizePreview: self.thumbnailSizePreview,
+            thumbnailSizeFullSize: self.thumbnailSizeFullSize,
+            thumbnailCostPerPixel: self.thumbnailCostPerPixel
+        )
+    }
 }
 
 // MARK: - Codable Model
 
-private struct SavedSettings: Codable {
+struct SavedSettings: Codable {
     let memoryCacheSizeMB: Int
     let maxCachedThumbnails: Int
     let thumbnailSizeGrid: Int

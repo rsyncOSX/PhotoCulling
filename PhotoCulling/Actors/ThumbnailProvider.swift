@@ -91,6 +91,48 @@ actor ThumbnailProvider {
         // Set delegate to track evictions
         memoryCache.delegate = CacheDelegate.shared
         self.diskCache = diskCache ?? DiskCacheManager()
+
+        Task {
+            await self.test()
+        }
+    }
+
+    func test() async {
+        /*
+
+         self.memoryCacheSizeMB = 500
+         self.maxCachedThumbnails = 100
+         self.thumbnailSizeGrid = 100
+         self.thumbnailSizePreview = 1024
+         self.thumbnailSizeFullSize = 8700
+         self.thumbnailCostPerPixel = 4
+
+         // Estimate memory cost: width * height * costPerPixel * 1.1 (overhead)
+         let estimatedCostPerImage = (size * size * costPerPixel * 11) / 10
+
+         // Store 100 images in memory cache, scale up for larger thumbnails
+         let totalCostLimit = max(500 * 1024 * 1024, estimatedCostPerImage * 100)
+         let countLimit = max(1000, estimatedCostPerImage > 0 ? (500 * 1024 * 1024) / estimatedCostPerImage : 500)
+
+         */
+
+        let settings = await SettingsManager.shared.asyncgetsettings()
+        let thumbnailCostPerPixel = settings.thumbnailCostPerPixel // 4 default
+        let thumbnailSizePreview = settings.thumbnailSizePreview // 1024 default
+        let memoryCacheSizeMB = settings.memoryCacheSizeMB // 500MB default
+        let thumbnailSizeGrid = settings.thumbnailSizeGrid // default 100
+        let maxCachedThumbnails = settings.maxCachedThumbnails // default 100
+
+        let estimatedCostPerImage = (thumbnailSizePreview * thumbnailSizePreview * thumbnailCostPerPixel * 11) / 10
+        let totalCostlimit = max(memoryCacheSizeMB * thumbnailSizePreview * thumbnailSizePreview, estimatedCostPerImage * maxCachedThumbnails)
+
+        Logger.process.debugMessageOnly(
+            "test(): totalCostLimit: \(totalCostlimit), countLimit: \(thumbnailCostPerPixel), costPerPixel: \(costPerPixel)"
+        )
+    }
+
+    func getsettings() async -> SavedSettings {
+        await SettingsManager.shared.asyncgetsettings()
     }
 
     func setFileHandlers(_ fileHandlers: FileHandlers) {
