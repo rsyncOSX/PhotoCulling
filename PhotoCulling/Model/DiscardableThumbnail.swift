@@ -27,6 +27,8 @@ final class DiscardableThumbnail: NSObject, NSDiscardableContent, @unchecked Sen
         }
 
         // If no representations found, fall back to logical size estimate
+        // WARNING: On Retina (2x) or high-DPI displays, image.size is in logical points
+        // For accurate pixel count on all displays, prefer using image.representations when available
         if totalCost == 0 {
             let width = Int(image.size.width)
             let height = Int(image.size.height)

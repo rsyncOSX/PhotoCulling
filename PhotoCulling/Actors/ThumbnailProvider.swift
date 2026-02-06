@@ -65,13 +65,17 @@ actor ThumbnailProvider {
     private var preloadTask: Task<Int, Never>?
 
     private var fileHandlers: FileHandlers?
-    /// Memory cost per pixel for thumbnails (1-8 bytes) - affects quality
+    /// Interpolation quality level (1-8) - controls resampling quality, NOT memory cost
+    /// Memory cost is always 4 bytes per pixel (RGBA) regardless of this setting
     private var costPerPixel: Int = 4
     /// let supported: Set<String> = ["arw", "tiff", "tif", "jpeg", "jpg", "png", "heic", "heif"]
     let supported: Set<String> = ["arw"]
 
     /// 2. Performance Limits - Configurable for testing
-    init(config: CacheConfig? = nil, diskCache: DiskCacheManager? = nil) {
+    init(
+        config: CacheConfig? = nil,
+        diskCache: DiskCacheManager? = nil
+    ) {
         memoryCache = NSCache<NSURL, DiscardableThumbnail>()
         if let config {
             memoryCache.totalCostLimit = config.totalCostLimit
@@ -90,11 +94,13 @@ actor ThumbnailProvider {
     func setmemomorycachefromsavedsettings() async {
         savedsettings = await SettingsManager.shared.asyncgetsettings()
         if let settings = savedsettings {
-            let thumbnailCostPerPixel = settings.thumbnailCostPerPixel // 4 default
-            let thumbnailSizePreview = settings.thumbnailSizePreview // 1024 default
+            let thumbnailCostPerPixel = settings.thumbnailCostPerPixel // 4 default (RGBA bytes per pixel)
+            let thumbnailSizePreview = settings.thumbnailSizePreview // 1024 default - used as estimate for cache limit
             let memoryCacheSizeMB = settings.memoryCacheSizeMB // 500MB default
             let maxCachedThumbnails = settings.maxCachedThumbnails // default 100
 
+            // Estimate cache limit using preview size (largest typical thumbnail size)
+            // = (1024 * 1024 * 4 bytes * 1.1 overhead) ≈ 4.6 MB per image at preview size
             let estimatedCostPerImage = (thumbnailSizePreview * thumbnailSizePreview * thumbnailCostPerPixel * 11) / 10
             let totalCostlimit = memoryCacheSizeMB * 1024 * 1024 // Convert MB to bytes
             let countLimit = estimatedCostPerImage > 0 ? totalCostlimit / estimatedCostPerImage : maxCachedThumbnails
@@ -114,6 +120,9 @@ actor ThumbnailProvider {
         self.fileHandlers = fileHandlers
     }
 
+    /// Set interpolation quality level (1-8)
+    /// Note: This affects resampling quality during thumbnail extraction, NOT memory accounting.
+    /// Memory cost is always 4 bytes per pixel (RGBA) regardless of this setting.
     func setCostPerPixel(_ cost: Int) {
         self.costPerPixel = max(1, min(8, cost)) // Clamp between 1-8
     }
@@ -226,8 +235,8 @@ actor ThumbnailProvider {
         }
     }
 
-    /// Renamed to reflect that it uses generic ImageIO, not Sony-specific SDKs
-    /// qualityCost: 1-8 bytes per pixel, controls interpolation quality
+    /// Extract thumbnail using generic ImageIO framework
+    /// qualityCost: 1-8 level of interpolation quality (not bytes per pixel - memory is always 4 bytes RGBA)
     private nonisolated func extractSonyThumbnail(from url: URL, maxDimension: CGFloat, qualityCost: Int = 4) async throws -> CGImage {
         try await Task.detached(priority: .userInitiated) {
             let options = [kCGImageSourceShouldCache: false] as CFDictionary
