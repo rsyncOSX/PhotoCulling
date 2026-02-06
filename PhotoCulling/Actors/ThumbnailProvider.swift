@@ -22,7 +22,6 @@ final class CacheDelegate: NSObject, NSCacheDelegate, @unchecked Sendable {
         super.init()
     }
 
-    /// ✅ FIX: Change 'obj: AnyObject' to 'obj: Any'
     nonisolated func cache(_: NSCache<AnyObject, AnyObject>, willEvictObject obj: Any) {
         // The cast still works exactly the same way
         if let image = obj as? NSImage {
@@ -188,10 +187,18 @@ actor ThumbnailProvider {
             if Task.isCancelled { return }
 
             // 1. Call the worker - we get a thread-safe CGImage
-            let cgImage = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize), qualityCost: costPerPixel)
+            let cgImage = try await extractSonyThumbnail(
+                from: url,
+                maxDimension: CGFloat(targetSize),
+                qualityCost: costPerPixel
+            )
 
             // 2. Create NSImage HERE, inside the Actor
-            let image = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+            let image = NSImage(
+                cgImage: cgImage,
+                size: NSSize(width: cgImage.width,
+                             height: cgImage.height)
+            )
 
             // 3. Store the NSImage
             storeInMemory(image, for: url)

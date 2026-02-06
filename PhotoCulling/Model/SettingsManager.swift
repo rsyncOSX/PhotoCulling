@@ -27,8 +27,8 @@ class SettingsManager {
         }
     }
 
-    /// Number of cached thumbnails to keep in memory (default: 50)
-    var maxCachedThumbnails: Int = 50 {
+    /// Number of cached thumbnails to keep in memory (default: 100)
+    var maxCachedThumbnails: Int = 100 {
         didSet {
             Task {
                 await saveSettings()
@@ -171,7 +171,7 @@ class SettingsManager {
     func resetToDefaults() async {
         await MainActor.run {
             self.memoryCacheSizeMB = 500
-            self.maxCachedThumbnails = 50
+            self.maxCachedThumbnails = 100
             self.thumbnailSizeGrid = 100
             self.thumbnailSizePreview = 1024
             self.thumbnailSizeFullSize = 8700
