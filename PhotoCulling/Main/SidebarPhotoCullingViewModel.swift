@@ -60,11 +60,11 @@ final class SidebarPhotoCullingViewModel {
             creatingthumbnails = true
 
             let settingsmanager = await SettingsManager.shared.asyncgetsettings()
-            let thumbnailsize = settingsmanager.thumbnailSizePreview
+            let thumbnailSizePreview = settingsmanager.thumbnailSizePreview
 
             await ThumbnailProvider.shared.preloadCatalog(
                 at: url,
-                targetSize: thumbnailsize
+                targetSize: thumbnailSizePreview
             )
 
             creatingthumbnails = false

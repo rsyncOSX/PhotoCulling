@@ -24,9 +24,11 @@ struct CachedThumbnailView: View {
         }
         .task(id: url) {
             isLoading = true
+            let settingsmanager = await SettingsManager.shared.asyncgetsettings()
+            let thumbnailSizePreview = settingsmanager.thumbnailSizePreview
             image = await ThumbnailProvider.shared.thumbnail(
                 for: url,
-                targetSize: ThumbnailSize.preview
+                targetSize: thumbnailSizePreview
             )
             isLoading = false
         }

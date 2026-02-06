@@ -13,6 +13,7 @@ struct SidebarPhotoCullingView: View {
     @Binding var zoomNSImageWindowFocused: Bool
 
     @State var viewModel = SidebarPhotoCullingViewModel()
+    @State var savedsettings: SavedSettings?
 
     var body: some View {
         NavigationSplitView {
@@ -86,6 +87,7 @@ struct SidebarPhotoCullingView: View {
                 maxfilesHandler: viewModel.maxfilesHandler
             )
             await ThumbnailProvider.shared.setFileHandlers(handlers)
+            savedsettings = await SettingsManager.shared.asyncgetsettings()
         }
         // --- RIGHT INSPECTOR ---
         .inspector(isPresented: $viewModel.isInspectorPresented) {

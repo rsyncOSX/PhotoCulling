@@ -17,33 +17,34 @@ struct PhotoItemView: View {
 
     @State private var thumbnailImage: NSImage?
     @State private var isLoading = false
+    @State private var savedsettings: SavedSettings?
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
             VStack(alignment: .leading) {
                 ZStack {
-                    if let thumbnailImage {
+                    if let thumbnailImage, let savedsettings {
                         Image(nsImage: thumbnailImage)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                             .frame(
-                                width: CGFloat(ThumbnailSize.grid),
-                                height: CGFloat(ThumbnailSize.grid)
+                                width: CGFloat(savedsettings.thumbnailSizeGrid),
+                                height: CGFloat(savedsettings.thumbnailSizeGrid)
                             )
                             .clipped()
-                    } else if isLoading {
+                    } else if isLoading, let savedsettings {
                         Rectangle()
                             .fill(Color.gray.opacity(0.1))
-                            .frame(height: CGFloat(ThumbnailSize.grid))
+                            .frame(height: CGFloat(savedsettings.thumbnailSizeGrid))
                             .overlay {
                                 ProgressView()
                                     .fixedSize()
                             }
-                    } else {
+                    } else if let savedsettings {
                         ZStack {
                             Rectangle()
                                 .fill(Color.gray.opacity(0.1))
-                                .frame(height: CGFloat(ThumbnailSize.grid))
+                                .frame(height: CGFloat(savedsettings.thumbnailSizeGrid))
 
                             Label("No image available", systemImage: "xmark")
                         }
@@ -71,11 +72,16 @@ struct PhotoItemView: View {
             isLoading = true
             // Most likely a thumbnail is received from the populated NSCache<NSURL, NSImage>().
             // Use preview size to match preload cache to avoid disk reads
+            let settingsmanager = await SettingsManager.shared.asyncgetsettings()
+            let thumbnailSizePreview = settingsmanager.thumbnailSizePreview
             thumbnailImage = await ThumbnailProvider.shared.thumbnail(
                 for: url,
-                targetSize: ThumbnailSize.preview
+                targetSize: thumbnailSizePreview
             )
             isLoading = false
+        }
+        .task {
+            savedsettings = await SettingsManager.shared.asyncgetsettings()
         }
     }
 

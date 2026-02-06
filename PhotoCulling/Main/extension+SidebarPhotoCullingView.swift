@@ -61,44 +61,45 @@ extension SidebarPhotoCullingView {
 
     var filetableview: some View {
         VStack(alignment: .leading) {
-            Table(viewModel.filteredFiles.compactMap { file in
-                (viewModel.getRating(for: file) >= viewModel.rating) ? file : nil
-            },
-            selection: $viewModel.selectedFileID,
-            sortOrder: $viewModel.sortOrder) {
-                TableColumn("", value: \.id) { file in
-                    Button(action: {
-                        handleToggleSelection(for: file)
-                    }, label: {
-                        Image(systemName: marktoggle(for: file) ? "checkmark.square.fill" : "square")
-                            .foregroundStyle(.blue)
-                    })
-                    .buttonStyle(.plain)
-                }
-                .width(30)
-                TableColumn("Rating") { file in
-                    RatingView(
-                        rating: viewModel.getRating(for: file),
-                        onChange: { newRating in
-                            // If not toggled, toggle it on first
-                            if !marktoggle(for: file) {
-                                handleToggleSelection(for: file)
+            if let savedsettings {
+                Table(viewModel.filteredFiles.compactMap { file in
+                    (viewModel.getRating(for: file) >= viewModel.rating) ? file : nil
+                },
+                selection: $viewModel.selectedFileID,
+                sortOrder: $viewModel.sortOrder) {
+                    TableColumn("", value: \.id) { file in
+                        Button(action: {
+                            handleToggleSelection(for: file)
+                        }, label: {
+                            Image(systemName: marktoggle(for: file) ? "checkmark.square.fill" : "square")
+                                .foregroundStyle(.blue)
+                        })
+                        .buttonStyle(.plain)
+                    }
+                    .width(30)
+                    TableColumn("Rating") { file in
+                        RatingView(
+                            rating: viewModel.getRating(for: file),
+                            onChange: { newRating in
+                                // If not toggled, toggle it on first
+                                if !marktoggle(for: file) {
+                                    handleToggleSelection(for: file)
+                                }
+                                viewModel.updateRating(for: file, rating: newRating)
                             }
-                            viewModel.updateRating(for: file, rating: newRating)
-                        }
-                    )
-                }
-                .width(CGFloat(ThumbnailSize.grid))
-                TableColumn("Name", value: \.name)
-                TableColumn("Size", value: \.size) { file in
-                    Text(file.formattedSize).monospacedDigit()
-                }
-                .width(75)
-                TableColumn("Modified", value: \.dateModified) { file in
-                    Text(file.dateModified, style: .date)
+                        )
+                    }
+                    .width(CGFloat(savedsettings.thumbnailSizeGrid))
+                    TableColumn("Name", value: \.name)
+                    TableColumn("Size", value: \.size) { file in
+                        Text(file.formattedSize).monospacedDigit()
+                    }
+                    .width(75)
+                    TableColumn("Modified", value: \.dateModified) { file in
+                        Text(file.dateModified, style: .date)
+                    }
                 }
             }
-
             if showPhotoGridView() {
                 PhotoGridView(
                     cullingmanager: viewModel.cullingmanager,
