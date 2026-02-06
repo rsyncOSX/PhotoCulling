@@ -17,9 +17,14 @@ struct SettingsView: View {
                 .tabItem {
                     Label("Cache", systemImage: "memorychip.fill")
                 }
+
+            ThumbnailSizesTab()
+                .tabItem {
+                    Label("Thumbnails", systemImage: "photo.fill")
+                }
         }
         .padding(20)
-        .frame(width: 450, height: 720)
+        .frame(width: 450, height: 450)
     }
 }
 
@@ -95,21 +100,23 @@ struct CacheSettingsTab: View {
                         }
 
                         // Current Disk Cache Size with Prune Button
-                        VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 8) {
                             HStack(spacing: 4) {
                                 Image(systemName: "internaldrive")
-                                    .font(.system(size: 10, weight: .medium))
+                                    .font(.system(size: 12, weight: .medium))
                                 Text("Current use: ")
-                                    .font(.system(size: 10, weight: .medium))
+                                    .font(.system(size: 12, weight: .medium))
 
                                 if isLoadingDiskCacheSize {
                                     ProgressView()
                                         .fixedSize()
                                 } else {
                                     Text(formatBytes(currentDiskCacheSize))
-                                        .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                        .font(.system(size: 12, weight: .semibold, design: .rounded))
                                 }
                             }
+
+                            Spacer()
 
                             ConditionalGlassButton(
                                 systemImage: "trash",
@@ -169,7 +176,86 @@ struct CacheSettingsTab: View {
                 .padding(12)
                 .background(Color(.controlBackgroundColor))
                 .cornerRadius(8)
+            }
 
+            Spacer()
+
+            // Reset Button
+            Button(
+                action: { showResetConfirmation = true },
+                label: {
+                    Label("Reset to Defaults", systemImage: "arrow.uturn.backward")
+                        .font(.system(size: 12, weight: .medium))
+                }
+            )
+            .buttonStyle(RefinedGlassButtonStyle())
+            .confirmationDialog(
+                "Reset Settings",
+                isPresented: $showResetConfirmation,
+                actions: {
+                    Button("Reset", role: .destructive) {
+                        Task {
+                            await settingsManager.resetToDefaultsMemoryCache()
+                        }
+                    }
+                    Button("Cancel", role: .cancel) {}
+                },
+                message: {
+                    Text("Are you sure you want to reset all settings to their default values?")
+                }
+            )
+        }
+        .onAppear(perform: refreshDiskCacheSize)
+        .onAppear {
+            // Initialize ThumbnailProvider with saved cost per pixel setting
+            Task {
+                await ThumbnailProvider.shared.setCostPerPixel(settingsManager.thumbnailCostPerPixel)
+            }
+        }
+    }
+
+    private func refreshDiskCacheSize() {
+        isLoadingDiskCacheSize = true
+        Task {
+            let size = await ThumbnailProvider.shared.getDiskCacheSize()
+            await MainActor.run {
+                currentDiskCacheSize = size
+                isLoadingDiskCacheSize = false
+            }
+        }
+    }
+
+    private func pruneDiskCache() {
+        isPruningDiskCache = true
+        Task {
+            await ThumbnailProvider.shared.pruneDiskCache(maxAgeInDays: 0)
+            // Refresh the size after pruning
+            let size = await ThumbnailProvider.shared.getDiskCacheSize()
+            await MainActor.run {
+                currentDiskCacheSize = size
+                isPruningDiskCache = false
+            }
+        }
+    }
+
+    private func formatBytes(_ bytes: Int) -> String {
+        if bytes == 0 { return "0 B" }
+        let units = ["B", "KB", "MB", "GB"]
+        let unitIndex = Int(log2(Double(bytes)) / 10)
+        let size = Double(bytes) / pow(1024, Double(unitIndex))
+        return String(format: "%.1f %@", size, units[min(unitIndex, units.count - 1)])
+    }
+}
+
+// MARK: - Thumbnail Sizes Tab
+
+struct ThumbnailSizesTab: View {
+    @Environment(SettingsManager.self) var settingsManager
+    @State private var showResetConfirmation = false
+
+    var body: some View {
+        VStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 20) {
                 // Thumbnail Settings Section
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Thumbnail Sizes")
@@ -245,9 +331,14 @@ struct CacheSettingsTab: View {
                             step: 1
                         )
                         HStack(spacing: 8) {
-                            Text("Lower values = lower quality/less memory. Higher values = better quality/more memory")
-                                .font(.system(size: 11, weight: .regular))
-                                .foregroundStyle(.secondary)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Lower values = lower quality/less memory.")
+                                    .font(.system(size: 11, weight: .regular))
+                                    .foregroundStyle(.secondary)
+                                Text("Higher values = better quality/more memory")
+                                    .font(.system(size: 11, weight: .regular))
+                                    .foregroundStyle(.secondary)
+                            }
 
                             // Calculate estimated costs
                             let gridCost = (settingsManager.thumbnailSizeGrid *
@@ -296,7 +387,7 @@ struct CacheSettingsTab: View {
                 actions: {
                     Button("Reset", role: .destructive) {
                         Task {
-                            await settingsManager.resetToDefaults()
+                            await settingsManager.resetToDefaultsThumbnails()
                         }
                     }
                     Button("Cancel", role: .cancel) {}
@@ -306,44 +397,11 @@ struct CacheSettingsTab: View {
                 }
             )
         }
-        .onAppear(perform: refreshDiskCacheSize)
         .onAppear {
             // Initialize ThumbnailProvider with saved cost per pixel setting
             Task {
                 await ThumbnailProvider.shared.setCostPerPixel(settingsManager.thumbnailCostPerPixel)
             }
         }
-    }
-
-    private func refreshDiskCacheSize() {
-        isLoadingDiskCacheSize = true
-        Task {
-            let size = await ThumbnailProvider.shared.getDiskCacheSize()
-            await MainActor.run {
-                currentDiskCacheSize = size
-                isLoadingDiskCacheSize = false
-            }
-        }
-    }
-
-    private func pruneDiskCache() {
-        isPruningDiskCache = true
-        Task {
-            await ThumbnailProvider.shared.pruneDiskCache(maxAgeInDays: 0)
-            // Refresh the size after pruning
-            let size = await ThumbnailProvider.shared.getDiskCacheSize()
-            await MainActor.run {
-                currentDiskCacheSize = size
-                isPruningDiskCache = false
-            }
-        }
-    }
-
-    private func formatBytes(_ bytes: Int) -> String {
-        if bytes == 0 { return "0 B" }
-        let units = ["B", "KB", "MB", "GB"]
-        let unitIndex = Int(log2(Double(bytes)) / 10)
-        let size = Double(bytes) / pow(1024, Double(unitIndex))
-        return String(format: "%.1f %@", size, units[min(unitIndex, units.count - 1)])
     }
 }

@@ -190,10 +190,16 @@ final class SettingsManager {
     }
 
     /// Reset settings to defaults
-    func resetToDefaults() async {
+    func resetToDefaultsMemoryCache() async {
         await MainActor.run {
             self.memoryCacheSizeMB = 500
             self.maxCachedThumbnails = 100
+        }
+        await saveSettings()
+    }
+
+    func resetToDefaultsThumbnails() async {
+        await MainActor.run {
             self.thumbnailSizeGrid = 100
             self.thumbnailSizePreview = 1024
             self.thumbnailSizeFullSize = 8700
