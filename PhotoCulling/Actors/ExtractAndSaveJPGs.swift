@@ -54,8 +54,6 @@ actor ExtractAndSaveJPGs {
                             let newCount = await self.incrementAndGetCount()
                             await self.fileHandlers?.fileHandler(newCount)
                         }
-
-                        // await self.processSingleFile(url, targetSize: targetSize)
                     }
                 }
 

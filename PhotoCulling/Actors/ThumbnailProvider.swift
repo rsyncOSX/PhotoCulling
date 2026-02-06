@@ -130,17 +130,9 @@ actor ThumbnailProvider {
 
     @discardableResult
     func preloadCatalog(at catalogURL: URL, targetSize: Int) async -> Int {
+        
         cancelPreload()
-        /*
-         // Reconfigure cache based on target size and cost per pixel to ensure adequate memory for thumbnails
-         let config = forThumbnailSize(targetSize, costPerPixel: costPerPixel)
-         memoryCache.totalCostLimit = config.totalCostLimit
-         memoryCache.countLimit = config.countLimit
-         let cacheMemMB = config.totalCostLimit / (1024 * 1024)
-         Logger.process.debugMessageOnly(
-             "Cache reconfigured for \(targetSize)px thumbnails: \(cacheMemMB)MB, limit: \(config.countLimit), costPerPixel: \(costPerPixel)"
-         )
-         */
+        
         let task = Task {
             successCount = 0
             let urls = await DiscoverFiles().discoverFiles(at: catalogURL, recursive: false)
@@ -177,6 +169,7 @@ actor ThumbnailProvider {
     }
 
     private func processSingleFile(_ url: URL, targetSize: Int) async {
+        
         // Cancellation Check inside the processing unit
         if Task.isCancelled { return }
 
