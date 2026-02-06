@@ -17,63 +17,41 @@ import OSLog
 final class SettingsManager {
     @MainActor static let shared = SettingsManager()
 
+    // MARK: - Initialization
+
+    private init() {
+        Task {
+            await loadSettings()
+        }
+    }
+
     // MARK: - Memory Cache Settings
 
     /// Maximum memory cache size in MB (default: 500)
-    var memoryCacheSizeMB: Int = 500 {
-        didSet {
-            Task {
-                await saveSettings()
-            }
-        }
-    }
+    @ObservationIgnored
+    var memoryCacheSizeMB: Int = 500
 
     /// Number of cached thumbnails to keep in memory (default: 100)
-    var maxCachedThumbnails: Int = 100 {
-        didSet {
-            Task {
-                await saveSettings()
-            }
-        }
-    }
+    @ObservationIgnored
+    var maxCachedThumbnails: Int = 100
 
     // MARK: - Thumbnail Size Settings
 
     /// Grid thumbnail size in pixels (default: 100)
-    var thumbnailSizeGrid: Int = 100 {
-        didSet {
-            Task {
-                await saveSettings()
-            }
-        }
-    }
+    @ObservationIgnored
+    var thumbnailSizeGrid: Int = 100
 
     /// Preview thumbnail size in pixels (default: 1024)
-    var thumbnailSizePreview: Int = 1024 {
-        didSet {
-            Task {
-                await saveSettings()
-            }
-        }
-    }
+    @ObservationIgnored
+    var thumbnailSizePreview: Int = 1024
 
     /// Full size thumbnail in pixels (default: 8700)
-    var thumbnailSizeFullSize: Int = 8700 {
-        didSet {
-            Task {
-                await saveSettings()
-            }
-        }
-    }
+    @ObservationIgnored
+    var thumbnailSizeFullSize: Int = 8700
 
     /// Estimated cost per pixel for thumbnail (in bytes, default: 4 for RGBA)
-    var thumbnailCostPerPixel: Int = 4 {
-        didSet {
-            Task {
-                await saveSettings()
-            }
-        }
-    }
+    @ObservationIgnored
+    var thumbnailCostPerPixel: Int = 4
 
     // MARK: - Private Properties
 
@@ -85,14 +63,6 @@ final class SettingsManager {
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         let appFolder = appSupport.appendingPathComponent("PhotoCulling", isDirectory: true)
         return appFolder.appendingPathComponent(settingsFileName)
-    }
-
-    // MARK: - Initialization
-
-    private init() {
-        Task {
-            await loadSettings()
-        }
     }
 
     // MARK: - Public Methods

@@ -37,6 +37,8 @@ struct CacheSettingsTab: View {
     @State private var isLoadingDiskCacheSize = false
     @State private var isPruningDiskCache = false
 
+    @State private var cacheConfig: CacheConfig?
+
     var body: some View {
         VStack(spacing: 16) {
             VStack(alignment: .leading, spacing: 20) {
@@ -143,7 +145,7 @@ struct CacheSettingsTab: View {
                                     Text("Total Cost Limit")
                                         .font(.system(size: 10, weight: .medium))
                                         .foregroundStyle(.secondary)
-                                    Text(formatBytes(524_288_000))
+                                    Text(formatBytes(cacheConfig?.totalCostLimit ?? 524_288_000))
                                         .font(.system(size: 11, weight: .semibold, design: .rounded))
                                 }
 
@@ -153,8 +155,10 @@ struct CacheSettingsTab: View {
                                     Text("Count Limit")
                                         .font(.system(size: 10, weight: .medium))
                                         .foregroundStyle(.secondary)
-                                    Text("28")
-                                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                    if let countLimit = cacheConfig?.countLimit {
+                                        Text("\(String(countLimit))")
+                                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                    }
                                 }
 
                                 Divider()
@@ -163,8 +167,10 @@ struct CacheSettingsTab: View {
                                     Text("Cost Per Pixel")
                                         .font(.system(size: 10, weight: .medium))
                                         .foregroundStyle(.secondary)
-                                    Text("4 bytes")
-                                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                    if let costPerPixel = cacheConfig?.costPerPixel {
+                                        Text("\(String(costPerPixel)) bytes")
+                                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                    }
                                 }
                             }
                         }
@@ -180,36 +186,47 @@ struct CacheSettingsTab: View {
 
             Spacer()
 
-            // Reset Button
-            Button(
-                action: { showResetConfirmation = true },
-                label: {
-                    Label("Reset to Defaults", systemImage: "arrow.uturn.backward")
-                        .font(.system(size: 12, weight: .medium))
-                }
-            )
-            .buttonStyle(RefinedGlassButtonStyle())
-            .confirmationDialog(
-                "Reset Settings",
-                isPresented: $showResetConfirmation,
-                actions: {
-                    Button("Reset", role: .destructive) {
-                        Task {
-                            await settingsManager.resetToDefaultsMemoryCache()
-                        }
+            HStack {
+                ConditionalGlassButton(
+                    systemImage: "square.and.arrow.down.fill",
+                    text: "Save Settings",
+                    helpText: "Save settings"
+                ) {
+                    Task {
+                        await settingsManager.saveSettings()
                     }
-                    Button("Cancel", role: .cancel) {}
-                },
-                message: {
-                    Text("Are you sure you want to reset all settings to their default values?")
                 }
-            )
-        }
-        .onAppear(perform: refreshDiskCacheSize)
-        .onAppear {
-            // Initialize ThumbnailProvider with saved cost per pixel setting
-            Task {
+
+                // Reset Button
+                Button(
+                    action: { showResetConfirmation = true },
+                    label: {
+                        Label("Reset to Defaults", systemImage: "arrow.uturn.backward")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                )
+                .buttonStyle(RefinedGlassButtonStyle())
+                .confirmationDialog(
+                    "Reset Settings",
+                    isPresented: $showResetConfirmation,
+                    actions: {
+                        Button("Reset", role: .destructive) {
+                            Task {
+                                await settingsManager.resetToDefaultsMemoryCache()
+                            }
+                        }
+                        Button("Cancel", role: .cancel) {}
+                    },
+                    message: {
+                        Text("Are you sure you want to reset all settings to their default values?")
+                    }
+                )
+            }
+            .onAppear(perform: refreshDiskCacheSize)
+            .task {
+                // Initialize ThumbnailProvider with saved cost per pixel setting
                 await ThumbnailProvider.shared.setCostPerPixel(settingsManager.thumbnailCostPerPixel)
+                cacheConfig = await ThumbnailProvider.shared.exportCalulatedSavedSettings()
             }
         }
     }
@@ -372,30 +389,42 @@ struct ThumbnailSizesTab: View {
 
             Spacer()
 
-            // Reset Button
-            Button(
-                action: { showResetConfirmation = true },
-                label: {
-                    Label("Reset to Defaults", systemImage: "arrow.uturn.backward")
-                        .font(.system(size: 12, weight: .medium))
-                }
-            )
-            .buttonStyle(RefinedGlassButtonStyle())
-            .confirmationDialog(
-                "Reset Settings",
-                isPresented: $showResetConfirmation,
-                actions: {
-                    Button("Reset", role: .destructive) {
-                        Task {
-                            await settingsManager.resetToDefaultsThumbnails()
-                        }
+            HStack {
+                ConditionalGlassButton(
+                    systemImage: "square.and.arrow.down.fill",
+                    text: "Save Settings",
+                    helpText: "Save settings"
+                ) {
+                    Task {
+                        await settingsManager.saveSettings()
                     }
-                    Button("Cancel", role: .cancel) {}
-                },
-                message: {
-                    Text("Are you sure you want to reset all settings to their default values?")
                 }
-            )
+
+                // Reset Button
+                Button(
+                    action: { showResetConfirmation = true },
+                    label: {
+                        Label("Reset to Defaults", systemImage: "arrow.uturn.backward")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                )
+                .buttonStyle(RefinedGlassButtonStyle())
+                .confirmationDialog(
+                    "Reset Settings",
+                    isPresented: $showResetConfirmation,
+                    actions: {
+                        Button("Reset", role: .destructive) {
+                            Task {
+                                await settingsManager.resetToDefaultsThumbnails()
+                            }
+                        }
+                        Button("Cancel", role: .cancel) {}
+                    },
+                    message: {
+                        Text("Are you sure you want to reset all settings to their default values?")
+                    }
+                )
+            }
         }
         .onAppear {
             // Initialize ThumbnailProvider with saved cost per pixel setting

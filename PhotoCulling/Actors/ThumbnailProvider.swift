@@ -33,6 +33,8 @@ final class CacheDelegate: NSObject, NSCacheDelegate, @unchecked Sendable {
 struct CacheConfig {
     let totalCostLimit: Int
     let countLimit: Int
+    /// Need this in return to settingsview
+    var costPerPixel: Int?
 
     nonisolated static let production = CacheConfig(
         totalCostLimit: 500 * 1024 * 1024, // ~500 MB for ~112 1024x1024 images
@@ -87,8 +89,31 @@ actor ThumbnailProvider {
             // Only set if config == nil, config is set in Tests
             if config == nil {
                 await self.setmemomorycachefromsavedsettings()
+                Logger.process.debugMessageOnly("ThumbnailProvider: init() - successfully loaded saved settings")
             }
         }
+    }
+
+    func exportCalulatedSavedSettings() async -> CacheConfig? {
+        if let settings = savedsettings {
+            let thumbnailCostPerPixel = settings.thumbnailCostPerPixel // 4 default (RGBA bytes per pixel)
+            let thumbnailSizePreview = settings.thumbnailSizePreview // 1024 default - used as estimate for cache limit
+            let memoryCacheSizeMB = settings.memoryCacheSizeMB // 500MB default
+            let maxCachedThumbnails = settings.maxCachedThumbnails // default 100
+
+            // Estimate cache limit using preview size (largest typical thumbnail size)
+            // = (1024 * 1024 * 4 bytes * 1.1 overhead) ≈ 4.6 MB per image at preview size
+            let estimatedCostPerImage = (thumbnailSizePreview * thumbnailSizePreview * thumbnailCostPerPixel * 11) / 10
+            let totalCostlimit = memoryCacheSizeMB * 1024 * 1024 // Convert MB to bytes
+            let countLimit = estimatedCostPerImage > 0 ? totalCostlimit / estimatedCostPerImage : maxCachedThumbnails
+
+            return CacheConfig(
+                totalCostLimit: totalCostlimit,
+                countLimit: countLimit,
+                costPerPixel: thumbnailCostPerPixel
+            )
+        }
+        return nil
     }
 
     func setmemomorycachefromsavedsettings() async {
