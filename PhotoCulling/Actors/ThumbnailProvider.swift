@@ -88,7 +88,6 @@ actor ThumbnailProvider {
     }
 
     func setmemomorycachefromsavedsettings() async {
-        
         savedsettings = await SettingsManager.shared.asyncgetsettings()
         if let settings = savedsettings {
             let thumbnailCostPerPixel = settings.thumbnailCostPerPixel // 4 default

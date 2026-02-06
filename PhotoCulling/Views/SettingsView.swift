@@ -288,7 +288,7 @@ struct CacheSettingsTab: View {
     private func pruneDiskCache() {
         isPruningDiskCache = true
         Task {
-            await ThumbnailProvider.shared.pruneDiskCache()
+            await ThumbnailProvider.shared.pruneDiskCache(maxAgeInDays: 0)
             // Refresh the size after pruning
             let size = await ThumbnailProvider.shared.getDiskCacheSize()
             await MainActor.run {
