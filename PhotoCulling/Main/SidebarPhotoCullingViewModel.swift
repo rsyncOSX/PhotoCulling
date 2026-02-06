@@ -59,9 +59,12 @@ final class SidebarPhotoCullingViewModel {
             processedURLs.insert(url)
             creatingthumbnails = true
 
+            let settingsmanager = await SettingsManager.shared.asyncgetsettings()
+            let thumbnailsize = settingsmanager.thumbnailSizePreview
+
             await ThumbnailProvider.shared.preloadCatalog(
                 at: url,
-                targetSize: ThumbnailSize.preview
+                targetSize: thumbnailsize
             )
 
             creatingthumbnails = false

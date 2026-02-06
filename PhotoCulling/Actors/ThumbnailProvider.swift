@@ -125,10 +125,27 @@ actor ThumbnailProvider {
 
         let estimatedCostPerImage = (thumbnailSizePreview * thumbnailSizePreview * thumbnailCostPerPixel * 11) / 10
         let totalCostlimit = max(memoryCacheSizeMB * thumbnailSizePreview * thumbnailSizePreview, estimatedCostPerImage * maxCachedThumbnails)
+        let countLimit = max(1000, estimatedCostPerImage > 0 ? (memoryCacheSizeMB * thumbnailSizePreview * thumbnailSizePreview) / estimatedCostPerImage : memoryCacheSizeMB)
 
         Logger.process.debugMessageOnly(
-            "test(): totalCostLimit: \(totalCostlimit), countLimit: \(thumbnailCostPerPixel), costPerPixel: \(costPerPixel)"
+            "test(): totalCostLimit: \(totalCostlimit), countLimit: \(countLimit), costPerPixel: \(thumbnailCostPerPixel)"
         )
+    }
+
+    /// Calculate appropriate cache limits based on thumbnail size and cost per pixel
+    func forThumbnailSize(_ size: Int, costPerPixel: Int = 4) -> CacheConfig {
+        // Estimate memory cost: width * height * costPerPixel * 1.1 (overhead)
+        let estimatedCostPerImage = (size * size * costPerPixel * 11) / 10
+
+        // Store 100 images in memory cache, scale up for larger thumbnails
+        let totalCostLimit = max(500 * 1024 * 1024, estimatedCostPerImage * 100)
+        let countLimit = max(1000, estimatedCostPerImage > 0 ? (500 * 1024 * 1024) / estimatedCostPerImage : 500)
+
+        Logger.process.debugMessageOnly(
+            "CacheConfig: totalCostLimit: \(totalCostLimit), countLimit: \(countLimit), costPerPixel: \(costPerPixel)"
+        )
+
+        return CacheConfig(totalCostLimit: totalCostLimit, countLimit: countLimit)
     }
 
     func getsettings() async -> SavedSettings {
@@ -154,7 +171,7 @@ actor ThumbnailProvider {
         cancelPreload()
 
         // Reconfigure cache based on target size and cost per pixel to ensure adequate memory for thumbnails
-        let config = CacheConfig.forThumbnailSize(targetSize, costPerPixel: costPerPixel)
+        let config = forThumbnailSize(targetSize, costPerPixel: costPerPixel)
         memoryCache.totalCostLimit = config.totalCostLimit
         memoryCache.countLimit = config.countLimit
         let cacheMemMB = config.totalCostLimit / (1024 * 1024)
