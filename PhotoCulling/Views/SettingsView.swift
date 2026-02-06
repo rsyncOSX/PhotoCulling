@@ -19,7 +19,7 @@ struct SettingsView: View {
                 }
         }
         .padding(20)
-        .frame(width: 450, height: 620)
+        .frame(width: 450, height: 720)
     }
 }
 
@@ -119,6 +119,47 @@ struct CacheSettingsTab: View {
                                 pruneDiskCache()
                             }
                             .disabled(isPruningDiskCache)
+                        }
+                        .padding(12)
+                        .background(Color(.controlBackgroundColor))
+                        .cornerRadius(8)
+
+                        // Cache Limits Summary
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Cache Limits")
+                                .font(.system(size: 12, weight: .semibold))
+
+                            Divider()
+
+                            HStack(spacing: 16) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Total Cost Limit")
+                                        .font(.system(size: 10, weight: .medium))
+                                        .foregroundStyle(.secondary)
+                                    Text(formatBytes(524_288_000))
+                                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                }
+
+                                Divider()
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Count Limit")
+                                        .font(.system(size: 10, weight: .medium))
+                                        .foregroundStyle(.secondary)
+                                    Text("28")
+                                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                }
+
+                                Divider()
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Cost Per Pixel")
+                                        .font(.system(size: 10, weight: .medium))
+                                        .foregroundStyle(.secondary)
+                                    Text("4 bytes")
+                                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                }
+                            }
                         }
                         .padding(12)
                         .background(Color(.controlBackgroundColor))

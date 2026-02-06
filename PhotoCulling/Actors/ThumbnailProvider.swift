@@ -99,10 +99,6 @@ actor ThumbnailProvider {
             let totalCostlimit = memoryCacheSizeMB * 1024 * 1024 // Convert MB to bytes
             let countLimit = estimatedCostPerImage > 0 ? totalCostlimit / estimatedCostPerImage : maxCachedThumbnails
 
-            Logger.process.debugMessageOnly(
-                "ThumbnailProvider: setmemomorycachefromsavedsettings() totalCostLimit: \(totalCostlimit), countLimit: \(countLimit), costPerPixel: \(thumbnailCostPerPixel)"
-            )
-
             memoryCache.totalCostLimit = totalCostlimit
             memoryCache.countLimit = countLimit
             // Set delegate to track evictions
@@ -130,9 +126,8 @@ actor ThumbnailProvider {
 
     @discardableResult
     func preloadCatalog(at catalogURL: URL, targetSize: Int) async -> Int {
-        
         cancelPreload()
-        
+
         let task = Task {
             successCount = 0
             let urls = await DiscoverFiles().discoverFiles(at: catalogURL, recursive: false)
@@ -169,7 +164,6 @@ actor ThumbnailProvider {
     }
 
     private func processSingleFile(_ url: URL, targetSize: Int) async {
-        
         // Cancellation Check inside the processing unit
         if Task.isCancelled { return }
 
