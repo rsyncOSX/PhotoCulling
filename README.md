@@ -11,25 +11,17 @@ macOS photo review and selection application for Sony ARW raw files.
 - macOS 14 (Sonoma) or later
 - Apple Silicon or Intel Mac
 
-## Current Version
+## Installation
 
-v0.6.1 - [February 5, 2026](https://github.com/rsyncOSX/PhotoCulling/releases)
+By download directly from the [releases page](https://github.com/rsyncOSX/PhotoCulling/releases). The application is signed and notarized by Apple.
 
-## Features
+## Version
 
-- Browse and review photo catalogs
-- Filter and sort photos
-- Tag and rate photos
-- Copy selected photos with rsync
+Current version: v0.6.1 - (February 5, 2026)- in active development
 
-## Building
+## Documentation
 
-Requires Xcode 15+. See [documentation](https://photoculling.netlify.app/docs/) for build instructions.
-
-## License
-
-[MPL-2.0](Licence.MD)
-
----
+- [User documentation](https://photoculling.netlify.app) ([repository](https://github.com/rsyncOSX/photocullingdocs))
+- [Changelog](https://photoculling.netlify.app/blog/)
 
 ![](images/photoculling.png)
