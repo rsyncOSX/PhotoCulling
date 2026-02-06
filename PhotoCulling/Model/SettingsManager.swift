@@ -138,6 +138,9 @@ final class SettingsManager {
     /// Save settings to JSON file
     func saveSettings() async {
         do {
+            // Validate settings before saving
+            validateSettings()
+
             let fileURL = settingsURL
 
             // Create directory if it doesn't exist
@@ -165,6 +168,24 @@ final class SettingsManager {
             logger.debug("Settings saved successfully")
         } catch {
             logger.error("Failed to save settings: \(error.localizedDescription)")
+        }
+    }
+
+    /// Validate settings and warn about potentially aggressive values
+    private func validateSettings() {
+        // Check minimum safety threshold
+        let minimumCacheMB = 50
+        if memoryCacheSizeMB < minimumCacheMB {
+            logger.warning("Cache size: \(self.memoryCacheSizeMB)MB is below recommended minimum of \(minimumCacheMB)MB. Performance may suffer.")
+        }
+
+        // Check if cache size exceeds 50% of available system memory
+        let availableMemory = ProcessInfo.processInfo.physicalMemory
+        let availableMemoryMB = Int(availableMemory / (1024 * 1024))
+        let memoryThresholdPercent = 50
+
+        if memoryCacheSizeMB > availableMemoryMB * memoryThresholdPercent / 100 {
+            logger.warning("Cache size: \(self.memoryCacheSizeMB)MB exceeds \(memoryThresholdPercent)% of available system memory (\(availableMemoryMB)MB). This may cause system memory pressure.")
         }
     }
 

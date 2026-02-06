@@ -88,24 +88,7 @@ actor ThumbnailProvider {
     }
 
     func setmemomorycachefromsavedsettings() async {
-        /*
-
-         self.memoryCacheSizeMB = 500
-         self.maxCachedThumbnails = 100
-         self.thumbnailSizeGrid = 100
-         self.thumbnailSizePreview = 1024
-         self.thumbnailSizeFullSize = 8700
-         self.thumbnailCostPerPixel = 4
-
-         // Estimate memory cost: width * height * costPerPixel * 1.1 (overhead)
-         let estimatedCostPerImage = (size * size * costPerPixel * 11) / 10
-
-         // Store 100 images in memory cache, scale up for larger thumbnails
-         let totalCostLimit = max(500 * 1024 * 1024, estimatedCostPerImage * 100)
-         let countLimit = max(1000, estimatedCostPerImage > 0 ? (500 * 1024 * 1024) / estimatedCostPerImage : 500)
-
-         */
-
+        
         savedsettings = await SettingsManager.shared.asyncgetsettings()
         if let settings = savedsettings {
             let thumbnailCostPerPixel = settings.thumbnailCostPerPixel // 4 default
@@ -114,8 +97,8 @@ actor ThumbnailProvider {
             let maxCachedThumbnails = settings.maxCachedThumbnails // default 100
 
             let estimatedCostPerImage = (thumbnailSizePreview * thumbnailSizePreview * thumbnailCostPerPixel * 11) / 10
-            let totalCostlimit = max(memoryCacheSizeMB * thumbnailSizePreview * thumbnailSizePreview, estimatedCostPerImage * maxCachedThumbnails)
-            let countLimit = max(1000, estimatedCostPerImage > 0 ? (memoryCacheSizeMB * thumbnailSizePreview * thumbnailSizePreview) / estimatedCostPerImage : memoryCacheSizeMB)
+            let totalCostlimit = memoryCacheSizeMB * 1024 * 1024 // Convert MB to bytes
+            let countLimit = estimatedCostPerImage > 0 ? totalCostlimit / estimatedCostPerImage : maxCachedThumbnails
 
             Logger.process.debugMessageOnly(
                 "test(): totalCostLimit: \(totalCostlimit), countLimit: \(countLimit), costPerPixel: \(thumbnailCostPerPixel)"
@@ -128,23 +111,6 @@ actor ThumbnailProvider {
         }
     }
 
-    /**
-     /// Calculate appropriate cache limits based on thumbnail size and cost per pixel
-     func forThumbnailSize(_ size: Int, costPerPixel: Int = 4) -> CacheConfig {
-         // Estimate memory cost: width * height * costPerPixel * 1.1 (overhead)
-         let estimatedCostPerImage = (size * size * costPerPixel * 11) / 10
-
-         // Store 100 images in memory cache, scale up for larger thumbnails
-         let totalCostLimit = max(500 * 1024 * 1024, estimatedCostPerImage * 100)
-         let countLimit = max(1000, estimatedCostPerImage > 0 ? (500 * 1024 * 1024) / estimatedCostPerImage : 500)
-
-         Logger.process.debugMessageOnly(
-             "CacheConfig: totalCostLimit: \(totalCostLimit), countLimit: \(countLimit), costPerPixel: \(costPerPixel)"
-         )
-
-         return CacheConfig(totalCostLimit: totalCostLimit, countLimit: countLimit)
-     }
-     */
     func getsettings() async -> SavedSettings {
         await SettingsManager.shared.asyncgetsettings()
     }
