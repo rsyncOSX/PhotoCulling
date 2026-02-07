@@ -82,7 +82,11 @@ actor ThumbnailProvider {
         if let costPerPixel = config.costPerPixel {
             self.costPerPixel = costPerPixel
         }
-        Logger.process.debugMessageOnly("ThumbnailProvider: applyConfig complete: memoryCache.totalCostLimit=\(memoryCache.totalCostLimit), memoryCache.countLimit=\(memoryCache.countLimit)")
+        Logger.process.debugMessageOnly(
+            "ThumbnailProvider: applyConfig complete: " +
+            "totalCostLimit=\(memoryCache.totalCostLimit), " +
+            "countLimit=\(memoryCache.countLimit)"
+        )
     }
 
     /// This function is use top present updated Cache Costs in settings when changing
