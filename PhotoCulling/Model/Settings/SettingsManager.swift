@@ -31,7 +31,9 @@ final class SettingsManager {
     var memoryCacheSizeMB: Int = 500
     /// Number of cached thumbnails to keep in memory (default: 100)
     var maxCachedThumbnails: Int = 100
+
     // MARK: - Thumbnail Size Settings
+
     /// Grid thumbnail size in pixels (default: 100)
     var thumbnailSizeGrid: Int = 100
     /// Preview thumbnail size in pixels (default: 1024)

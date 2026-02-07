@@ -40,29 +40,56 @@ actor ThumbnailProvider {
     /// let supported: Set<String> = ["arw", "tiff", "tif", "jpeg", "jpg", "png", "heic", "heif"]
     let supported: Set<String> = ["arw"]
 
+    /// Ensures settings are loaded before any work starts
+    private var setupTask: Task<Void, Never>?
+    private let pendingConfig: CacheConfig?
+
     /// 2. Performance Limits - Configurable for testing
     init(
         config: CacheConfig? = nil,
         diskCache: DiskCacheManager? = nil
     ) {
-        memoryCache = NSCache<NSURL, DiscardableThumbnail>()
-        if let config {
-            memoryCache.totalCostLimit = config.totalCostLimit
-            memoryCache.countLimit = config.countLimit
-            memoryCache.delegate = CacheDelegate.shared
-        }
+        self.memoryCache = NSCache<NSURL, DiscardableThumbnail>()
         self.diskCache = diskCache ?? DiskCacheManager()
-        Task {
-            // Only set if config == nil, config is set in Tests
-            if config == nil {
+        // Store the config to be used later during "ensureReady"
+        self.pendingConfig = config
+        // Logger is fine here because it doesn't capture 'self'
+        Logger.process.debugMessageOnly("ThumbnailProvider: init() complete (pending setup)")
+    }
+
+    /// 3. The magic helper: Creates the task if it doesn't exist, then awaits it.
+    private func ensureReady() async {
+        // If the task already exists, just wait for it.
+        if let task = setupTask {
+            return await task.value
+        }
+
+        // If not, create the task inside the actor.
+        // Because this is an actor method, this is thread-safe!
+        let newTask = Task { [pendingConfig] in
+            if let config = pendingConfig {
+                self.applyConfig(config)
+            } else {
                 await self.setCacheCostsFromSavedSettings()
             }
         }
-        Logger.process.debugMessageOnly("ThumbnailProvider: init() - successfully loaded saved settings")
+
+        self.setupTask = newTask
+        return await newTask.value
     }
 
-    // This function is use top present updated Cache Costs in settings when changing
-    // settings data.
+    private func applyConfig(_ config: CacheConfig) {
+        memoryCache.totalCostLimit = config.totalCostLimit
+        memoryCache.countLimit = config.countLimit
+        memoryCache.delegate = CacheDelegate.shared
+        if let costPerPixel = config.costPerPixel {
+            self.costPerPixel = costPerPixel
+        }
+        Logger.process.debugMessageOnly("ThumbnailProvider: applyConfig complete: memoryCache.totalCostLimit=\(memoryCache.totalCostLimit), memoryCache.countLimit=\(memoryCache.countLimit)")
+    }
+
+    /// This function is use top present updated Cache Costs in settings when changing
+    /// settings data.
     func getCacheCostsAfterSettingsUpdate() async -> CacheConfig? {
         if let settings = savedsettings {
             let thumbnailCostPerPixel = settings.thumbnailCostPerPixel // 4 default (RGBA bytes per pixel)
@@ -85,8 +112,8 @@ actor ThumbnailProvider {
         return nil
     }
 
-    // This function is executed as part of init, calculates new Cache Costs from
-    // saved settingd.
+    /// This function is executed as part of init, calculates new Cache Costs from
+    /// saved settingd.
     func setCacheCostsFromSavedSettings() async {
         savedsettings = await SettingsManager.shared.asyncgetsettings()
         if let settings = savedsettings {
@@ -101,11 +128,12 @@ actor ThumbnailProvider {
             let totalCostlimit = memoryCacheSizeMB * 1024 * 1024 // Convert MB to bytes
             let countLimit = estimatedCostPerImage > 0 ? totalCostlimit / estimatedCostPerImage : maxCachedThumbnails
 
-            memoryCache.totalCostLimit = totalCostlimit
-            memoryCache.countLimit = countLimit
-            // Set delegate to track evictions
-            memoryCache.delegate = CacheDelegate.shared
-            Logger.process.debugMessageOnly("ThumbnailProvider: setMemoryCacheFromSavedSettings: memoryCache.totalCostLimit=\(memoryCache.totalCostLimit), memoryCache.countLimit=\(memoryCache.countLimit)")
+            let config = CacheConfig(
+                totalCostLimit: totalCostlimit,
+                countLimit: countLimit,
+                costPerPixel: thumbnailCostPerPixel
+            )
+            applyConfig(config)
         }
     }
 
@@ -133,6 +161,8 @@ actor ThumbnailProvider {
 
     @discardableResult
     func preloadCatalog(at catalogURL: URL, targetSize: Int) async -> Int {
+        await ensureReady()
+
         cancelPreload()
 
         let task = Task {
@@ -315,6 +345,7 @@ actor ThumbnailProvider {
 
     /// Get current cache statistics for monitoring
     func getCacheStatistics() async -> CacheStatistics {
+        await ensureReady()
         let total = cacheMemory + cacheDisk
         let hitRate = total > 0 ? Double(cacheMemory) / Double(total) * 100 : 0
         return CacheStatistics(
@@ -336,6 +367,7 @@ actor ThumbnailProvider {
     }
 
     func thumbnail(for url: URL, targetSize: Int) async -> NSImage? {
+        await ensureReady()
         do {
             return try await resolveImage(for: url, targetSize: targetSize)
         } catch {

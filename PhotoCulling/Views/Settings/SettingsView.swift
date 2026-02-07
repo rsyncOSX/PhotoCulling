@@ -230,7 +230,7 @@ struct CacheSettingsTab: View {
                 await ThumbnailProvider.shared.setCostPerPixel(settingsManager.thumbnailCostPerPixel)
                 cacheConfig = await ThumbnailProvider.shared.getCacheCostsAfterSettingsUpdate()
             }
-            .task (id: settingsManager.memoryCacheSizeMB) {
+            .task(id: settingsManager.memoryCacheSizeMB) {
                 await ThumbnailProvider.shared.setCacheCostsFromSavedSettings()
                 cacheConfig = await ThumbnailProvider.shared.getCacheCostsAfterSettingsUpdate()
             }
