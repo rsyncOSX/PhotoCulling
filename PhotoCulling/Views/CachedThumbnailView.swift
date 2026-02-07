@@ -26,10 +26,15 @@ struct CachedThumbnailView: View {
             isLoading = true
             let settingsmanager = await SettingsManager.shared.asyncgetsettings()
             let thumbnailSizePreview = settingsmanager.thumbnailSizePreview
-            image = await ThumbnailProvider.shared.thumbnail(
+            let cgImage = await ThumbnailProvider.shared.thumbnail(
                 for: url,
                 targetSize: thumbnailSizePreview
             )
+            if let cgImage {
+                image = NSImage(cgImage: cgImage, size: .zero)
+            } else {
+                image = nil
+            }
             isLoading = false
         }
     }

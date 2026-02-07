@@ -251,9 +251,13 @@ actor ThumbnailProvider {
 
             Logger.process.debugThreadOnly("ThumbnailProvider: processSingleFile() - CREATING thumbnail")
 
-            // Background save
-            Task.detached(priority: .background) {
-                await self.diskCache.save(cgImage, for: url)
+            // Background save - handle errors properly
+            Task.detached(priority: .background) { [cgImage] in
+                do {
+                    await self.diskCache.save(cgImage, for: url)
+                } catch {
+                    Logger.process.warning("Failed to save disk cache for \(url.lastPathComponent): \(error)")
+                }
             }
         } catch {
             Logger.process.warning("Failed: \(url.lastPathComponent)")
@@ -321,6 +325,18 @@ actor ThumbnailProvider {
         memoryCache.setObject(wrapper, forKey: url as NSURL, cost: wrapper.cost)
     }
 
+    /// Convert NSImage to CGImage for Sendable transport
+    private func nsImageToCGImage(_ nsImage: NSImage) throws -> CGImage {
+        // Create a TIFF representation and convert to CGImage
+        guard let tiffData = nsImage.tiffRepresentation,
+              let bitmapRep = NSBitmapImageRep(data: tiffData),
+              let cgImage = bitmapRep.cgImage
+        else {
+            throw ThumbnailError.generationFailed
+        }
+        return cgImage
+    }
+
     private func incrementAndGetCount() -> Int {
         successCount += 1
         return successCount
@@ -363,7 +379,7 @@ actor ThumbnailProvider {
         await diskCache.pruneCache(maxAgeInDays: maxAgeInDays)
     }
 
-    func thumbnail(for url: URL, targetSize: Int) async -> NSImage? {
+    func thumbnail(for url: URL, targetSize: Int) async -> CGImage? {
         await ensureReady()
         do {
             return try await resolveImage(for: url, targetSize: targetSize)
@@ -373,18 +389,20 @@ actor ThumbnailProvider {
         }
     }
 
-    private func resolveImage(for url: URL, targetSize: Int) async throws -> NSImage {
+    private func resolveImage(for url: URL, targetSize: Int) async throws -> CGImage {
         let nsUrl = url as NSURL
 
         // A. Check RAM
         if let wrapper = memoryCache.object(forKey: nsUrl), wrapper.beginContentAccess() {
             // FIX #1: We must pair begin with end.
-            // The 'image' variable holds a strong reference to the NSImage,
+            // The 'nsImage' variable holds a strong reference to the NSImage,
             // so it's safe to tell the cache we are done accessing it.
             defer { wrapper.endContentAccess() }
             cacheMemory += 1
             Logger.process.debugThreadOnly("resolveImage: found in RAM Cache (hits: \(cacheMemory))")
-            return wrapper.image
+            // Convert NSImage to CGImage for Sendable return
+            let nsImage = wrapper.image
+            return try nsImageToCGImage(nsImage)
         }
 
         // B. Check Disk
@@ -392,7 +410,7 @@ actor ThumbnailProvider {
             storeInMemory(diskImage, for: url)
             cacheDisk += 1
             Logger.process.debugThreadOnly("resolveImage: found in Disk Cache (misses: \(cacheDisk))")
-            return diskImage
+            return try nsImageToCGImage(diskImage)
         }
 
         // C. Extract
@@ -401,17 +419,21 @@ actor ThumbnailProvider {
         // 1. Get the Sendable CGImage
         let cgImage = try await extractSonyThumbnail(from: url, maxDimension: CGFloat(targetSize), qualityCost: costPerPixel)
 
-        // 2. Wrap in NSImage for display (inside Actor)
+        // 2. Wrap in NSImage for caching (inside Actor)
         let image = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
 
         storeInMemory(image, for: url)
 
-        // 3. Background save
-        Task.detached(priority: .background) {
-            await self.diskCache.save(cgImage, for: url)
+        // 3. Background save - handle errors properly
+        Task.detached(priority: .background) { [cgImage] in
+            do {
+                await self.diskCache.save(cgImage, for: url)
+            } catch {
+                Logger.process.warning("Failed to save disk cache for \(url.lastPathComponent): \(error)")
+            }
         }
 
-        return image
+        return cgImage
     }
 }
 

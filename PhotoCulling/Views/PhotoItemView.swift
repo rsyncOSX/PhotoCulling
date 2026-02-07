@@ -74,10 +74,17 @@ struct PhotoItemView: View {
             // Use preview size to match preload cache to avoid disk reads
             let settingsmanager = await SettingsManager.shared.asyncgetsettings()
             let thumbnailSizePreview = settingsmanager.thumbnailSizePreview
-            thumbnailImage = await ThumbnailProvider.shared.thumbnail(
+            let cgThumb = await ThumbnailProvider.shared.thumbnail(
                 for: url,
                 targetSize: thumbnailSizePreview
             )
+            if let cgThumb {
+                // Create an NSImage from the CGImage. Use scale 1.0 and .up orientation by default.
+                let nsImage = NSImage(cgImage: cgThumb, size: .zero)
+                thumbnailImage = nsImage
+            } else {
+                thumbnailImage = nil
+            }
             isLoading = false
         }
         .task {

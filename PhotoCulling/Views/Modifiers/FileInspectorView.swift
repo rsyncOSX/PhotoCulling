@@ -53,7 +53,12 @@ struct FileInspectorView: View {
         .onChange(of: file) {
             Task {
                 if let file {
-                    nsImage = await ThumbnailProvider.shared.thumbnail(for: file.url, targetSize: 1024)
+                    let cgImage = await ThumbnailProvider.shared.thumbnail(for: file.url, targetSize: 1024)
+                    if let cgImage {
+                        nsImage = NSImage(cgImage: cgImage, size: .zero)
+                    } else {
+                        nsImage = nil
+                    }
                 }
             }
         }
