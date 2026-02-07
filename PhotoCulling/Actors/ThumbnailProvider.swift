@@ -14,39 +14,6 @@ enum ThumbnailError: Error {
     case generationFailed
 }
 
-/// Delegate to track NSCache evictions for monitoring memory pressure
-final class CacheDelegate: NSObject, NSCacheDelegate, @unchecked Sendable {
-    nonisolated static let shared = CacheDelegate()
-
-    override nonisolated init() {
-        super.init()
-    }
-
-    nonisolated func cache(_: NSCache<AnyObject, AnyObject>, willEvictObject obj: Any) {
-        // The cast still works exactly the same way
-        if let image = obj as? NSImage {
-            Logger.process.debugMessageOnly("Evicted image: \(image)")
-        }
-    }
-}
-
-struct CacheConfig {
-    let totalCostLimit: Int
-    let countLimit: Int
-    /// Need this in return to settingsview
-    var costPerPixel: Int?
-
-    nonisolated static let production = CacheConfig(
-        totalCostLimit: 500 * 1024 * 1024, // ~500 MB for ~112 1024x1024 images
-        countLimit: 1000
-    )
-
-    nonisolated static let testing = CacheConfig(
-        totalCostLimit: 100_000, // Very small for testing evictions
-        countLimit: 5
-    )
-}
-
 actor ThumbnailProvider {
     nonisolated static let shared = ThumbnailProvider()
 

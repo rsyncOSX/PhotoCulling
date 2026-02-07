@@ -1,0 +1,25 @@
+//
+//  CacheConfig.swift
+//  PhotoCulling
+//
+//  Created by Thomas Evensen on 07/02/2026.
+//
+
+import Foundation
+
+struct CacheConfig {
+    let totalCostLimit: Int
+    let countLimit: Int
+    /// Need this in return to settingsview
+    var costPerPixel: Int?
+
+    nonisolated static let production = CacheConfig(
+        totalCostLimit: 500 * 1024 * 1024, // ~500 MB for ~112 1024x1024 images
+        countLimit: 1000
+    )
+
+    nonisolated static let testing = CacheConfig(
+        totalCostLimit: 100_000, // Very small for testing evictions
+        countLimit: 5
+    )
+}
