@@ -28,29 +28,17 @@ final class SettingsManager {
     // MARK: - Memory Cache Settings
 
     /// Maximum memory cache size in MB (default: 500)
-    @ObservationIgnored
     var memoryCacheSizeMB: Int = 500
-
     /// Number of cached thumbnails to keep in memory (default: 100)
-    @ObservationIgnored
     var maxCachedThumbnails: Int = 100
-
     // MARK: - Thumbnail Size Settings
-
     /// Grid thumbnail size in pixels (default: 100)
-    @ObservationIgnored
     var thumbnailSizeGrid: Int = 100
-
     /// Preview thumbnail size in pixels (default: 1024)
-    @ObservationIgnored
     var thumbnailSizePreview: Int = 1024
-
     /// Full size thumbnail in pixels (default: 8700)
-    @ObservationIgnored
     var thumbnailSizeFullSize: Int = 8700
-
     /// Estimated cost per pixel for thumbnail (in bytes, default: 4 for RGBA)
-    @ObservationIgnored
     var thumbnailCostPerPixel: Int = 4
 
     // MARK: - Private Properties
@@ -82,7 +70,7 @@ final class SettingsManager {
 
             // If file doesn't exist, just use defaults
             guard FileManager.default.fileExists(atPath: fileURL.path) else {
-                logger.debug("Settings file not found, using defaults")
+                Logger.process.debugMessageOnly("Settings file not found, using defaults")
                 return
             }
 
@@ -99,7 +87,7 @@ final class SettingsManager {
                 self.thumbnailCostPerPixel = savedSettings.thumbnailCostPerPixel
             }
 
-            logger.debug("Settings loaded successfully")
+            Logger.process.debugMessageOnly("SettingsManager: Settings loaded successfully")
         } catch {
             logger.error("Failed to load settings: \(error.localizedDescription)")
         }
@@ -135,9 +123,9 @@ final class SettingsManager {
             let data = try encoder.encode(settingsToSave)
 
             try data.write(to: fileURL, options: .atomic)
-            logger.debug("Settings saved successfully")
+            Logger.process.debugMessageOnly("Settings saved successfully")
         } catch {
-            logger.error("Failed to save settings: \(error.localizedDescription)")
+            Logger.process.errorMessageOnly("Failed to save settings: \(error.localizedDescription)")
         }
     }
 
@@ -148,7 +136,7 @@ final class SettingsManager {
         if memoryCacheSizeMB < minimumCacheMB {
             let message = "Cache size: \(self.memoryCacheSizeMB)MB is below " +
                 "recommended minimum of \(minimumCacheMB)MB. Performance may suffer."
-            logger.warning("\(message)")
+            Logger.process.errorMessageOnly("\(message)")
         }
 
         // Check if cache size exceeds 50% of available system memory
@@ -160,7 +148,7 @@ final class SettingsManager {
             let message = "Cache size: \(self.memoryCacheSizeMB)MB exceeds " +
                 "\(memoryThresholdPercent)% of available system memory " +
                 "(\(availableMemoryMB)MB). This may cause system memory pressure."
-            logger.warning("\(message)")
+            Logger.process.errorMessageOnly("\(message)")
         }
     }
 

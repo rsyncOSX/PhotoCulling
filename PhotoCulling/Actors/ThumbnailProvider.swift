@@ -56,9 +56,9 @@ actor ThumbnailProvider {
             // Only set if config == nil, config is set in Tests
             if config == nil {
                 await self.setMemoryCacheFromSavedSettings()
-                Logger.process.debugMessageOnly("ThumbnailProvider: init() - successfully loaded saved settings")
             }
         }
+        Logger.process.debugMessageOnly("ThumbnailProvider: init() - successfully loaded saved settings")
     }
 
     func exportCalculatedSavedSettings() async -> CacheConfig? {
@@ -101,6 +101,7 @@ actor ThumbnailProvider {
             memoryCache.countLimit = countLimit
             // Set delegate to track evictions
             memoryCache.delegate = CacheDelegate.shared
+            Logger.process.debugMessageOnly("ThumbnailProvider: setMemoryCacheFromSavedSettings: memoryCache.totalCostLimit=\(memoryCache.totalCostLimit), memoryCache.countLimit=\(memoryCache.countLimit)")
         }
     }
 
@@ -117,6 +118,7 @@ actor ThumbnailProvider {
     /// Memory cost is always 4 bytes per pixel (RGBA) regardless of this setting.
     func setCostPerPixel(_ cost: Int) {
         self.costPerPixel = max(1, min(8, cost)) // Clamp between 1-8
+        Logger.process.debugMessageOnly("ThumbnailProvider: setCostPerPixel(\(cost))")
     }
 
     private func cancelPreload() {

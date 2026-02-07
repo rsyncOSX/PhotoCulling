@@ -145,7 +145,7 @@ struct CacheSettingsTab: View {
                                     Text("Total Cost Limit")
                                         .font(.system(size: 10, weight: .medium))
                                         .foregroundStyle(.secondary)
-                                    Text(formatBytes(cacheConfig?.totalCostLimit ?? 524_288_000))
+                                    Text(formatBytes(cacheConfig?.totalCostLimit ?? 0))
                                         .font(.system(size: 11, weight: .semibold, design: .rounded))
                                 }
 
@@ -227,6 +227,14 @@ struct CacheSettingsTab: View {
                 // Initialize ThumbnailProvider with saved cost per pixel setting
                 await ThumbnailProvider.shared.setCostPerPixel(settingsManager.thumbnailCostPerPixel)
                 cacheConfig = await ThumbnailProvider.shared.exportCalculatedSavedSettings()
+            }
+            .task (id: settingsManager.memoryCacheSizeMB) {
+                await ThumbnailProvider.shared.setMemoryCacheFromSavedSettings()
+                cacheConfig = await ThumbnailProvider.shared.exportCalculatedSavedSettings()
+            }
+            .task(id: settingsManager.thumbnailCostPerPixel) {
+                await ThumbnailProvider.shared.setMemoryCacheFromSavedSettings()
+                await ThumbnailProvider.shared.setCostPerPixel(settingsManager.thumbnailCostPerPixel)
             }
         }
     }
