@@ -225,16 +225,19 @@ struct CacheSettingsTab: View {
             .onAppear(perform: refreshDiskCacheSize)
             .task {
                 // Initialize ThumbnailProvider with saved cost per pixel setting
+                // The ThumbnailProvider.init get the saved settings an update cost by
+                // setCacheCostsFromSavedSettings()
                 await ThumbnailProvider.shared.setCostPerPixel(settingsManager.thumbnailCostPerPixel)
-                cacheConfig = await ThumbnailProvider.shared.exportCalculatedSavedSettings()
+                cacheConfig = await ThumbnailProvider.shared.getCacheCostsAfterSettingsUpdate()
             }
             .task (id: settingsManager.memoryCacheSizeMB) {
-                await ThumbnailProvider.shared.setMemoryCacheFromSavedSettings()
-                cacheConfig = await ThumbnailProvider.shared.exportCalculatedSavedSettings()
+                await ThumbnailProvider.shared.setCacheCostsFromSavedSettings()
+                cacheConfig = await ThumbnailProvider.shared.getCacheCostsAfterSettingsUpdate()
             }
             .task(id: settingsManager.thumbnailCostPerPixel) {
-                await ThumbnailProvider.shared.setMemoryCacheFromSavedSettings()
+                await ThumbnailProvider.shared.setCacheCostsFromSavedSettings()
                 await ThumbnailProvider.shared.setCostPerPixel(settingsManager.thumbnailCostPerPixel)
+                cacheConfig = await ThumbnailProvider.shared.getCacheCostsAfterSettingsUpdate()
             }
         }
     }

@@ -55,13 +55,15 @@ actor ThumbnailProvider {
         Task {
             // Only set if config == nil, config is set in Tests
             if config == nil {
-                await self.setMemoryCacheFromSavedSettings()
+                await self.setCacheCostsFromSavedSettings()
             }
         }
         Logger.process.debugMessageOnly("ThumbnailProvider: init() - successfully loaded saved settings")
     }
 
-    func exportCalculatedSavedSettings() async -> CacheConfig? {
+    // This function is use top present updated Cache Costs in settings when changing
+    // settings data.
+    func getCacheCostsAfterSettingsUpdate() async -> CacheConfig? {
         if let settings = savedsettings {
             let thumbnailCostPerPixel = settings.thumbnailCostPerPixel // 4 default (RGBA bytes per pixel)
             let thumbnailSizePreview = settings.thumbnailSizePreview // 1024 default - used as estimate for cache limit
@@ -83,7 +85,9 @@ actor ThumbnailProvider {
         return nil
     }
 
-    func setMemoryCacheFromSavedSettings() async {
+    // This function is executed as part of init, calculates new Cache Costs from
+    // saved settingd.
+    func setCacheCostsFromSavedSettings() async {
         savedsettings = await SettingsManager.shared.asyncgetsettings()
         if let settings = savedsettings {
             let thumbnailCostPerPixel = settings.thumbnailCostPerPixel // 4 default (RGBA bytes per pixel)
