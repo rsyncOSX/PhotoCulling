@@ -59,13 +59,10 @@ actor ThumbnailProvider {
 
     /// 3. The magic helper: Creates the task if it doesn't exist, then awaits it.
     private func ensureReady() async {
-        // If the task already exists, just wait for it.
         if let task = setupTask {
             return await task.value
         }
 
-        // If not, create the task inside the actor.
-        // Because this is an actor method, this is thread-safe!
         let newTask = Task { [pendingConfig] in
             if let config = pendingConfig {
                 self.applyConfig(config)
@@ -75,7 +72,7 @@ actor ThumbnailProvider {
         }
 
         self.setupTask = newTask
-        return await newTask.value
+        await newTask.value
     }
 
     private func applyConfig(_ config: CacheConfig) {
