@@ -5,10 +5,10 @@ struct FileDetailView: View {
 
     @Binding var cgImage: CGImage?
     @Binding var nsImage: NSImage?
+    @Binding var selectedFileID: UUID?
 
     let files: [FileItem]
     let file: FileItem?
-    let selectedFileID: UUID?
 
     var body: some View {
         if let file = file {
@@ -36,6 +36,9 @@ struct FileDetailView: View {
                     setCGImage: { cgImage = $0 },
                     openWindow: { id in openWindow(id: id) }
                 )
+            }
+            .onTapGesture(count: 1) {
+                selectedFileID = nil
             }
         } else {
             ContentUnavailableView(
