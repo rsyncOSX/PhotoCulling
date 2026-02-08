@@ -79,7 +79,6 @@ struct SidebarPhotoCullingView: View {
                 selectedFileID: $viewModel.selectedFileID,
                 files: viewModel.files,
                 file: viewModel.selectedFile
-                
             )
         }
         .task {

@@ -84,6 +84,7 @@ struct CustomMemoryLimitTests {
 // MARK: - Example: Memory Pressure Scenarios
 
 @Suite("Memory Pressure Scenarios")
+@MainActor
 struct MemoryPressureScenarios {
     /// Test behavior when cache limit is reached
     @Test("Cache behavior near limit")
@@ -120,6 +121,7 @@ struct MemoryPressureScenarios {
 // MARK: - Example: Comparing Configs
 
 @Suite("Configuration Comparison Tests")
+@MainActor
 struct ConfigComparisonTests {
     /// Compare behavior across multiple config sizes
     @Test("Behavior across config sizes")
@@ -134,7 +136,7 @@ struct ConfigComparisonTests {
             let provider = ThumbnailProvider(config: config)
             let stats = await provider.getCacheStatistics()
 
-            print("Config \(name): hitRate=\(stats.hitRate)%")
+            print("Config \(name): hitRate=\(await stats.hitRate)%")
             #expect(stats.hitRate >= 0)
         }
     }
@@ -143,6 +145,7 @@ struct ConfigComparisonTests {
 // MARK: - Example: Eviction Monitoring
 
 @Suite("Cache Eviction Monitoring")
+@MainActor
 struct EvictionMonitoringTests {
     /// Monitor eviction statistics
     @Test("Eviction statistics collection")
@@ -151,13 +154,13 @@ struct EvictionMonitoringTests {
 
         // Initial state
         let initialStats = await provider.getCacheStatistics()
-        print("Initial evictions: \(initialStats.evictions)")
+        print("Initial evictions: \(await initialStats.evictions)")
 
         // After operations
         await provider.clearCaches()
 
         let finalStats = await provider.getCacheStatistics()
-        print("Final evictions: \(finalStats.evictions)")
+        print("Final evictions: \(await finalStats.evictions)")
 
         #expect(finalStats.evictions >= initialStats.evictions)
     }
@@ -170,10 +173,10 @@ struct EvictionMonitoringTests {
         let stats = await provider.getCacheStatistics()
 
         // Log statistics
-        print("Hits: \(stats.hits)")
-        print("Misses: \(stats.misses)")
-        print("Hit Rate: \(stats.hitRate)%")
-        print("Evictions: \(stats.evictions)")
+        print("Hits: \(await stats.hits)")
+        print("Misses: \(await stats.misses)")
+        print("Hit Rate: \(await stats.hitRate)%")
+        print("Evictions: \(await stats.evictions)")
 
         #expect(true)
     }
@@ -182,6 +185,7 @@ struct EvictionMonitoringTests {
 // MARK: - Example: Realistic Scenarios
 
 @Suite("Realistic Workload Tests")
+@MainActor
 struct RealisticWorkloadTests {
     /// Simulate typical thumbnail browsing session
     @Test("Typical browsing session")
@@ -228,6 +232,7 @@ struct RealisticWorkloadTests {
 // MARK: - Performance Measurement Tests
 
 @Suite("Memory Performance Tests")
+@MainActor
 struct MemoryPerformanceTests {
     /// Measure cache operations with different configs
     @Test("Operations speed with testing config")
@@ -263,6 +268,7 @@ struct MemoryPerformanceTests {
 // MARK: - Integration Test Template
 
 @Suite("Integration Test Examples")
+@MainActor
 struct IntegrationTestExamples {
     /// Template for testing multiple operations together
     @Test("Multi-operation workflow")
@@ -271,14 +277,14 @@ struct IntegrationTestExamples {
 
         // Step 1: Get initial stats
         let initialStats = await provider.getCacheStatistics()
-        print("Initial: hits=\(initialStats.hits), misses=\(initialStats.misses)")
+        print("Initial: hits=\(await initialStats.hits), misses=\(await initialStats.misses)")
 
         // Step 2: Perform operations (would access files in real scenario)
         // ...
 
         // Step 3: Get final stats
         let finalStats = await provider.getCacheStatistics()
-        print("Final: hits=\(finalStats.hits), misses=\(finalStats.misses)")
+        print("Final: hits=\(await finalStats.hits), misses=\(await finalStats.misses)")
 
         // Step 4: Verify expectations
         #expect(finalStats.hits >= initialStats.hits)

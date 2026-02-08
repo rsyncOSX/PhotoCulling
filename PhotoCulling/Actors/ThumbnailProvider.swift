@@ -84,8 +84,8 @@ actor ThumbnailProvider {
         }
         Logger.process.debugMessageOnly(
             "ThumbnailProvider: applyConfig complete: " +
-            "totalCostLimit=\(memoryCache.totalCostLimit), " +
-            "countLimit=\(memoryCache.countLimit)"
+                "totalCostLimit=\(memoryCache.totalCostLimit), " +
+                "countLimit=\(memoryCache.countLimit)"
         )
     }
 
