@@ -45,7 +45,6 @@ final class SettingsManager {
 
     // MARK: - Private Properties
 
-    private let logger = Logger(subsystem: "com.photoculling", category: "SettingsManager")
     private let settingsFileName = "settings.json"
 
     private var settingsURL: URL {
@@ -91,7 +90,7 @@ final class SettingsManager {
 
             Logger.process.debugMessageOnly("SettingsManager: Settings loaded successfully")
         } catch {
-            logger.error("Failed to load settings: \(error.localizedDescription)")
+            Logger.process.errorMessageOnly("Failed to load settings: \(error.localizedDescription)")
         }
     }
 
