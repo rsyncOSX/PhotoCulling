@@ -29,7 +29,10 @@ enum JPGPreviewHandler {
                 openWindow(WindowIdentifier.zoomcgImage.rawValue)
                 let extractor = ExtractEmbeddedPreview()
                 if file.url.pathExtension.lowercased() == SupportedFileType.arw.rawValue {
-                    if let mycgImage = await extractor.extractEmbeddedPreview(from: file.url, fullSize: true) {
+                    if let mycgImage = await extractor.extractEmbeddedPreview(
+                        from: file.url,
+                        fullSize: false
+                    ) {
                         setCGImage(mycgImage)
                     }
                 }
