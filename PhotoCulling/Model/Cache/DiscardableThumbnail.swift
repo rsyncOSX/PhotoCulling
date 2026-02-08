@@ -10,7 +10,7 @@ import os
 
 final class DiscardableThumbnail: NSObject, NSDiscardableContent, @unchecked Sendable {
     let image: NSImage
-    let cost: Int
+    nonisolated let cost: Int
     private let state = OSAllocatedUnfairLock(initialState: (isDiscarded: false, accessCount: 0))
 
     nonisolated init(image: NSImage) {

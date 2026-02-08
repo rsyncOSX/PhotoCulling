@@ -14,7 +14,6 @@ import Foundation
 import Testing
 
 @Suite("ThumbnailProvider Advanced Memory Tests")
-@MainActor
 struct ThumbnailProviderAdvancedMemoryTests {
     @Test("Small cost limit triggers rapid evictions")
     func rapidEvictionsWithSmallCostLimit() async {
@@ -232,7 +231,6 @@ struct ThumbnailProviderDiscardableContentTests {
 }
 
 @Suite("ThumbnailProvider Isolation Tests")
-@MainActor
 struct ThumbnailProviderIsolationTests {
     @Test("Shared instance is consistent")
     func sharedInstanceConsistency() async {

@@ -7,11 +7,11 @@
 
 import Foundation
 
-struct CacheConfig {
-    let totalCostLimit: Int
-    let countLimit: Int
+struct CacheConfig: Sendable {
+    nonisolated let totalCostLimit: Int
+    nonisolated let countLimit: Int
     /// Need this in return to settingsview
-    var costPerPixel: Int?
+    nonisolated var costPerPixel: Int?
 
     nonisolated static let production = CacheConfig(
         totalCostLimit: 500 * 1024 * 1024, // ~500 MB for ~112 1024x1024 images

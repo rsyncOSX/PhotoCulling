@@ -16,7 +16,6 @@ import Testing
 // MARK: - Example: Custom Memory Limit Scenarios
 
 @Suite("Custom Memory Limit Tests")
-@MainActor
 struct CustomMemoryLimitTests {
     /// Example 1: Test with 5 MB cache limit
     /// Useful for testing with moderate cache sizes
@@ -84,7 +83,6 @@ struct CustomMemoryLimitTests {
 // MARK: - Example: Memory Pressure Scenarios
 
 @Suite("Memory Pressure Scenarios")
-@MainActor
 struct MemoryPressureScenarios {
     /// Test behavior when cache limit is reached
     @Test("Cache behavior near limit")
@@ -121,7 +119,6 @@ struct MemoryPressureScenarios {
 // MARK: - Example: Comparing Configs
 
 @Suite("Configuration Comparison Tests")
-@MainActor
 struct ConfigComparisonTests {
     /// Compare behavior across multiple config sizes
     @Test("Behavior across config sizes")
@@ -135,9 +132,10 @@ struct ConfigComparisonTests {
         for (name, config) in configs {
             let provider = ThumbnailProvider(config: config)
             let stats = await provider.getCacheStatistics()
+            let hitRate = stats.hitRate
 
-            print("Config \(name): hitRate=\(await stats.hitRate)%")
-            #expect(stats.hitRate >= 0)
+            print("Config \(name): hitRate=\(hitRate)%")
+            #expect(hitRate >= 0)
         }
     }
 }
@@ -145,7 +143,6 @@ struct ConfigComparisonTests {
 // MARK: - Example: Eviction Monitoring
 
 @Suite("Cache Eviction Monitoring")
-@MainActor
 struct EvictionMonitoringTests {
     /// Monitor eviction statistics
     @Test("Eviction statistics collection")
@@ -154,15 +151,17 @@ struct EvictionMonitoringTests {
 
         // Initial state
         let initialStats = await provider.getCacheStatistics()
-        print("Initial evictions: \(await initialStats.evictions)")
+        let initialEvictions = initialStats.evictions
+        print("Initial evictions: \(initialEvictions)")
 
         // After operations
         await provider.clearCaches()
 
         let finalStats = await provider.getCacheStatistics()
-        print("Final evictions: \(await finalStats.evictions)")
+        let finalEvictions = finalStats.evictions
+        print("Final evictions: \(finalEvictions)")
 
-        #expect(finalStats.evictions >= initialStats.evictions)
+        #expect(finalEvictions >= initialEvictions)
     }
 
     /// Track hit/miss ratio
@@ -173,10 +172,15 @@ struct EvictionMonitoringTests {
         let stats = await provider.getCacheStatistics()
 
         // Log statistics
-        print("Hits: \(await stats.hits)")
-        print("Misses: \(await stats.misses)")
-        print("Hit Rate: \(await stats.hitRate)%")
-        print("Evictions: \(await stats.evictions)")
+        let hits = stats.hits
+        let misses = stats.misses
+        let hitRate = stats.hitRate
+        let evictions = stats.evictions
+
+        print("Hits: \(hits)")
+        print("Misses: \(misses)")
+        print("Hit Rate: \(hitRate)%")
+        print("Evictions: \(evictions)")
 
         #expect(true)
     }
@@ -185,7 +189,6 @@ struct EvictionMonitoringTests {
 // MARK: - Example: Realistic Scenarios
 
 @Suite("Realistic Workload Tests")
-@MainActor
 struct RealisticWorkloadTests {
     /// Simulate typical thumbnail browsing session
     @Test("Typical browsing session")
@@ -201,10 +204,10 @@ struct RealisticWorkloadTests {
         let testURL = URL(fileURLWithPath: "/photos/test.arw")
 
         // First access - cache miss (file not found in this test)
-        let result1 = await provider.thumbnail(for: testURL, targetSize: 2560)
+        _ = await provider.thumbnail(for: testURL, targetSize: 2560)
 
         // Second access - might be cached or miss again
-        let result2 = await provider.thumbnail(for: testURL, targetSize: 2560)
+        _ = await provider.thumbnail(for: testURL, targetSize: 2560)
 
         #expect(true)
     }
@@ -232,7 +235,6 @@ struct RealisticWorkloadTests {
 // MARK: - Performance Measurement Tests
 
 @Suite("Memory Performance Tests")
-@MainActor
 struct MemoryPerformanceTests {
     /// Measure cache operations with different configs
     @Test("Operations speed with testing config")
@@ -268,7 +270,6 @@ struct MemoryPerformanceTests {
 // MARK: - Integration Test Template
 
 @Suite("Integration Test Examples")
-@MainActor
 struct IntegrationTestExamples {
     /// Template for testing multiple operations together
     @Test("Multi-operation workflow")
@@ -277,24 +278,29 @@ struct IntegrationTestExamples {
 
         // Step 1: Get initial stats
         let initialStats = await provider.getCacheStatistics()
-        print("Initial: hits=\(await initialStats.hits), misses=\(await initialStats.misses)")
+        let initialHits = initialStats.hits
+        let initialMisses = initialStats.misses
+        print("Initial: hits=\(initialHits), misses=\(initialMisses)")
 
         // Step 2: Perform operations (would access files in real scenario)
         // ...
 
         // Step 3: Get final stats
         let finalStats = await provider.getCacheStatistics()
-        print("Final: hits=\(await finalStats.hits), misses=\(await finalStats.misses)")
+        let finalHits = finalStats.hits
+        let finalMisses = finalStats.misses
+        print("Final: hits=\(finalHits), misses=\(finalMisses)")
 
         // Step 4: Verify expectations
-        #expect(finalStats.hits >= initialStats.hits)
+        #expect(finalHits >= initialHits)
 
         // Step 5: Clean up
         await provider.clearCaches()
 
         // Step 6: Verify cleanup
         let cleanStats = await provider.getCacheStatistics()
-        #expect(cleanStats.hits == 0 || cleanStats.hits >= 0) // Reset
+        let cleanHits = cleanStats.hits
+        #expect(cleanHits == 0 || cleanHits >= 0) // Reset
     }
 }
 
