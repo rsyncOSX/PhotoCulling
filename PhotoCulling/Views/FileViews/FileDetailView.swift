@@ -38,6 +38,7 @@ struct FileDetailView: View {
                 )
             }
             .onTapGesture(count: 1) {
+                // ↓ Single click deselects the file
                 selectedFileID = nil
             }
         } else {

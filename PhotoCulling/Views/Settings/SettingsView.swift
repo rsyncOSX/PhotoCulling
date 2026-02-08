@@ -22,10 +22,13 @@ struct SettingsView: View {
                 .tabItem {
                     Label("Thumbnails", systemImage: "photo.fill")
                 }
+
+            CacheStatisticsView(thumbnailProvider: ThumbnailProvider.shared)
+                .tabItem {
+                    Label("Cache statistics", systemImage: "numbers")
+                }
         }
         .padding(20)
         .frame(width: 450, height: 450)
     }
 }
-
-

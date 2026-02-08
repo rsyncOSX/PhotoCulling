@@ -11,6 +11,7 @@ final class SidebarPhotoCullingViewModel {
     var filteredFiles: [FileItem] = []
     var searchText = ""
     var selectedFileID: FileItem.ID?
+    var previouslySelectedFileID: FileItem.ID?
     var sortOrder = [KeyPathComparator(\FileItem.name)]
     var isShowingPicker = false
     var isInspectorPresented = false

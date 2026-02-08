@@ -90,7 +90,21 @@ extension SidebarPhotoCullingView {
                         )
                     }
                     .width(CGFloat(savedsettings.thumbnailSizeGrid))
-                    TableColumn("Name", value: \.name)
+                    TableColumn("Name", value: \.name) { file in
+                        HStack(spacing: 8) {
+                            // Visual indicator for previously selected file
+                            if file.id == viewModel.previouslySelectedFileID {
+                                VStack {
+                                    Spacer()
+                                    RoundedRectangle(cornerRadius: 2)
+                                        .fill(.blue)
+                                        .frame(width: 3)
+                                    Spacer()
+                                }
+                            }
+                            Text(file.name)
+                        }
+                    }
                     TableColumn("Size", value: \.size) { file in
                         Text(file.formattedSize).monospacedDigit()
                     }
@@ -114,6 +128,11 @@ extension SidebarPhotoCullingView {
             }
         }
         .onChange(of: viewModel.selectedFileID) {
+            // Track the previously selected file
+            if viewModel.selectedFileID != nil {
+                viewModel.previouslySelectedFileID = viewModel.selectedFileID
+            }
+
             if let index = viewModel.files.firstIndex(where: { $0.id == viewModel.selectedFileID }) {
                 viewModel.selectedFileID = viewModel.files[index].id
                 viewModel.selectedFile = viewModel.files[index]
