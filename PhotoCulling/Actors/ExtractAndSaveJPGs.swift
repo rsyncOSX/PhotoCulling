@@ -21,7 +21,7 @@ actor ExtractAndSaveJPGs {
     }
 
     @discardableResult
-    func extractAndSaveAlljpgs(from catalogURL: URL, fullSize: Bool = false) async -> Int {
+    func extractAndSaveAlljpgs(from catalogURL: URL, fullSize _: Bool = false) async -> Int {
         cancelExtractJPGSTask()
 
         let task = Task {
@@ -46,8 +46,7 @@ actor ExtractAndSaveJPGs {
 
                     group.addTask {
                         if let cgImage = await ExtractEmbeddedPreview().extractEmbeddedPreview(
-                            from: url,
-                            fullSize: fullSize
+                            from: url
                         ) {
                             await ExtractEmbeddedPreview().save(image: cgImage, originalURL: url)
 

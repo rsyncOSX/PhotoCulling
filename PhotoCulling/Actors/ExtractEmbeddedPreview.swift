@@ -13,6 +13,8 @@ actor ExtractEmbeddedPreview {
         // Above 8640 extracs full size
         let maxThumbnailSize: CGFloat = fullSize ? 8640 : 4320
 
+        // Downsampling to 4320 is on Silicon failry quick and a sweet spot for culling
+
         guard let imageSource = CGImageSourceCreateWithURL(arwURL as CFURL, nil) else {
             Logger.process.warning("Failed to create image source")
             return nil

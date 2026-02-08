@@ -257,11 +257,7 @@ actor ThumbnailProvider {
 
             // Background save - handle errors properly
             Task.detached(priority: .background) { [cgImage] in
-                do {
-                    await self.diskCache.save(cgImage, for: url)
-                } catch {
-                    Logger.process.warning("Failed to save disk cache for \(url.lastPathComponent): \(error)")
-                }
+                await self.diskCache.save(cgImage, for: url)
             }
         } catch {
             Logger.process.warning("Failed: \(url.lastPathComponent)")
@@ -430,11 +426,7 @@ actor ThumbnailProvider {
 
         // 3. Background save - handle errors properly
         Task.detached(priority: .background) { [cgImage] in
-            do {
-                await self.diskCache.save(cgImage, for: url)
-            } catch {
-                Logger.process.warning("Failed to save disk cache for \(url.lastPathComponent): \(error)")
-            }
+            await self.diskCache.save(cgImage, for: url)
         }
 
         return cgImage

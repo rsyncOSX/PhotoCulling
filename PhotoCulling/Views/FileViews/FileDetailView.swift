@@ -6,9 +6,9 @@ struct FileDetailView: View {
     @Binding var cgImage: CGImage?
     @Binding var nsImage: NSImage?
     @Binding var selectedFileID: UUID?
-    
-    // Used if selectedFileID = nil and user double click on picture when
-    // inspector tab is hidded, e.g. selectedFileID == nil
+
+    /// Used if selectedFileID = nil and user double click on picture when
+    /// inspector tab is hidded, e.g. selectedFileID == nil
     @State var savedselecetdFileID: UUID?
 
     let files: [FileItem]
@@ -31,14 +31,13 @@ struct FileDetailView: View {
             .padding()
             .frame(minWidth: 300, minHeight: 300)
             .onTapGesture(count: 2) {
-                
                 if selectedFileID == nil, let savedselecetdFileID {
                     selectedFileID = savedselecetdFileID
                 }
-                
+
                 guard let selectedID = selectedFileID,
                       let file = files.first(where: { $0.id == selectedID }) else { return }
-                
+
                 JPGPreviewHandler.handle(
                     file: file,
                     setNSImage: { nsImage = $0 },
